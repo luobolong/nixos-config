@@ -22,14 +22,63 @@ let
       grimblast "''${args[@]}" copysave "$target" "$file"
     '';
   };
-  togglePinned = pkgs.writeShellApplication {
-    name = "hypr-toggle-pin";
-    runtimeInputs = [ pkgs.jq ];
+  shortcutsHelpText = pkgs.writeText "hyprland-shortcuts.txt" ''
+    Hyprland 快捷键说明
+    ==================
+
+    提示：SUPER 是 Windows 键；在此窗口按 q 退出。
+
+    窗口与会话
+      SUPER + Q                         退出 Hyprland 会话
+      ALT + F4                          关闭当前窗口
+      SUPER + W                         切换窗口浮动
+      SUPER + SHIFT + W                 先浮动，再切换窗口置顶
+      SUPER + L                         锁定屏幕
+      SHIFT + F11 / SUPER + D           切换全屏
+      SUPER + 方向键                    切换焦点
+      SUPER + CTRL + SHIFT + 方向键     向指定方向移动窗口
+      SUPER + SHIFT + 方向键            向指定方向调整窗口大小
+      SUPER + 鼠标左键                  拖动窗口
+      SUPER + 鼠标右键                  调整窗口大小
+
+    常用应用
+      SUPER + T                         终端
+      SUPER + ALT + T                   切换下拉终端
+      SUPER + E                         文件管理器
+      SUPER + C                         文本编辑器
+      SUPER + B                         浏览器
+      CTRL + SHIFT + Escape             系统监视器
+      SUPER + A                         应用查找器
+      SUPER + /                         打开本说明
+
+    工作区
+      SUPER + 1…9 / 0                   切换到工作区 1…9 / 10
+      SUPER + SHIFT + 1…9 / 0           移动窗口到工作区 1…9 / 10
+      SUPER + S / M                     切换特殊工作区 S / M
+      SUPER + SHIFT + S / M             移动窗口到特殊工作区并跟随
+      SUPER + ALT + S / M               静默移动窗口到特殊工作区
+
+    屏幕捕获
+      SUPER + SHIFT + P                 颜色选择器
+      SUPER + P                         截取屏幕区域
+      SUPER + CTRL + P                  冻结并截取屏幕区域
+      SUPER + ALT + P                   截取当前显示器
+      Print                             截取所有显示器
+
+    多媒体
+      XF86AudioRaise/LowerVolume        调整音量
+      XF86AudioMute                     静音
+      XF86MonBrightnessUp/Down          调整屏幕亮度
+  '';
+  shortcutsHelp = pkgs.writeShellApplication {
+    name = "hypr-shortcuts-help";
+    runtimeInputs = with pkgs; [
+      kitty
+      less
+    ];
     text = ''
-      if [[ "$(hyprctl -j activewindow | jq -r '.floating // false')" != "true" ]]; then
-        hyprctl dispatch togglefloating
-      fi
-      hyprctl dispatch pin
+      exec kitty --class shortcuts-help --title "快捷键说明" \
+        less -R -- ${shortcutsHelpText}
     '';
   };
 in
@@ -57,7 +106,7 @@ in
       grim
       slurp
       screenshot
-      togglePinned
+      shortcutsHelp
       brightnessctl
       playerctl
       networkmanagerapplet
@@ -103,7 +152,7 @@ in
       python3
       lua-language-server
       nil
-      nixfmt-rfc-style
+      nixfmt
     ];
     preferXdgDirectories = true;
   };
@@ -143,6 +192,8 @@ in
     defaultEditor = true;
     viAlias = true;
     vimAlias = true;
+    withPython3 = false;
+    withRuby = false;
     extraPackages = with pkgs; [ tree-sitter ];
   };
 
@@ -211,116 +262,8 @@ in
     package = null;
     portalPackage = null;
     systemd.enable = true;
-    settings = {
-      "$mod" = "SUPER";
-      "$terminal" = "kitty";
-      "$fileManager" = "dolphin";
-      monitor = ",preferred,auto,1";
-      input = {
-        kb_layout = "us";
-        follow_mouse = 1;
-        touchpad.natural_scroll = true;
-      };
-      general = {
-        gaps_in = 5;
-        gaps_out = 10;
-        border_size = 2;
-        layout = "dwindle";
-      };
-      decoration = {
-        rounding = 10;
-        blur = {
-          enabled = true;
-          size = 8;
-          passes = 3;
-        };
-      };
-      animations.enabled = true;
-      exec-once = [
-        "fcitx5 -d --replace"
-        "nm-applet --indicator"
-        "[workspace special:terminal silent; float; size 80% 50%; center] kitty --class dropdown-terminal --title dropdown-terminal"
-      ];
-      bind = [
-        "$mod, Q, exit"
-        "ALT, F4, killactive"
-        "$mod, W, togglefloating"
-        "$mod, L, exec, hyprlock"
-        "SHIFT, F11, fullscreen"
-        "$mod, D, fullscreen"
-        "$mod SHIFT, F, exec, hypr-toggle-pin"
-
-        "$mod CTRL SHIFT, left, movewindow, l"
-        "$mod CTRL SHIFT, right, movewindow, r"
-        "$mod CTRL SHIFT, up, movewindow, u"
-        "$mod CTRL SHIFT, down, movewindow, d"
-
-        "$mod, T, exec, $terminal"
-        "$mod ALT, T, togglespecialworkspace, terminal"
-        "$mod, E, exec, $fileManager"
-        "$mod, C, exec, code"
-        "$mod, B, exec, firefox"
-        "CTRL SHIFT, Escape, exec, missioncenter"
-        "$mod, A, exec, fuzzel"
-
-        "$mod, left, movefocus, l"
-        "$mod, right, movefocus, r"
-        "$mod, up, movefocus, u"
-        "$mod, down, movefocus, d"
-
-        "$mod, 1, workspace, 1"
-        "$mod, 2, workspace, 2"
-        "$mod, 3, workspace, 3"
-        "$mod, 4, workspace, 4"
-        "$mod, 5, workspace, 5"
-        "$mod, 6, workspace, 6"
-        "$mod, 7, workspace, 7"
-        "$mod, 8, workspace, 8"
-        "$mod, 9, workspace, 9"
-        "$mod, 0, workspace, 10"
-
-        "$mod SHIFT, S, movetoworkspace, special:S"
-        "$mod ALT, S, movetoworkspacesilent, special:S"
-        "$mod, S, togglespecialworkspace, S"
-        "$mod SHIFT, M, movetoworkspace, special:M"
-        "$mod ALT, M, movetoworkspacesilent, special:M"
-        "$mod, M, togglespecialworkspace, M"
-
-        "$mod SHIFT, 1, movetoworkspace, 1"
-        "$mod SHIFT, 2, movetoworkspace, 2"
-        "$mod SHIFT, 3, movetoworkspace, 3"
-        "$mod SHIFT, 4, movetoworkspace, 4"
-        "$mod SHIFT, 5, movetoworkspace, 5"
-        "$mod SHIFT, 6, movetoworkspace, 6"
-        "$mod SHIFT, 7, movetoworkspace, 7"
-        "$mod SHIFT, 8, movetoworkspace, 8"
-        "$mod SHIFT, 9, movetoworkspace, 9"
-        "$mod SHIFT, 0, movetoworkspace, 10"
-
-        "$mod SHIFT, P, exec, hyprpicker -a"
-        "$mod, P, exec, hypr-screenshot area"
-        "$mod CTRL, P, exec, hypr-screenshot area true"
-        "$mod ALT, P, exec, hypr-screenshot output"
-        ", Print, exec, hypr-screenshot screen"
-      ];
-      binde = [
-        "$mod SHIFT, right, resizeactive, 50 0"
-        "$mod SHIFT, left, resizeactive, -50 0"
-        "$mod SHIFT, up, resizeactive, 0 -50"
-        "$mod SHIFT, down, resizeactive, 0 50"
-      ];
-      bindel = [
-        ",XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"
-        ",XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
-        ",XF86AudioMute, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
-        ",XF86MonBrightnessUp, exec, brightnessctl set 5%+"
-        ",XF86MonBrightnessDown, exec, brightnessctl set 5%-"
-      ];
-      bindm = [
-        "$mod, mouse:272, movewindow"
-        "$mod, mouse:273, resizewindow"
-      ];
-    };
+    configType = "lua";
+    extraConfig = builtins.readFile ./hyprland.lua;
   };
 
   programs.noctalia = {

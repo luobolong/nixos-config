@@ -15,7 +15,7 @@
 - Snapper：自动创建 `/persist` 快照并按小时、天、周、月清理
 - systemd-boot + Lanzaboote UKI，支持 UEFI Secure Boot，最多保留 10 个系统代次
 - 每周自动清理 7 天前的 Nix 代次，并优化 Nix Store
-- Hyprland（UWSM 会话）+ Noctalia v5
+- Hyprland（UWSM 会话，Lua 配置）+ Noctalia v5
 - greetd + tuigreet 登录界面
 - Kitty（Hyprland 模糊背景）+ Zsh + Starship 提示符
 - NetworkManager、蓝牙、PipeWire
@@ -37,7 +37,9 @@
 │   ├── core.nix
 │   ├── desktop.nix
 │   └── impermanence.nix
-├── home/default.nix
+├── home/
+│   ├── default.nix
+│   └── hyprland.lua
 └── packages/flclash.nix
 ```
 

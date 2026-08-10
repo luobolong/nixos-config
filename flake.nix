@@ -57,6 +57,6 @@
 
       checks.${system}.nixos = self.nixosConfigurations.${hostname}.config.system.build.toplevel;
 
-      formatter.${system} = nixpkgs.legacyPackages.${system}.nixfmt-rfc-style;
+      formatter.${system} = nixpkgs.legacyPackages.${system}.nixfmt;
     };
 }
