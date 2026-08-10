@@ -11,7 +11,7 @@
           priority = 1;
           name = "ESP";
           start = "1M";
-          size = "1G";
+          size = "2G";
           type = "EF00";
           content = {
             type = "filesystem";
@@ -22,10 +22,13 @@
         };
 
         swap = {
-          size = "16G";
+          # 与本机 64 GiB 内存等大，为休眠镜像预留足够空间。
+          size = "64G";
           content = {
             type = "swap";
-            randomEncryption = true;
+            # 由 Disko 将此分区配置为 boot.resumeDevice。
+            # 休眠不能使用每次开机更换密钥的 randomEncryption。
+            resumeDevice = true;
           };
         };
 
@@ -41,6 +44,12 @@
               };
               "/persist" = {
                 mountpoint = "/persist";
+                mountOptions = [ "compress=zstd" "noatime" ];
+              };
+              # 与 /persist 同级，挂载到其内部供 Snapper 保存快照，
+              # 避免快照递归包含其他快照。
+              "/persist-snapshots" = {
+                mountpoint = "/persist/.snapshots";
                 mountOptions = [ "compress=zstd" "noatime" ];
               };
             };

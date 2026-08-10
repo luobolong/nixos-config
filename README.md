@@ -12,13 +12,17 @@
 - Disko + GPT + UEFI
 - Btrfs：`/nix` 和 `/persist` 使用 Zstd 压缩
 - Impermanence：`/` 是 tmpfs，每次启动自动清空；必要状态保存在 `/persist`
-- rEFInd，最多显示 10 个系统代次
+- Snapper：自动创建 `/persist` 快照并按小时、天、周、月清理
+- systemd-boot + Lanzaboote UKI，支持 UEFI Secure Boot，最多保留 10 个系统代次
 - 每周自动清理 7 天前的 Nix 代次，并优化 Nix Store
 - Hyprland（UWSM 会话）+ Noctalia v5
 - greetd + tuigreet 登录界面
+- Kitty（Hyprland 模糊背景）+ Zsh + Starship 提示符
 - NetworkManager、蓝牙、PipeWire
-- Fcitx5 + Rime + rime-ice（雾凇拼音）
-- Neovim + AstroNvim v5、VS Code、Spotify、FlClash
+- Fcitx5 + Rime + rime-ice（雾凇拼音）+ Catppuccin Mocha Sapphire 皮肤
+- Dolphin、Fastfetch、Mission Center、btop、Fuzzel、Hyprlock、Neovim + AstroNvim v5、VS Code、Spotify、FlClash
+- GnuPG + GPG Agent、SSH Agent、direnv + nix-direnv
+- jq、yq、rsync、Zip/7-Zip、常用硬件诊断、NixOS 维护与基础构建工具
 
 ## 目录结构
 
@@ -54,32 +58,29 @@ username = "ben";
 ./hosts/nixos
 ```
 
-### 2. 选择 CPU
+### 2. CPU 与显卡
 
-默认硬件配置适用于 Intel CPU。AMD 用户在 `hosts/nixos/hardware-configuration.nix` 中把：
-
-```nix
-boot.kernelModules = [ "kvm-intel" ];
-hardware.cpu.intel.updateMicrocode = ...;
-```
-
-改为：
+默认硬件配置适用于 AMD CPU，并启用了 AMD 微码更新、AMDGPU 早期 KMS，以及由 `hardware.graphics` 提供的 Mesa OpenGL/Vulkan 驱动：
 
 ```nix
 boot.kernelModules = [ "kvm-amd" ];
-hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+hardware.cpu.amd.updateMicrocode = lib.mkDefault true;
+hardware.graphics.enable = true;
+hardware.graphics.enable32Bit = true;
 ```
 
-NVIDIA 显卡通常还需要额外的驱动配置；本仓库默认面向 Intel/AMD 核显或 AMD 显卡。
+如果改用 Intel CPU，需将 KVM 模块和微码选项改为 Intel 对应配置。NVIDIA 显卡通常还需要额外的专有驱动配置；本仓库默认面向 AMD 显卡。
 
 ### 3. 调整根目录和 Swap 大小
 
-默认临时根目录最多使用 8 GiB 内存，Swap 分区为 16 GiB。可分别在 `hosts/nixos/disk-config.nix` 中修改：
+默认临时根目录最多使用 8 GiB 内存，Swap 分区与本机 64 GiB 内存等大，并作为休眠恢复设备。可分别在 `hosts/nixos/disk-config.nix` 中修改：
 
 ```nix
 options = [ "defaults" "mode=755" "size=8G" ];
-size = "16G";
+size = "64G";
 ```
+
+若机器内存容量不同，请将 Swap 的 `size` 改为不小于实际内存的值。休眠 Swap 未启用随机加密，因为随机密钥会在重启后丢失，导致无法恢复休眠镜像。
 
 ## 全新安装
 
@@ -193,9 +194,43 @@ sudo nixos-enter --root /mnt -c 'passwd ben'
 sudo reboot
 ```
 
-拔掉安装 U 盘，rEFInd 应显示 NixOS 启动项。首次登录在 tuigreet 中选择 Hyprland。
+拔掉安装 U 盘，systemd-boot 应显示 NixOS 启动项。首次登录在 tuigreet 中选择 Hyprland。此时先保持固件 Secure Boot 关闭，首次启动的 UKI 尚未签名。
 
 ## 首次登录
+
+### UKI 与 Secure Boot
+
+Lanzaboote 会为每个 NixOS 系统代次生成 UKI。首次启动时，`generate-sb-keys.service` 会在持久化的 `/var/lib/sbctl` 中生成 Secure Boot 密钥：
+
+```bash
+systemctl status generate-sb-keys.service
+sudo sbctl status
+```
+
+确认密钥已经生成后，再重建一次，使 Lanzaboote 使用新密钥签名 systemd-boot 和 UKI：
+
+```bash
+sudo nixos-rebuild boot --flake .#nixos
+sudo sbctl verify
+```
+
+确认启动文件已经签名后，进入 UEFI 固件设置并切换到 Secure Boot Setup Mode。不要选择会同时清空 `dbx` 的“清除全部 Secure Boot 密钥”；不同主板通常可以通过删除 Platform Key（PK）进入 Setup Mode。
+
+回到 NixOS 后手动注册密钥，并保留 Microsoft 签名证书以兼容显卡 Option ROM 和部分固件更新：
+
+```bash
+sudo sbctl enroll-keys --microsoft
+sudo reboot
+```
+
+最后在固件中启用 Secure Boot，并验证状态：
+
+```bash
+bootctl status
+sudo sbctl status
+```
+
+Secure Boot 只验证启动链完整性；本配置按要求不启用磁盘加密，因此不会阻止他人从其他系统直接读取磁盘数据。不要提交 `/var/lib/sbctl` 中的私钥。
 
 ### Fcitx5 + 雾凇拼音
 
@@ -267,9 +302,18 @@ sudo findmnt | grep /persist
 sudo du -sh /persist/*
 ```
 
+查看 `/persist` 的 Snapper 快照和定时任务：
+
+```bash
+snapper -c persist list
+systemctl list-timers 'snapper-*'
+```
+
 ## 添加持久目录
 
 临时根目录意味着：没有列入持久化清单的数据会在重启后消失。
+
+标准的 Desktop、Documents、Downloads、Music、Pictures、Public、Templates、Videos 已持久化；`XDG_PROJECTS_DIR` 指向新增的 `~/Workspace`。用户的 `.config`、`.local/share` 和 `.local/state` 也会保留，因此应用设置、数据和 Zsh 历史不会在重启后丢失。`.cache` 有意保持临时，避免缓存长期占用 `/persist` 和 Snapper 快照空间。
 
 - 系统目录：编辑 `modules/impermanence.nix` 中的 `directories` 或 `files`
 - 用户目录：编辑同一文件的 `users.${username}.directories`
@@ -286,15 +330,51 @@ sudo du -sh /persist/*
 
 | 快捷键 | 动作 |
 |---|---|
-| `Super + Enter` | 打开 Kitty |
+| `Super + Q` | 退出 Hyprland |
+| `Alt + F4` | 关闭当前窗口 |
+| `Super + W` | 切换当前窗口浮动状态 |
+| `Super + L` | 使用 Hyprlock 锁定屏幕 |
+| `Shift + F11` / `Super + D` | 切换全屏 |
+| `Super + Shift + F` | 切换窗口置顶；平铺窗口会先转为浮动 |
+| `Super + 方向键` | 向对应方向切换焦点 |
+| `Super + Shift + 方向键` | 按 50 像素调整当前窗口大小 |
+| `Super + Ctrl + Shift + 方向键` | 向对应方向移动当前窗口 |
+| `Super + 鼠标左键` | 拖动窗口 |
+| `Super + 鼠标右键` | 调整窗口大小 |
+
+### 启动应用
+
+| 快捷键 | 动作 |
+|---|---|
+| `Super + T` | 打开 Kitty |
+| `Super + Alt + T` | 切换下拉 Kitty 终端 |
 | `Super + E` | 打开文件管理器 |
+| `Super + C` | 打开 VS Code |
 | `Super + B` | 打开 Firefox |
-| `Super + Q` | 关闭当前窗口 |
-| `Super + F` | 全屏 |
-| `Super + V` | 切换浮动窗口 |
-| `Super + 1..5` | 切换工作区 |
-| `Super + Shift + 1..5` | 移动窗口到工作区 |
-| `Super + Shift + M` | 退出 Hyprland |
+| `Ctrl + Shift + Escape` | 打开 Mission Center；终端中也可运行 `btop` |
+| `Super + A` | 打开 Fuzzel 应用查找器 |
+
+### 工作区与暂存区
+
+| 快捷键 | 动作 |
+|---|---|
+| `Super + 1..9` / `Super + 0` | 切换到工作区 1..9 / 10 |
+| `Super + Shift + 1..9` / `Super + Shift + 0` | 移动窗口到工作区 1..9 / 10 |
+| `Super + Shift + S` / `Super + Shift + M` | 移动窗口到暂存区 S / M 并跟随 |
+| `Super + Alt + S` / `Super + Alt + M` | 静默移动窗口到暂存区 S / M |
+| `Super + S` / `Super + M` | 显示或隐藏暂存区 S / M |
+
+### 屏幕捕获
+
+| 快捷键 | 动作 |
+|---|---|
+| `Super + Shift + P` | 选取颜色并复制到剪贴板 |
+| `Super + P` | 截取屏幕区域 |
+| `Super + Ctrl + P` | 冻结画面后截取屏幕区域 |
+| `Super + Alt + P` | 截取当前显示器 |
+| `Print` | 截取所有显示器 |
+
+截图会同时复制到剪贴板，并保存到 XDG 图片目录下的 `Screenshots` 子目录。
 
 ## 注意事项
 
@@ -314,6 +394,7 @@ sudo du -sh /persist/*
 - [Home Manager](https://github.com/nix-community/home-manager)
 - [Disko](https://github.com/nix-community/disko)
 - [Impermanence](https://github.com/nix-community/impermanence)
+- [Lanzaboote](https://github.com/nix-community/lanzaboote)
 - [Noctalia v5](https://github.com/noctalia-dev/noctalia)
 - [rime-ice](https://github.com/iDvel/rime-ice)
 - [AstroNvim Template](https://github.com/AstroNvim/template)

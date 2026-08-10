@@ -49,13 +49,26 @@
 
   boot = {
     loader = {
-      refind = {
-        enable = true;
-        maxGenerations = 10;
+      # Lanzaboote 接管 systemd-boot，并为每个系统代次生成 UKI。
+      systemd-boot = {
+        enable = lib.mkForce false;
+        configurationLimit = 10;
       };
       efi.canTouchEfiVariables = true;
       timeout = 5;
     };
+
+    lanzaboote = {
+      enable = true;
+      pkiBundle = "/var/lib/sbctl";
+      configurationLimit = 10;
+
+      # 首次启动时生成密钥。生成后需再次 nixos-rebuild 才会签名 UKI。
+      # 固件密钥注册保持手动，避免在未知主板上自动修改 UEFI 密钥。
+      autoGenerateKeys.enable = true;
+      autoEnrollKeys.enable = false;
+    };
+
     tmp.cleanOnBoot = true;
   };
 
@@ -68,8 +81,10 @@
     wget
     btrfs-progs
     disko
+    sbctl
     vim
   ];
+  environment.pathsToLink = [ "/share/zsh" ];
 
   system.stateVersion = "25.11";
 }

@@ -4,6 +4,8 @@
     enable = true;
     withUWSM = true;
   };
+  # 系统模块同时安装 Hyprlock，并配置认证所需的 PAM 服务。
+  programs.hyprlock.enable = true;
 
   programs.noctalia = {
     enable = true;
@@ -46,7 +48,8 @@
       addons = with pkgs; [
         fcitx5-rime
         fcitx5-gtk
-        fcitx5-configtool
+        qt6Packages.fcitx5-configtool
+        catppuccin-fcitx5
       ];
     };
   };

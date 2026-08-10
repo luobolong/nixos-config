@@ -14,6 +14,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    lanzaboote = {
+      url = "github:nix-community/lanzaboote/v1.1.0";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # main 分支目前是 Noctalia v5（Beta）。flake.lock 会固定实际版本。
     noctalia = {
       url = "github:noctalia-dev/noctalia";
@@ -31,7 +36,7 @@
     };
   };
 
-  outputs = inputs@{ self, nixpkgs, home-manager, impermanence, disko, noctalia, ... }:
+  outputs = inputs@{ self, nixpkgs, home-manager, impermanence, disko, lanzaboote, noctalia, ... }:
     let
       system = "x86_64-linux";
       hostname = "nixos";
@@ -43,6 +48,7 @@
         modules = [
           disko.nixosModules.disko
           impermanence.nixosModules.impermanence
+          lanzaboote.nixosModules.lanzaboote
           home-manager.nixosModules.home-manager
           noctalia.nixosModules.default
           ./hosts/nixos
