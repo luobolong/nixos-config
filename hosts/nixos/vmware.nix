@@ -22,13 +22,17 @@ in
   boot.initrd.availableKernelModules = [
     "ahci"
     "sd_mod"
+    "btrfs"
   ];
 
-  # These are physical AMD host settings inherited from hardware-configuration.nix.
+  # Replace the physical AMD early-module list while retaining every module
+  # required to discover and mount the VMware Btrfs root filesystem.
   boot.initrd.kernelModules = lib.mkForce [
     "ahci"
     "sd_mod"
+    "btrfs"
   ];
+  boot.initrd.supportedFilesystems = [ "btrfs" ];
   boot.kernelModules = lib.mkForce [ ];
   hardware.cpu.amd.updateMicrocode = lib.mkForce false;
 
