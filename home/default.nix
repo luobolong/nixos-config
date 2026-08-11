@@ -107,6 +107,13 @@ in
     inherit username;
     homeDirectory = "/home/${username}";
     stateVersion = "25.11";
+    pointerCursor = {
+      name = "Adwaita";
+      package = pkgs.adwaita-icon-theme;
+      size = 32;
+      gtk.enable = true;
+      x11.enable = true;
+    };
     packages = with pkgs; [
       # 桌面应用
       vscode
@@ -356,5 +363,7 @@ in
     ELECTRON_OZONE_PLATFORM_HINT = "auto";
     TERMINAL = "kitty";
     XMODIFIERS = "@im=fcitx";
+    XCURSOR_THEME = "Adwaita";
+    XCURSOR_SIZE = "32";
   };
 }
