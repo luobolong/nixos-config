@@ -264,7 +264,11 @@ in
     packages = with pkgs; [
       # 桌面应用
       vscode
+      jetbrains.idea
+      jetbrains.datagrip
+      jetbrains.goland
       spotify
+      qq
       flclash
       dolphin
       kdePackages.baloo-widgets
@@ -272,6 +276,7 @@ in
       kdePackages.kio-extras
       catppuccinKde
       firefox
+      localsend
       mission-center
       obs-studio
       pavucontrol

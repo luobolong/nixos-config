@@ -12,7 +12,7 @@
 - Disko + GPT + UEFI
 - Btrfs：`@root`、`@nix`、`@home` 分别挂载到 `/`、`/nix`、`/home`，并使用 Zstd 压缩
 - Snapper：分别为 `/` 和 `/home` 自动创建快照，并按小时、天、周、月清理
-- systemd-boot + Lanzaboote UKI，支持 UEFI Secure Boot，最多保留 10 个系统代次
+- rEFInd（10 秒）→ systemd-boot（2 秒）→ Lanzaboote UKI；支持 UEFI Secure Boot，最多保留 10 个系统代次
 - 每周自动清理 7 天前的 Nix 代次，并优化 Nix Store
 - Hyprland（UWSM 会话，Lua 配置）+ Noctalia v5
 - greetd + tuigreet 登录界面
@@ -20,7 +20,7 @@
 - NetworkManager、蓝牙、PipeWire
 - Fcitx5 + Rime + rime-ice（雾凇拼音）+ Catppuccin Mocha Sapphire 皮肤
 - Inter、Source Serif 4、Noto CJK/Emoji、Sarasa Gothic 字体 + Papirus Dark 图标主题 + Adwaita 32px 鼠标主题
-- Dolphin、Fastfetch、Mission Center、btop、Fuzzel（Catppuccin Mocha）、Satty、Hyprlock、Neovim + AstroNvim v5、VS Code、Spotify、FlClash
+- Dolphin、Fastfetch、Mission Center、btop、Fuzzel（Catppuccin Mocha）、Satty、Hyprlock、Neovim + AstroNvim v5、VS Code、IntelliJ IDEA Ultimate、DataGrip、GoLand、Spotify、QQ、FlClash
 - GnuPG + GPG Agent、SSH Agent、direnv + nix-direnv
 - jq、yq、rsync、Zip/7-Zip、常用硬件诊断、NixOS 维护与基础构建工具
 
@@ -37,11 +37,13 @@
 │   ├── core.nix
 │   ├── desktop.nix
 │   ├── fonts.conf
+│   ├── refind.nix
 │   └── snapper.nix
 ├── home/
 │   ├── default.nix
 │   └── hyprland.lua
-└── packages/flclash.nix
+└── packages/
+    └── flclash.nix
 ```
 
 ## 安装前修改
@@ -83,6 +85,16 @@ size = "64G";
 ```
 
 若机器内存容量不同，请将 Swap 的 `size` 改为不小于实际内存的值。休眠 Swap 未启用随机加密，因为随机密钥会在重启后丢失，导致无法恢复休眠镜像。
+
+### 4. 确认 Windows ESP
+
+rEFInd 的 Windows 条目使用 ESP 的 GPT 分区 UUID，当前配置位于 `hosts/nixos/default.nix`：
+
+```nix
+windowsEfiPartuuid = "991a77db-c316-4f75-b9df-bc05e179a798";
+```
+
+如果 Windows ESP 发生变化，使用 `lsblk -o PATH,FSTYPE,PARTUUID,PARTLABEL` 找到包含 Windows Boot Manager 的 FAT 分区，并同步修改这个值。
 
 ## 全新安装
 
@@ -188,7 +200,7 @@ sudo nixos-install --flake .#nixos --no-root-passwd
 sudo reboot
 ```
 
-拔掉安装 U 盘，systemd-boot 应显示 NixOS 启动项。首次登录在 tuigreet 中输入用户名 `ben`、密码 `q`，并选择 Hyprland。此时先保持固件 Secure Boot 关闭，首次启动的 UKI 尚未签名。
+拔掉安装 U 盘后，应先看到只包含 `systemd-boot` 和 `Windows` 的 rEFInd 菜单；选择带 NixOS 图标的 `systemd-boot` 后，再选择 NixOS 系统代次。首次登录在 tuigreet 中输入用户名 `ben`、密码 `q`，并选择 Hyprland。此时先保持固件 Secure Boot 关闭，首次启动的 rEFInd 和 UKI 尚未签名。
 
 ## 首次登录
 
@@ -201,12 +213,14 @@ systemctl status generate-sb-keys.service
 sudo sbctl status
 ```
 
-确认密钥已经生成后，再重建一次，使 Lanzaboote 使用新密钥签名 systemd-boot 和 UKI：
+确认密钥已经生成后，再重建一次，使安装器使用同一套密钥签名 rEFInd、systemd-boot 和 UKI：
 
 ```bash
 sudo nixos-rebuild boot --flake .#nixos
 sudo sbctl verify
 ```
+
+`sbctl verify` 会把 `/boot/EFI/nixos/kernel-*.efi` 报告为未签名，这是 Lanzaboote 的正常布局：已签名的 generation EFI 文件保存并校验该外部内核的 SHA-256，不能手动签名或删除它。rEFInd、systemd-boot 和 `/boot/EFI/Linux/nixos-generation-*.efi` 应显示为已签名。
 
 确认启动文件已经签名后，进入 UEFI 固件设置并切换到 Secure Boot Setup Mode。不要选择会同时清空 `dbx` 的“清除全部 Secure Boot 密钥”；不同主板通常可以通过删除 Platform Key（PK）进入 Setup Mode。
 
@@ -258,7 +272,7 @@ systemctl --user status noctalia
 
 ### FlClash
 
-FlClash 使用官方 x86_64 AppImage 发行包封装，版本和 SHA-256 已在 `packages/flclash.nix` 中固定。配置目录是 `~/.local/share/com.follow.clash`。
+FlClash 使用官方 x86_64 AppImage 发行包封装，版本、SHA-256 和额外运行库已在 `packages/flclash.nix` 中固定。配置目录是 `~/.local/share/com.follow.clash`。
 
 ## 日常维护
 

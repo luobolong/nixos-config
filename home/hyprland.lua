@@ -63,7 +63,6 @@ hl.window_rule({
 
 hl.on("hyprland.start", function()
   hl.exec_cmd("fcitx5 -d --replace")
-  hl.exec_cmd("nm-applet --indicator")
   hl.exec_cmd(
     "kitty --class dropdown-terminal --title dropdown-terminal",
     {
