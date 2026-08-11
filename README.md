@@ -19,7 +19,7 @@
 - Kitty（Hyprland 模糊背景）+ Zsh + Starship 提示符
 - NetworkManager、蓝牙、PipeWire
 - Fcitx5 + Rime + rime-ice（雾凇拼音）+ Catppuccin Mocha Sapphire 皮肤
-- Inter、Source Serif 4、Noto CJK/Emoji、Sarasa Gothic 字体 + Papirus 图标主题
+- Inter、Source Serif 4、Noto CJK/Emoji、Sarasa Gothic 字体 + Papirus 图标主题 + Adwaita 32px 鼠标主题
 - Dolphin、Fastfetch、Mission Center、btop、Fuzzel（Catppuccin Mocha）、Satty、Hyprlock、Neovim + AstroNvim v5、VS Code、Spotify、FlClash
 - GnuPG + GPG Agent、SSH Agent、direnv + nix-direnv
 - jq、yq、rsync、Zip/7-Zip、常用硬件诊断、NixOS 维护与基础构建工具
