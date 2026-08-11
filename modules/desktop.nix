@@ -65,7 +65,7 @@
       noto-fonts-color-emoji
       noto-fonts-monochrome-emoji
       sarasa-gothic
-      nerd-fonts.jetbrains-mono
+      nerd-fonts.cousine
     ];
     fontconfig = {
       localConf = builtins.readFile ./fonts.conf;
