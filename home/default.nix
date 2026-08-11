@@ -108,6 +108,7 @@ in
     homeDirectory = "/home/${username}";
     stateVersion = "25.11";
     pointerCursor = {
+      enable = true;
       name = "Adwaita";
       package = pkgs.adwaita-icon-theme;
       size = 32;
