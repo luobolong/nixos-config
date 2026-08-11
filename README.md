@@ -184,19 +184,13 @@ sudo nixos-install --flake .#nixos --no-root-passwd
 
 如果你修改了 `hostname`，把 `#nixos` 换成新名称。
 
-安装完成后，为用户设置密码（把 `ben` 换成你的用户名）：
-
-```bash
-sudo nixos-enter --root /mnt -c 'passwd ben'
-```
-
-然后重启：
+配置已经声明 `ben` 和 `root` 的初始登录密码均为单字母 `q`，不需要再进入安装目标执行 `passwd`。然后重启：
 
 ```bash
 sudo reboot
 ```
 
-拔掉安装 U 盘，systemd-boot 应显示 NixOS 启动项。首次登录在 tuigreet 中选择 Hyprland。此时先保持固件 Secure Boot 关闭，首次启动的 UKI 尚未签名。
+拔掉安装 U 盘，systemd-boot 应显示 NixOS 启动项。首次登录在 tuigreet 中输入用户名 `ben`、密码 `q`，并选择 Hyprland。此时先保持固件 Secure Boot 关闭，首次启动的 UKI 尚未签名。
 
 ## 首次登录
 
@@ -381,7 +375,7 @@ systemctl list-timers 'snapper-*'
 ## 注意事项
 
 - 配置面向 `x86_64-linux` 和 UEFI 设备。
-- `users.mutableUsers = true` 方便首次安装后用 `passwd` 设置密码；密码哈希保存在 `/persist/etc/shadow` 对应的持久系统状态中。
+- `ben` 和 `root` 当前都使用极弱密码 `q`。配置只保存密码哈希，并以 `users.mutableUsers = false` 强制修复持久化 `/etc/shadow` 中的锁定账户；正式使用前应通过 `mkpasswd` 生成新哈希并替换 `modules/core.nix` 中的 `loginPasswordHash`。
 - 不要把代理订阅、密码、SSH 私钥或其他密钥提交到 GitHub。
 - `flake.lock` 应当提交；`result` 等本地构建结果已由 `.gitignore` 排除。
 - Flake 更新可能包含破坏性变化。先执行 `nix flake check --no-build`，再切换系统，并保留可启动的旧代次。

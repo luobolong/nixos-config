@@ -1,4 +1,8 @@
 { config, lib, pkgs, hostname, username, ... }:
+let
+  # ben 与 root 的声明式登录密码均为 q。安装完成后应尽快替换此哈希。
+  loginPasswordHash = "$6$nixos-q$0B6DvCXoaCdasG4yVg.oseHaI7tHqdEZZByzCzlZXzrDq/gRhz.RqqB89mBova8pKIb0FqY7hctkMXQ/bvyUx.";
+in
 {
   networking.hostName = hostname;
   networking.networkmanager.enable = true;
@@ -18,12 +22,19 @@
   };
   console.keyMap = "us";
 
-  users.mutableUsers = true;
-  users.users.${username} = {
-    isNormalUser = true;
-    description = username;
-    extraGroups = [ "networkmanager" "wheel" "video" "audio" "input" ];
-    shell = pkgs.zsh;
+  users = {
+    # 强制同步声明式密码，也能修复 /persist/etc/shadow 中已有的锁定账户。
+    mutableUsers = false;
+    users = {
+      root.hashedPassword = loginPasswordHash;
+      ${username} = {
+        isNormalUser = true;
+        description = username;
+        hashedPassword = loginPasswordHash;
+        extraGroups = [ "networkmanager" "wheel" "video" "audio" "input" ];
+        shell = pkgs.zsh;
+      };
+    };
   };
   programs.zsh.enable = true;
   security.sudo.wheelNeedsPassword = true;
