@@ -1,4 +1,12 @@
 {
+  # Allow the first rebuild to download Noctalia from its official binary cache.
+  nixConfig = {
+    extra-substituters = [ "https://noctalia.cachix.org" ];
+    extra-trusted-public-keys = [
+      "noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4="
+    ];
+  };
+
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
@@ -22,10 +30,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # main 分支目前是 Noctalia v5（Beta）。flake.lock 会固定实际版本。
+    # The cachix branch always points at the latest revision built by Noctalia's
+    # binary cache. Keep its own nixpkgs input so the cached derivation matches.
     noctalia = {
-      url = "github:noctalia-dev/noctalia";
-      inputs.nixpkgs.follows = "nixpkgs";
+      url = "github:noctalia-dev/noctalia/cachix";
     };
 
     rime-ice = {

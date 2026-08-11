@@ -3,6 +3,7 @@
   imports = [ (modulesPath + "/installer/scan/not-detected.nix") ];
 
   # 通用 PC 启动模块。安装后可用 nixos-generate-config 生成的硬件设置按需补充。
+  boot.initrd.systemd.enable = true;
   boot.initrd.availableKernelModules = [ "xhci_pci" "nvme" "ahci" "usb_storage" "sd_mod" ];
   # AMDGPU 早期 KMS，避免 Wayland/Hyprland 启动时切换显示模式。
   boot.initrd.kernelModules = [ "amdgpu" ];
