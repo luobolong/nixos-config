@@ -10,6 +10,12 @@ let
   };
 in
 {
+  # The systemd-based initrd in the current unstable snapshot sees the VMware
+  # SATA partitions in /dev, but leaves their .device units inactive.  The
+  # scripted stage-1 waits for the device path directly and avoids that udev /
+  # systemd device-unit failure.
+  boot.initrd.systemd.enable = lib.mkForce false;
+
   # Attach the VMware virtual disk to a SATA controller. The legacy LSI Logic
   # Parallel controller works in the LiveCD kernel but is unreliable with the
   # newer kernel used by this configuration.
