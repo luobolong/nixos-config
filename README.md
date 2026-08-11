@@ -19,7 +19,8 @@
 - Kitty（Hyprland 模糊背景）+ Zsh + Starship 提示符
 - NetworkManager、蓝牙、PipeWire
 - Fcitx5 + Rime + rime-ice（雾凇拼音）+ Catppuccin Mocha Sapphire 皮肤
-- Dolphin、Fastfetch、Mission Center、btop、Fuzzel、Hyprlock、Neovim + AstroNvim v5、VS Code、Spotify、FlClash
+- Inter、Source Serif 4、Noto CJK/Emoji、Sarasa Gothic 字体 + Papirus 图标主题
+- Dolphin、Fastfetch、Mission Center、btop、Fuzzel（Catppuccin Mocha）、Satty、Hyprlock、Neovim + AstroNvim v5、VS Code、Spotify、FlClash
 - GnuPG + GPG Agent、SSH Agent、direnv + nix-direnv
 - jq、yq、rsync、Zip/7-Zip、常用硬件诊断、NixOS 维护与基础构建工具
 
@@ -35,6 +36,7 @@
 ├── modules/
 │   ├── core.nix
 │   ├── desktop.nix
+│   ├── fonts.conf
 │   └── snapper.nix
 ├── home/
 │   ├── default.nix
@@ -309,17 +311,22 @@ systemctl list-timers 'snapper-*'
 
 | 快捷键 | 动作 |
 |---|---|
-| `Super + Q` | 退出 Hyprland |
-| `Alt + F4` | 关闭当前窗口 |
+| `Super + Q` / `Alt + F4` | 关闭当前窗口 |
+| `Super + Alt + F4` | 强制结束当前窗口进程 |
 | `Super + W` | 切换当前窗口浮动状态 |
+| `Super + G` | 切换窗口分组 |
 | `Super + L` | 使用 Hyprlock 锁定屏幕 |
 | `Shift + F11` / `Super + D` | 切换全屏 |
-| `Super + Shift + F` | 切换窗口置顶；平铺窗口会先转为浮动 |
+| `Super + Shift + W` | 切换窗口置顶；平铺窗口会先转为浮动 |
+| `Super + J` | 切换 Dwindle 分割方向 |
+| `Super + Ctrl + H` / `Super + Ctrl + L` | 向后 / 向前切换活动分组 |
 | `Super + 方向键` | 向对应方向切换焦点 |
+| `Alt + Tab` | 循环切换焦点 |
 | `Super + Shift + 方向键` | 按 50 像素调整当前窗口大小 |
 | `Super + Ctrl + Shift + 方向键` | 向对应方向移动当前窗口 |
 | `Super + 鼠标左键` | 拖动窗口 |
 | `Super + 鼠标右键` | 调整窗口大小 |
+| `Super + Z` / `Super + X` | 按住并移动鼠标以拖动 / 调整窗口大小 |
 
 ### 启动应用
 
@@ -332,6 +339,7 @@ systemctl list-timers 'snapper-*'
 | `Super + B` | 打开 Firefox |
 | `Ctrl + Shift + Escape` | 打开 Mission Center；终端中也可运行 `btop` |
 | `Super + A` | 打开 Fuzzel 应用查找器 |
+| `Super + /` | 显示快捷键说明 |
 
 ### 工作区与暂存区
 
@@ -339,6 +347,10 @@ systemctl list-timers 'snapper-*'
 |---|---|
 | `Super + 1..9` / `Super + 0` | 切换到工作区 1..9 / 10 |
 | `Super + Shift + 1..9` / `Super + Shift + 0` | 移动窗口到工作区 1..9 / 10 |
+| `Super + Ctrl + Down` | 切换到空工作区 |
+| `Super + 鼠标滚轮下` / `Super + 鼠标滚轮上` | 下一个 / 上一个已存在工作区 |
+| `Super + Ctrl + Right` / `Super + Ctrl + Left` | 下一个 / 上一个相对工作区 |
+| `Super + Alt + Ctrl + Right` / `Super + Alt + Ctrl + Left` | 移动窗口到下一个 / 上一个相对工作区 |
 | `Super + Shift + S` / `Super + Shift + M` | 移动窗口到暂存区 S / M 并跟随 |
 | `Super + Alt + S` / `Super + Alt + M` | 静默移动窗口到暂存区 S / M |
 | `Super + S` / `Super + M` | 显示或隐藏暂存区 S / M |
@@ -348,12 +360,12 @@ systemctl list-timers 'snapper-*'
 | 快捷键 | 动作 |
 |---|---|
 | `Super + Shift + P` | 选取颜色并复制到剪贴板 |
-| `Super + P` | 截取屏幕区域 |
-| `Super + Ctrl + P` | 冻结画面后截取屏幕区域 |
-| `Super + Alt + P` | 截取当前显示器 |
-| `Print` | 截取所有显示器 |
+| `Super + P` | 截取屏幕区域并用 Satty 标注 |
+| `Super + Ctrl + P` | 冻结画面后截取区域并用 Satty 标注 |
+| `Super + Alt + P` | 截取当前显示器并用 Satty 标注 |
+| `Print` | 截取所有显示器并用 Satty 标注 |
 
-截图会同时复制到剪贴板，并保存到 XDG 图片目录下的 `Screenshots` 子目录。
+截图完成后会打开 Satty 进行标注。在 Satty 中复制结果到剪贴板，或保存到 XDG 图片目录下的 `Screenshots` 子目录。
 
 ## 注意事项
 
@@ -371,6 +383,7 @@ systemctl list-timers 'snapper-*'
 
 - [NixOS / nixpkgs](https://github.com/NixOS/nixpkgs)
 - [Home Manager](https://github.com/nix-community/home-manager)
+- [Catppuccin for Fuzzel](https://github.com/catppuccin/fuzzel)
 - [Disko](https://github.com/nix-community/disko)
 - [Lanzaboote](https://github.com/nix-community/lanzaboote)
 - [Noctalia v5](https://github.com/noctalia-dev/noctalia)

@@ -6,6 +6,8 @@ let
     runtimeInputs = with pkgs; [
       coreutils
       grimblast
+      satty
+      wl-clipboard
     ];
     text = ''
       target="''${1:-area}"
@@ -13,13 +15,16 @@ let
       directory="''${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots"
       mkdir -p "$directory"
       file="$directory/$(date +'%Y-%m-%d_%H-%M-%S-%N').png"
+      raw_file="$(mktemp --suffix=.png)"
+      trap 'rm -f "$raw_file"' EXIT
 
-      args=(--notify)
+      args=()
       if [[ "$freeze" == "true" ]]; then
         args+=(--freeze)
       fi
 
-      grimblast "''${args[@]}" copysave "$target" "$file"
+      grimblast "''${args[@]}" save "$target" "$raw_file"
+      satty --filename "$raw_file" --output-filename "$file"
     '';
   };
   shortcutsHelpText = pkgs.writeText "hyprland-shortcuts.txt" ''
@@ -29,17 +34,28 @@ let
     提示：SUPER 是 Windows 键；在此窗口按 q 退出。
 
     窗口与会话
-      SUPER + Q                         退出 Hyprland 会话
-      ALT + F4                          关闭当前窗口
+      SUPER + Q / ALT + F4              关闭当前窗口
+      SUPER + ALT + F4                  强制结束当前窗口进程
       SUPER + W                         切换窗口浮动
+      SUPER + G                         切换窗口分组
       SUPER + SHIFT + W                 先浮动，再切换窗口置顶
       SUPER + L                         锁定屏幕
       SHIFT + F11 / SUPER + D           切换全屏
+      SUPER + J                         切换 Dwindle 分割方向
+
+    分组导航
+      SUPER + CTRL + H                  向后切换活动分组
+      SUPER + CTRL + L                  向前切换活动分组
+
+    窗口焦点与位置
       SUPER + 方向键                    切换焦点
+      ALT + Tab                         循环切换焦点
       SUPER + CTRL + SHIFT + 方向键     向指定方向移动窗口
       SUPER + SHIFT + 方向键            向指定方向调整窗口大小
       SUPER + 鼠标左键                  拖动窗口
       SUPER + 鼠标右键                  调整窗口大小
+      SUPER + Z                         按住并移动鼠标以拖动窗口
+      SUPER + X                         按住并移动鼠标以调整窗口大小
 
     常用应用
       SUPER + T                         终端
@@ -48,12 +64,16 @@ let
       SUPER + C                         文本编辑器
       SUPER + B                         浏览器
       CTRL + SHIFT + Escape             系统监视器
-      SUPER + A                         应用查找器
+      SUPER + A                         Fuzzel 应用查找器
       SUPER + /                         打开本说明
 
     工作区
       SUPER + 1…9 / 0                   切换到工作区 1…9 / 10
       SUPER + SHIFT + 1…9 / 0           移动窗口到工作区 1…9 / 10
+      SUPER + CTRL + Down               切换到空工作区
+      SUPER + mouse_down / mouse_up     下一个 / 上一个已存在工作区
+      SUPER + CTRL + Right / Left       下一个 / 上一个相对工作区
+      SUPER + ALT + CTRL + Right / Left 移动窗口到下一个 / 上一个相对工作区
       SUPER + S / M                     切换特殊工作区 S / M
       SUPER + SHIFT + S / M             移动窗口到特殊工作区并跟随
       SUPER + ALT + S / M               静默移动窗口到特殊工作区
@@ -177,6 +197,17 @@ in
     enable = true;
     enableZshIntegration = true;
   };
+  gtk = {
+    enable = true;
+    iconTheme = {
+      name = "Papirus";
+      package = pkgs.papirus-icon-theme;
+    };
+  };
+  qt = {
+    enable = true;
+    platformTheme.name = "gtk3";
+  };
   programs.kitty = {
     enable = true;
     settings = {
@@ -221,6 +252,45 @@ in
     source = inputs.astronvim;
     recursive = true;
   };
+
+  xdg.configFile."kdeglobals".text = ''
+    [Icons]
+    Theme=Papirus
+  '';
+
+  xdg.configFile."fuzzel/fuzzel.ini".text = ''
+    [main]
+    include=${inputs.catppuccin-fuzzel}/themes/catppuccin-mocha/mauve.ini
+    font=Inter:size=12
+    icon-theme=Papirus
+    terminal=kitty
+  '';
+
+  xdg.configFile."satty/config.toml".text = ''
+    [general]
+    annotation-size-factor = 1
+    copy-command = "wl-copy"
+
+    [font]
+    family = "Noto Sans CJK SC"
+    style = "Regular"
+
+    fallback = [
+        "Noto Sans",
+        "Noto Color Emoji",
+    ]
+
+    [color-palette]
+    palette = [
+        "#ff0000ff",
+        "#ffaa00ff",
+        "#ffff00ff",
+        "#00cc66ff",
+        "#0088ffff",
+        "#ffffffFF",
+        "#000000FF",
+    ]
+  '';
 
   # rime-ice 需要在用户目录写入编译产物，因此部署时复制为可写文件。
   home.activation.installRimeIce = lib.hm.dag.entryAfter [ "writeBoundary" ] ''

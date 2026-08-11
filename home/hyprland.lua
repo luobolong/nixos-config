@@ -35,6 +35,9 @@ hl.config({
   animations = {
     enabled = true,
   },
+  dwindle = {
+    preserve_split = true,
+  },
 })
 
 hl.on("hyprland.start", function()
@@ -52,9 +55,11 @@ hl.on("hyprland.start", function()
 end)
 
 -- 窗口与会话操作。
-hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd("uwsm stop"))
+hl.bind(mainMod .. " + Q", hl.dsp.window.close())
 hl.bind("ALT + F4", hl.dsp.window.close())
+hl.bind(mainMod .. " + ALT + F4", hl.dsp.window.kill())
 hl.bind(mainMod .. " + W", hl.dsp.window.float({ action = "toggle" }))
+hl.bind(mainMod .. " + G", hl.dsp.group.toggle())
 hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("hyprlock"))
 hl.bind("SHIFT + F11", hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }))
 hl.bind(mainMod .. " + D", hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }))
@@ -62,6 +67,10 @@ hl.bind(mainMod .. " + SHIFT + W", function()
   hl.dispatch(hl.dsp.window.float({ action = "set" }))
   hl.dispatch(hl.dsp.window.pin({ action = "toggle" }))
 end)
+hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))
+hl.bind(mainMod .. " + CTRL + H", hl.dsp.group.prev())
+hl.bind(mainMod .. " + CTRL + L", hl.dsp.group.next())
+hl.bind("ALT + Tab", hl.dsp.window.cycle_next({ next = true }), { repeating = true })
 
 local directions = {
   left = "l",
@@ -120,6 +129,20 @@ for workspace = 1, 10 do
   )
 end
 
+hl.bind(mainMod .. " + CTRL + Down", hl.dsp.focus({ workspace = "empty" }))
+hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
+hl.bind(mainMod .. " + mouse_up", hl.dsp.focus({ workspace = "e-1" }))
+hl.bind(mainMod .. " + CTRL + Right", hl.dsp.focus({ workspace = "r+1" }))
+hl.bind(mainMod .. " + CTRL + Left", hl.dsp.focus({ workspace = "r-1" }))
+hl.bind(
+  mainMod .. " + ALT + CTRL + Right",
+  hl.dsp.window.move({ workspace = "r+1", follow = true })
+)
+hl.bind(
+  mainMod .. " + ALT + CTRL + Left",
+  hl.dsp.window.move({ workspace = "r-1", follow = true })
+)
+
 local function bindSpecialWorkspace(key, name)
   hl.bind(
     mainMod .. " + SHIFT + " .. key,
@@ -173,3 +196,5 @@ hl.bind(
 -- Super + 鼠标左/右键移动和调整窗口大小。
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
+hl.bind(mainMod .. " + Z", hl.dsp.window.drag(), { mouse = true })
+hl.bind(mainMod .. " + X", hl.dsp.window.resize(), { mouse = true })
