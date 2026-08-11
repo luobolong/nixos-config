@@ -3,6 +3,12 @@ local mainMod = "SUPER"
 local terminal = "kitty"
 local fileManager = "dolphin"
 
+-- Noctalia generates this module when its Hyprland template is enabled. Keep
+-- startup working before the first render or when the template is disabled.
+pcall(function()
+  require("noctalia").apply_theme()
+end)
+
 hl.monitor({
   output = "",
   mode = "preferred",
@@ -113,16 +119,10 @@ hl.bind(mainMod .. " + ALT + T", hl.dsp.workspace.toggle_special("terminal"))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("code"))
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("firefox"))
+hl.bind(mainMod .. " + F", hl.dsp.exec_cmd("firefox"))
 hl.bind("CTRL + SHIFT + Escape", hl.dsp.exec_cmd("missioncenter"))
 hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("fuzzel"))
-hl.bind(
-  mainMod .. " + slash",
-  hl.dsp.exec_cmd("hypr-shortcuts-help", {
-    float = true,
-    size = { "monitor_w*0.7", "monitor_h*0.8" },
-    center = true,
-  })
-)
+hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd("hypr-command-palette"))
 
 -- 工作区 1–10；数字键 0 对应工作区 10。
 for workspace = 1, 10 do
