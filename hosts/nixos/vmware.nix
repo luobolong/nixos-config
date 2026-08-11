@@ -10,21 +10,17 @@ let
   };
 in
 {
-  # VMware's virtual LSI Logic Parallel controller needs this driver chain in
-  # the initrd before the Btrfs root device can appear.
+  # Attach the VMware virtual disk to a SATA controller. The legacy LSI Logic
+  # Parallel controller works in the LiveCD kernel but is unreliable with the
+  # newer kernel used by this configuration.
   boot.initrd.availableKernelModules = [
-    "mptbase"
-    "mptscsih"
-    "mptspi"
-    "scsi_transport_spi"
+    "ahci"
     "sd_mod"
   ];
 
   # These are physical AMD host settings inherited from hardware-configuration.nix.
-  # Load mptspi explicitly: this VMware controller is not coldplugged reliably
-  # by the installed initrd even though the module is available there.
   boot.initrd.kernelModules = lib.mkForce [
-    "mptspi"
+    "ahci"
     "sd_mod"
   ];
   boot.kernelModules = lib.mkForce [ ];
