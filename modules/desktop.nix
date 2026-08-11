@@ -57,16 +57,24 @@
   fonts = {
     enableDefaultPackages = true;
     packages = with pkgs; [
+      inter
+      source-serif
       noto-fonts
       noto-fonts-cjk-sans
       noto-fonts-cjk-serif
       noto-fonts-color-emoji
+      noto-fonts-monochrome-emoji
+      sarasa-gothic
       nerd-fonts.jetbrains-mono
     ];
-    fontconfig.defaultFonts = {
-      sansSerif = [ "Noto Sans CJK SC" ];
-      serif = [ "Noto Serif CJK SC" ];
-      monospace = [ "JetBrainsMono Nerd Font" "Noto Sans Mono CJK SC" ];
+    fontconfig = {
+      localConf = builtins.readFile ./fonts.conf;
+      defaultFonts = {
+        sansSerif = [ ];
+        serif = [ ];
+        monospace = [ ];
+        emoji = [ ];
+      };
     };
   };
 }
