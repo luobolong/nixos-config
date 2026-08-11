@@ -334,7 +334,7 @@ in
   programs.kitty = {
     enable = true;
     settings = {
-      font_family = "Cousine Nerd Font";
+      font_family = "JetBrainsMono Nerd Font";
       bold_font = "auto";
       italic_font = "auto";
       bold_italic_font = "auto";
