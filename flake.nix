@@ -7,8 +7,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    impermanence.url = "github:nix-community/impermanence";
-
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -36,7 +34,7 @@
     };
   };
 
-  outputs = inputs@{ self, nixpkgs, home-manager, impermanence, disko, lanzaboote, noctalia, ... }:
+  outputs = inputs@{ self, nixpkgs, home-manager, disko, lanzaboote, noctalia, ... }:
     let
       system = "x86_64-linux";
       hostname = "nixos";
@@ -47,7 +45,6 @@
         specialArgs = { inherit inputs hostname username; };
         modules = [
           disko.nixosModules.disko
-          impermanence.nixosModules.impermanence
           lanzaboote.nixosModules.lanzaboote
           home-manager.nixosModules.home-manager
           noctalia.nixosModules.default

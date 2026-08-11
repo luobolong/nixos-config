@@ -38,32 +38,24 @@
             type = "btrfs";
             extraArgs = [ "-f" "-L" "nixos" ];
             subvolumes = {
-              "/nix" = {
+              "@root" = {
+                mountpoint = "/";
+                mountOptions = [ "compress=zstd" "noatime" ];
+              };
+              "@root/.snapshots" = { };
+              "@nix" = {
                 mountpoint = "/nix";
                 mountOptions = [ "compress=zstd" "noatime" ];
               };
-              "/persist" = {
-                mountpoint = "/persist";
+              "@home" = {
+                mountpoint = "/home";
                 mountOptions = [ "compress=zstd" "noatime" ];
               };
-              # 与 /persist 同级，挂载到其内部供 Snapper 保存快照，
-              # 避免快照递归包含其他快照。
-              "/persist-snapshots" = {
-                mountpoint = "/persist/.snapshots";
-                mountOptions = [ "compress=zstd" "noatime" ];
-              };
+              "@home/.snapshots" = { };
             };
           };
         };
       };
     };
   };
-
-  # 临时根目录：重启即清空；需要保留的内容由 impermanence 绑定到 /persist。
-  fileSystems."/" = {
-    device = "none";
-    fsType = "tmpfs";
-    options = [ "defaults" "mode=755" "size=8G" ];
-  };
-  fileSystems."/persist".neededForBoot = true;
 }

@@ -23,7 +23,7 @@ in
   console.keyMap = "us";
 
   users = {
-    # 强制同步声明式密码，也能修复 /persist/etc/shadow 中已有的锁定账户。
+    # 强制同步声明式密码，确保声明配置是账户密码的唯一来源。
     mutableUsers = false;
     users = {
       root.hashedPassword = loginPasswordHash;

@@ -5,7 +5,7 @@
     ./hardware-configuration.nix
     ../../modules/core.nix
     ../../modules/desktop.nix
-    ../../modules/impermanence.nix
+    ../../modules/snapper.nix
   ];
 
   home-manager = {

@@ -269,7 +269,7 @@ in
   programs.noctalia = {
     enable = true;
     systemd.enable = true;
-    # 留空可让 Noctalia 设置界面管理配置；目录已由 impermanence 持久化。
+    # 留空可让 Noctalia 设置界面管理配置。
     settings = { };
   };
 

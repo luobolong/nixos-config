@@ -1,6 +1,6 @@
 # NixOS Hyprland 工作站
 
-一套可以直接放到 GitHub 管理的 NixOS 配置。它使用 Flakes、Home Manager、Disko、Btrfs 和 Impermanence，提供 Hyprland + Noctalia v5 桌面、雾凇拼音和常用桌面/开发软件。
+一套可以直接放到 GitHub 管理的 NixOS 配置。它使用 Flakes、Home Manager、Disko 和 Btrfs，提供 Hyprland + Noctalia v5 桌面、雾凇拼音和常用桌面/开发软件。
 
 > [!WARNING]
 > 安装命令会**清空目标磁盘的全部数据**。执行 Disko 前，务必备份数据并反复确认磁盘的 `/dev/disk/by-id/...` 路径。不要使用容易变化的 `/dev/sda` 或 `/dev/nvme0n1`。
@@ -10,9 +10,8 @@
 - NixOS unstable + Flakes
 - Home Manager
 - Disko + GPT + UEFI
-- Btrfs：`/nix` 和 `/persist` 使用 Zstd 压缩
-- Impermanence：`/` 是 tmpfs，每次启动自动清空；必要状态保存在 `/persist`
-- Snapper：自动创建 `/persist` 快照并按小时、天、周、月清理
+- Btrfs：`@root`、`@nix`、`@home` 分别挂载到 `/`、`/nix`、`/home`，并使用 Zstd 压缩
+- Snapper：分别为 `/` 和 `/home` 自动创建快照，并按小时、天、周、月清理
 - systemd-boot + Lanzaboote UKI，支持 UEFI Secure Boot，最多保留 10 个系统代次
 - 每周自动清理 7 天前的 Nix 代次，并优化 Nix Store
 - Hyprland（UWSM 会话，Lua 配置）+ Noctalia v5
@@ -36,7 +35,7 @@
 ├── modules/
 │   ├── core.nix
 │   ├── desktop.nix
-│   └── impermanence.nix
+│   └── snapper.nix
 ├── home/
 │   ├── default.nix
 │   └── hyprland.lua
@@ -73,12 +72,11 @@ hardware.graphics.enable32Bit = true;
 
 如果改用 Intel CPU，需将 KVM 模块和微码选项改为 Intel 对应配置。NVIDIA 显卡通常还需要额外的专有驱动配置；本仓库默认面向 AMD 显卡。
 
-### 3. 调整根目录和 Swap 大小
+### 3. 调整 Swap 大小
 
-默认临时根目录最多使用 8 GiB 内存，Swap 分区与本机 64 GiB 内存等大，并作为休眠恢复设备。可分别在 `hosts/nixos/disk-config.nix` 中修改：
+默认 Swap 分区与本机 64 GiB 内存等大，并作为休眠恢复设备。可在 `hosts/nixos/disk-config.nix` 中修改：
 
 ```nix
-options = [ "defaults" "mode=755" "size=8G" ];
 size = "64G";
 ```
 
@@ -156,11 +154,9 @@ nix --extra-experimental-features "nix-command flakes" flake check --no-build
 grep -n "device" hosts/nixos/disk-config.nix
 ```
 
-为临时根目录创建挂载点，然后执行 Disko：
+执行 Disko：
 
 ```bash
-sudo mkdir -p /mnt
-sudo mount -t tmpfs -o size=8G,mode=755 none /mnt
 sudo nix --extra-experimental-features "nix-command flakes" \
   run github:nix-community/disko/latest -- \
   --mode destroy,format,mount \
@@ -168,7 +164,7 @@ sudo nix --extra-experimental-features "nix-command flakes" \
   ./hosts/nixos/disk-config.nix
 ```
 
-确认结果中 `/mnt/nix`、`/mnt/persist` 和 `/mnt/boot` 都已挂载：
+确认结果中 `/mnt`、`/mnt/nix`、`/mnt/home` 和 `/mnt/boot` 都已挂载：
 
 ```bash
 findmnt -R /mnt
@@ -248,11 +244,11 @@ fcitx5 -r
 nvim
 ```
 
-插件、状态和缓存中的重要部分位于持久目录，重启不会丢失。AstroNvim 模板本身由 Flake 输入管理。
+插件、状态和缓存保存在用户主目录中。AstroNvim 模板本身由 Flake 输入管理。
 
 ### Noctalia
 
-Noctalia 作为用户服务随 Hyprland 启动。它的图形设置保存在 `~/.config/noctalia`，该目录已持久化。检查服务：
+Noctalia 作为用户服务随 Hyprland 启动。它的图形设置保存在 `~/.config/noctalia`。检查服务：
 
 ```bash
 systemctl --user status noctalia
@@ -260,7 +256,7 @@ systemctl --user status noctalia
 
 ### FlClash
 
-FlClash 使用官方 x86_64 AppImage 发行包封装，版本和 SHA-256 已在 `packages/flclash.nix` 中固定。配置目录 `~/.local/share/com.follow.clash` 已持久化。
+FlClash 使用官方 x86_64 AppImage 发行包封装，版本和 SHA-256 已在 `packages/flclash.nix` 中固定。配置目录是 `~/.local/share/com.follow.clash`。
 
 ## 日常维护
 
@@ -291,36 +287,23 @@ sudo nix-collect-garbage --delete-older-than 7d
 nix-collect-garbage --delete-older-than 7d
 ```
 
-查看保留的数据：
+查看 Btrfs 文件系统用量：
 
 ```bash
-sudo findmnt | grep /persist
-sudo du -sh /persist/*
+sudo btrfs filesystem usage /
 ```
 
-查看 `/persist` 的 Snapper 快照和定时任务：
+查看根目录和 Home 的 Snapper 快照及定时任务：
 
 ```bash
-snapper -c persist list
+snapper -c root list
+snapper -c home list
 systemctl list-timers 'snapper-*'
 ```
 
-## 添加持久目录
+## 数据保存
 
-临时根目录意味着：没有列入持久化清单的数据会在重启后消失。
-
-标准的 Desktop、Documents、Downloads、Music、Pictures、Public、Templates、Videos 已持久化；`XDG_PROJECTS_DIR` 指向新增的 `~/Workspace`。用户的 `.config`、`.local/share` 和 `.local/state` 也会保留，因此应用设置、数据和 Zsh 历史不会在重启后丢失。`.cache` 有意保持临时，避免缓存长期占用 `/persist` 和 Snapper 快照空间。
-
-- 系统目录：编辑 `modules/impermanence.nix` 中的 `directories` 或 `files`
-- 用户目录：编辑同一文件的 `users.${username}.directories`
-
-例如要保留 Podman 数据，可加入：
-
-```nix
-"/var/lib/containers"
-```
-
-修改后先重建系统，再开始把重要数据放进新目录。
+根目录和 Home 使用独立的持久化 Btrfs 子卷，系统状态、用户文件、应用配置和缓存都会正常跨重启保留。`XDG_PROJECTS_DIR` 指向 `~/Workspace`；需要释放空间时可按需清理 `~/.cache`。
 
 ## 常用 Hyprland 快捷键
 
@@ -375,7 +358,7 @@ systemctl list-timers 'snapper-*'
 ## 注意事项
 
 - 配置面向 `x86_64-linux` 和 UEFI 设备。
-- `ben` 和 `root` 当前都使用极弱密码 `q`。配置只保存密码哈希，并以 `users.mutableUsers = false` 强制修复持久化 `/etc/shadow` 中的锁定账户；正式使用前应通过 `mkpasswd` 生成新哈希并替换 `modules/core.nix` 中的 `loginPasswordHash`。
+- `ben` 和 `root` 当前都使用极弱密码 `q`。配置只保存密码哈希，并以 `users.mutableUsers = false` 强制同步声明式账户密码；正式使用前应通过 `mkpasswd` 生成新哈希并替换 `modules/core.nix` 中的 `loginPasswordHash`。
 - 不要把代理订阅、密码、SSH 私钥或其他密钥提交到 GitHub。
 - `flake.lock` 应当提交；`result` 等本地构建结果已由 `.gitignore` 排除。
 - Flake 更新可能包含破坏性变化。先执行 `nix flake check --no-build`，再切换系统，并保留可启动的旧代次。
@@ -389,7 +372,6 @@ systemctl list-timers 'snapper-*'
 - [NixOS / nixpkgs](https://github.com/NixOS/nixpkgs)
 - [Home Manager](https://github.com/nix-community/home-manager)
 - [Disko](https://github.com/nix-community/disko)
-- [Impermanence](https://github.com/nix-community/impermanence)
 - [Lanzaboote](https://github.com/nix-community/lanzaboote)
 - [Noctalia v5](https://github.com/noctalia-dev/noctalia)
 - [rime-ice](https://github.com/iDvel/rime-ice)
