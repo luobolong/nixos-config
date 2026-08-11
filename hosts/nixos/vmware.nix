@@ -1,13 +1,32 @@
-{ username, ... }:
+{ lib, pkgs, username, ... }:
+let
+  kittySoftwareRendered = pkgs.symlinkJoin {
+    name = "kitty-software-rendered";
+    paths = [ pkgs.kitty ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    postBuild = ''
+      wrapProgram $out/bin/kitty --set LIBGL_ALWAYS_SOFTWARE 1
+    '';
+  };
+in
 {
   # VMware's virtual LSI Logic Parallel controller needs this in the initrd.
   boot.initrd.availableKernelModules = [ "mptspi" ];
 
+  # These are physical AMD host settings inherited from hardware-configuration.nix.
+  boot.initrd.kernelModules = lib.mkForce [ ];
+  boot.kernelModules = lib.mkForce [ ];
+  hardware.cpu.amd.updateMicrocode = lib.mkForce false;
+
   virtualisation.vmware.guest.enable = true;
 
-  # Home Manager's Noctalia unit starts through the user service manager, so
-  # set the software-rendering variable on the unit explicitly.
-  home-manager.users.${username}.systemd.user.services.noctalia.Service.Environment = [
-    "LIBGL_ALWAYS_SOFTWARE=1"
-  ];
+  home-manager.users.${username} = {
+    # These can start outside Hyprland's child-process environment, so force
+    # llvmpipe explicitly as well as setting the post-start desktop default.
+    programs.kitty.package = kittySoftwareRendered;
+
+    systemd.user.services.noctalia.Service.Environment = [
+      "LIBGL_ALWAYS_SOFTWARE=1"
+    ];
+  };
 }

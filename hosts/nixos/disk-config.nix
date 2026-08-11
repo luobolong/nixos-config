@@ -1,9 +1,9 @@
 { lib, ... }:
 {
-  # 安装前必须把这里改成实际磁盘的 /dev/disk/by-id/... 路径。
+  # VMware 分支固定使用虚拟机中的单块系统盘。
   disko.devices.disk.main = {
     type = "disk";
-    device = lib.mkDefault "/dev/disk/by-id/CHANGE_ME";
+    device = lib.mkDefault "/dev/sda";
     content = {
       type = "gpt";
       partitions = {
@@ -18,17 +18,6 @@
             format = "vfat";
             mountpoint = "/boot";
             mountOptions = [ "umask=0077" ];
-          };
-        };
-
-        swap = {
-          # 与本机 64 GiB 内存等大，为休眠镜像预留足够空间。
-          size = "64G";
-          content = {
-            type = "swap";
-            # 由 Disko 将此分区配置为 boot.resumeDevice。
-            # 休眠不能使用每次开机更换密钥的 randomEncryption。
-            resumeDevice = true;
           };
         };
 

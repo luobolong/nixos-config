@@ -39,28 +39,21 @@
       system = "x86_64-linux";
       hostname = "nixos";
       username = "ben";
-      commonModules = [
-        disko.nixosModules.disko
-        lanzaboote.nixosModules.lanzaboote
-        home-manager.nixosModules.home-manager
-        noctalia.nixosModules.default
-        ./hosts/nixos
-      ];
-      mkSystem = extraModules: nixpkgs.lib.nixosSystem {
+    in {
+      nixosConfigurations.${hostname} = nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = { inherit inputs hostname username; };
-        modules = commonModules ++ extraModules;
-      };
-    in {
-      nixosConfigurations = {
-        ${hostname} = mkSystem [ ];
-        "${hostname}-vmware" = mkSystem [ ./hosts/nixos/vmware.nix ];
+        modules = [
+          disko.nixosModules.disko
+          lanzaboote.nixosModules.lanzaboote
+          home-manager.nixosModules.home-manager
+          noctalia.nixosModules.default
+          ./hosts/nixos
+          ./hosts/nixos/vmware.nix
+        ];
       };
 
-      checks.${system} = {
-        nixos = self.nixosConfigurations.${hostname}.config.system.build.toplevel;
-        nixos-vmware = self.nixosConfigurations."${hostname}-vmware".config.system.build.toplevel;
-      };
+      checks.${system}.nixos = self.nixosConfigurations.${hostname}.config.system.build.toplevel;
 
       formatter.${system} = nixpkgs.legacyPackages.${system}.nixfmt;
     };

@@ -38,6 +38,9 @@ hl.config({
 })
 
 hl.on("hyprland.start", function()
+  -- The compositor has initialized on VMware SVGA3D at this point. Make
+  -- subsequently spawned desktop applications use Mesa llvmpipe instead.
+  hl.env("LIBGL_ALWAYS_SOFTWARE", "1")
   hl.exec_cmd("fcitx5 -d --replace")
   hl.exec_cmd("nm-applet --indicator")
   hl.exec_cmd(

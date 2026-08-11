@@ -1,4 +1,4 @@
-{ config, inputs, lib, osConfig, pkgs, username, ... }:
+{ config, inputs, lib, pkgs, username, ... }:
 let
   flclash = pkgs.callPackage ../packages/flclash.nix { };
   screenshot = pkgs.writeShellApplication {
@@ -263,13 +263,7 @@ in
     portalPackage = null;
     systemd.enable = true;
     configType = "lua";
-    extraConfig =
-      lib.optionalString osConfig.virtualisation.vmware.guest.enable ''
-        -- Keep the compositor on VMware SVGA3D, but make applications spawned
-        -- by Hyprland use Mesa's software renderer for stability.
-        hl.env("LIBGL_ALWAYS_SOFTWARE", "1")
-      ''
-      + builtins.readFile ./hyprland.lua;
+    extraConfig = builtins.readFile ./hyprland.lua;
   };
 
   programs.noctalia = {
