@@ -1,7 +1,7 @@
 { config, lib, pkgs, hostname, username, ... }:
 let
   # ben 与 root 的声明式登录密码均为 q。安装完成后应尽快替换此哈希。
-  loginPasswordHash = "$6$nixos-q$0B6DvCXoaCdasG4yVg.oseHaI7tHqdEZZByzCzlZXzrDq/gRhz.RqqB89mBova8pKIb0FqY7hctkMXQ/bvyUx.";
+  loginPasswordHash = "$6$R1okLc57kK.c4j7/$t7Vr4cPUATqr1LthGUK8rX1MePp8yKUPltzSzLNbWT7OaN153SYID5hrvb3hse.Mgh6g54v1PFYheRHPx/l8W1";
 in
 {
   networking.hostName = hostname;
