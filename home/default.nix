@@ -8,6 +8,50 @@
 }:
 let
   flclash = pkgs.callPackage ../packages/flclash.nix { };
+  catppuccinKde = pkgs.catppuccin-kde.override {
+    flavour = [ "mocha" ];
+    accents = [ "mauve" ];
+    winDecStyles = [ "modern" ];
+  };
+  catppuccinKvantum = pkgs.catppuccin-kvantum.override {
+    variant = "mocha";
+    accent = "mauve";
+  };
+  dolphinUiStyle = pkgs.writeText "dolphin-ui.qss" ''
+    QWidget {
+      font-size: 9pt;
+    }
+  '';
+  dolphin = pkgs.symlinkJoin {
+    name = "dolphin-kvantum";
+    paths = [ pkgs.kdePackages.dolphin ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    postBuild = ''
+      wrapProgram "$out/bin/dolphin" \
+        --set QT_QPA_PLATFORMTHEME qt6ct \
+        --set QT_STYLE_OVERRIDE kvantum \
+        --add-flags "-stylesheet ${dolphinUiStyle}" \
+        --prefix QT_PLUGIN_PATH : "${
+          lib.makeSearchPath "lib/qt-6/plugins" [
+            pkgs.kdePackages.qt6ct
+            pkgs.kdePackages.qtstyleplugin-kvantum
+          ]
+        }"
+    '';
+  };
+  spotify = pkgs.symlinkJoin {
+    name = "spotify-wayland";
+    paths = [ pkgs.spotify ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    postBuild = ''
+      wrapProgram "$out/bin/spotify" \
+        --set NIXOS_OZONE_WL 1 \
+        --add-flags "--enable-features=UseOzonePlatform" \
+        --add-flags "--ozone-platform=wayland" \
+        --add-flags "--enable-wayland-ime" \
+        --add-flags "--wayland-text-input-version=3"
+    '';
+  };
   screenshot = pkgs.writeShellApplication {
     name = "hypr-screenshot";
     runtimeInputs = with pkgs; [
@@ -222,10 +266,14 @@ in
       vscode
       spotify
       flclash
-      kdePackages.dolphin
+      dolphin
+      kdePackages.baloo-widgets
+      kdePackages.ffmpegthumbs
       kdePackages.kio-extras
+      catppuccinKde
       firefox
       mission-center
+      obs-studio
       pavucontrol
 
       # Hyprland 与 Wayland 桌面工具
@@ -323,16 +371,37 @@ in
   gtk = {
     enable = true;
     iconTheme = {
-      name = "Papirus";
+      name = "Papirus-Dark";
       package = pkgs.papirus-icon-theme;
     };
   };
   qt = {
     enable = true;
-    platformTheme.name = "gtk3";
+    platformTheme.name = "qtct";
+    style.name = "kvantum";
+    kvantum = {
+      enable = true;
+      themes = [ catppuccinKvantum ];
+      settings.General.theme = "catppuccin-mocha-mauve";
+    };
+    qt5ctSettings.Appearance = {
+      color_scheme_path = "${catppuccinKde}/share/color-schemes/CatppuccinMochaMauve.colors";
+      custom_palette = true;
+      icon_theme = "Papirus-Dark";
+      standard_dialogs = "default";
+      style = "kvantum";
+    };
+    qt6ctSettings.Appearance = {
+      color_scheme_path = "${catppuccinKde}/share/color-schemes/CatppuccinMochaMauve.colors";
+      custom_palette = true;
+      icon_theme = "Papirus-Dark";
+      standard_dialogs = "default";
+      style = "kvantum";
+    };
   };
   programs.kitty = {
     enable = true;
+    themeFile = "Catppuccin-Mocha";
     settings = {
       font_family = "JetBrainsMono Nerd Font";
       bold_font = "auto";
@@ -346,10 +415,6 @@ in
       dynamic_background_opacity = true;
       confirm_os_window_close = 0;
     };
-    # Noctalia writes this file whenever its active palette changes.
-    extraConfig = ''
-      include themes/noctalia.conf
-    '';
   };
   programs.neovim = {
     enable = true;
@@ -385,17 +450,88 @@ in
     source = inputs.astronvim;
     recursive = true;
   };
+  xdg.configFile."nvim/lua/plugins/absolute-line-numbers.lua".text = ''
+    return {
+      "AstroNvim/astrocore",
+      opts = {
+        options = {
+          opt = {
+            number = true,
+            relativenumber = false,
+          },
+        },
+      },
+    }
+  '';
 
   xdg.configFile."kdeglobals".text = ''
+    [Colors:View]
+    BackgroundNormal=#00000000
+
+    [General]
+    ColorScheme=CatppuccinMochaMauve
+    TerminalApplication=kitty
+
     [Icons]
-    Theme=Papirus
+    Theme=Papirus-Dark
+
+    [UiSettings]
+    ColorScheme=CatppuccinMochaMauve
+
+    [Wallet]
+    Enabled=false
   '';
+
+  # Mirror HyDE's compact, transparent Dolphin layout.
+  xdg.configFile."dolphinrc".text = ''
+    MenuBar=Disabled
+
+    [General]
+    ShowSelectionToggle=false
+    ShowStatusBar=false
+
+    [IconsMode]
+    MaximumTextLines=1
+    PreviewSize=112
+
+    [InformationPanel]
+    dateFormat=ShortFormat
+
+    [KFileDialog Settings]
+    Places Icons Auto-resize=false
+    Places Icons Static Size=16
+
+    [MainWindow]
+    MenuBar=Disabled
+    ToolBarsMovable=Disabled
+
+    [MainWindow][Toolbar mainToolBar]
+    IconSize=16
+    ToolButtonStyle=IconOnly
+
+    [PlacesPanel]
+    IconSize=16
+
+    [Toolbar mainToolBar]
+    ToolButtonStyle=IconOnly
+  '';
+
+  # Dolphin stores dock placement and visibility separately from dolphinrc.
+  # Keep the Places and Information panels on the right, with the unavailable
+  # Konsole terminal panel hidden.
+  xdg.stateFile."dolphinstaterc" = {
+    force = true;
+    text = ''
+      [State]
+      State=AAAA/wAAAAD9AAAAAwAAAAAAAACTAAAD4PwCAAAAAfsAAAAWAGYAbwBsAGQAZQByAHMARABvAGMAawAAAAAA/////wAAAAAA////AAAAAQAAALUAAAJy/AIAAAAC+wAAABQAcABsAGEAYwBlAHMARABvAGMAawEAAAAAAAAAdgAAAEEA////+wAAABAAaQBuAGYAbwBEAG8AYwBrAQAAAH0AAAH1AAAA1wD///8AAAADAAAFXgAAATv8AQAAAAH7AAAAGAB0AGUAcgBtAGkAbgBhAGwARABvAGMAawAAAAAAAAAFXgAAAI0A////AAAEogAAAnIAAAAEAAAABAAAAAgAAAAI/AAAAAEAAAABAAAAAQAAABYAbQBhAGkAbgBUAG8AbwBsAEIAYQByAwAAAAD/////AAAAAAAAAAA=
+    '';
+  };
 
   xdg.configFile."fuzzel/fuzzel.ini".text = ''
     [main]
     include=${inputs.catppuccin-fuzzel}/themes/catppuccin-mocha/mauve.ini
     font=Inter:size=12
-    icon-theme=Papirus
+    icon-theme=Papirus-Dark
     terminal=kitty
   '';
 
@@ -472,7 +608,8 @@ in
   programs.noctalia = {
     enable = true;
     systemd.enable = true;
-    # These are defaults; Noctalia's settings UI can still override them at runtime.
+    # Keep Kitty and KDE/Qt out of dynamic templates so their fixed
+    # Catppuccin Mocha theme is not overwritten on palette changes.
     settings.theme.templates = {
       enable_builtin_templates = true;
       builtin_ids = [
@@ -485,13 +622,10 @@ in
         "gtk3"
         "gtk4"
         "helix"
-        "kcolorscheme"
-        "kitty"
         "labwc"
         "niri"
         "hyprland"
         "mango"
-        "qt"
         "scroll"
         "sway"
         "starship"

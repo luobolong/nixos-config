@@ -39,8 +39,10 @@ hl.config({
     rounding = 10,
     blur = {
       enabled = true,
-      size = 8,
-      passes = 3,
+      size = 10,
+      passes = 4,
+      -- Keep blur strength consistent while window opacity changes.
+      ignore_opacity = true,
     },
   },
   animations = {
@@ -49,6 +51,14 @@ hl.config({
   dwindle = {
     preserve_split = true,
   },
+})
+
+-- Catppuccin glass treatment for Kitty and Dolphin. The first value is used
+-- while focused, the second while unfocused, and fullscreen stays opaque.
+hl.window_rule({
+  name = "catppuccin-glass-apps",
+  match = { class = "^(kitty|dropdown-terminal|org[.]kde[.]dolphin)$" },
+  opacity = "0.90 override 0.78 override 1.0 override",
 })
 
 hl.on("hyprland.start", function()
