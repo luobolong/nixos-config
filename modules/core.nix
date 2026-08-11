@@ -63,6 +63,9 @@ in
   nixpkgs.config.allowUnfree = true;
 
   boot = {
+    # 跟随 nixos-unstable 提供的最新 Linux 内核系列。
+    kernelPackages = pkgs.linuxPackages_latest;
+
     loader = {
       # Lanzaboote 接管 systemd-boot，并为每个系统代次生成 UKI。
       systemd-boot = {

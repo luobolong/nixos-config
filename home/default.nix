@@ -138,6 +138,7 @@ in
       brightnessctl
       playerctl
       networkmanagerapplet
+      nwg-displays
 
       # 终端与文件检索工具
       fastfetch
@@ -181,12 +182,23 @@ in
       lua-language-server
       nil
       nixfmt
+      codex
     ];
     preferXdgDirectories = true;
   };
 
   programs.home-manager.enable = true;
-  programs.git.enable = true;
+  programs.git = {
+    enable = true;
+    settings = {
+      user = {
+        name = "luobolong";
+        email = "benjcarrot@gmail.com";
+        signingKey = "223526AB6B297BE2";
+      };
+      commit.gpgSign = true;
+    };
+  };
   programs.gpg.enable = true;
   programs.direnv = {
     enable = true;

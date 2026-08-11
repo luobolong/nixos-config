@@ -7,8 +7,13 @@ hl.monitor({
   output = "",
   mode = "preferred",
   position = "auto",
-  scale = 1,
+  scale = 2,
 })
+
+-- nwg-displays writes these files after the first successful Apply. Keep the
+-- fallback monitor above so Hyprland can still start before they exist.
+pcall(require, "monitors")
+pcall(require, "workspaces")
 
 hl.config({
   input = {
