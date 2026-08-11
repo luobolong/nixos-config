@@ -10,11 +10,23 @@ let
   };
 in
 {
-  # VMware's virtual LSI Logic Parallel controller needs this in the initrd.
-  boot.initrd.availableKernelModules = [ "mptspi" ];
+  # VMware's virtual LSI Logic Parallel controller needs this driver chain in
+  # the initrd before the Btrfs root device can appear.
+  boot.initrd.availableKernelModules = [
+    "mptbase"
+    "mptscsih"
+    "mptspi"
+    "scsi_transport_spi"
+    "sd_mod"
+  ];
 
   # These are physical AMD host settings inherited from hardware-configuration.nix.
-  boot.initrd.kernelModules = lib.mkForce [ ];
+  # Load mptspi explicitly: this VMware controller is not coldplugged reliably
+  # by the installed initrd even though the module is available there.
+  boot.initrd.kernelModules = lib.mkForce [
+    "mptspi"
+    "sd_mod"
+  ];
   boot.kernelModules = lib.mkForce [ ];
   hardware.cpu.amd.updateMicrocode = lib.mkForce false;
 
