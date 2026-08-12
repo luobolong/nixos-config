@@ -25,9 +25,32 @@ hl.config({
   input = {
     kb_layout = "us",
     follow_mouse = 1,
+    sensitivity = 0,
+    accel_profile = "flat",
     touchpad = {
+      disable_while_typing = true,
       natural_scroll = true,
+      scroll_factor = 0.5,
+      tap_to_click = true,
+      tap_button_map = "lrm",
+      clickfinger_behavior = true,
+      tap_and_drag = true,
+      drag_lock = 1,
+      -- Reserve three-finger swipes for Hyprland gestures below.
+      drag_3fg = 0,
+      middle_button_emulation = false,
     },
+  },
+  gestures = {
+    -- Responsive, macOS-like one-workspace-at-a-time swipes.
+    workspace_swipe_distance = 250,
+    workspace_swipe_invert = true,
+    workspace_swipe_min_speed_to_force = 25,
+    workspace_swipe_cancel_ratio = 0.35,
+    workspace_swipe_create_new = false,
+    workspace_swipe_direction_lock = true,
+    workspace_swipe_direction_lock_threshold = 12,
+    workspace_swipe_forever = false,
   },
   general = {
     gaps_in = 5,
@@ -51,6 +74,42 @@ hl.config({
   dwindle = {
     preserve_split = true,
   },
+})
+
+local trackpadDevices = {
+  "apple-inc.-magic-trackpad",
+  "apple-inc.-magic-trackpad-1",
+}
+
+-- Keep external mice on the global flat profile, while trackpads use the
+-- adaptive profile that is better suited to precise finger movement.
+for _, device in ipairs(trackpadDevices) do
+  hl.device({
+    name = device,
+    sensitivity = 0,
+    accel_profile = "adaptive",
+  })
+end
+
+-- macOS-inspired navigation with Hyprland-native window manipulation.
+hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
+
+-- Four fingers manipulate the active window directly. While dragging, the
+-- existing Super+Shift+number binds can carry it to another workspace.
+hl.gesture({ fingers = 4, direction = "swipe", action = "move" })
+hl.gesture({
+  fingers = 4,
+  direction = "pinchin",
+  action = function()
+    hl.dispatch(hl.dsp.window.fullscreen({ mode = "maximized", action = "unset" }))
+  end,
+})
+hl.gesture({
+  fingers = 4,
+  direction = "pinchout",
+  action = function()
+    hl.dispatch(hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" }))
+  end,
 })
 
 -- Catppuccin glass treatment for Kitty and Dolphin. The first value is used
@@ -90,7 +149,7 @@ end)
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))
 hl.bind(mainMod .. " + CTRL + H", hl.dsp.group.prev())
 hl.bind(mainMod .. " + CTRL + L", hl.dsp.group.next())
-hl.bind("ALT + Tab", hl.dsp.window.cycle_next({ next = true }), { repeating = true })
+hl.bind("ALT + Tab", hl.dsp.exec_cmd("noctalia msg window-switcher"))
 
 local directions = {
   left = "l",
@@ -130,7 +189,7 @@ hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("code"))
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("firefox"))
 hl.bind(mainMod .. " + F", hl.dsp.exec_cmd("firefox"))
 hl.bind("CTRL + SHIFT + Escape", hl.dsp.exec_cmd("missioncenter"))
-hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("fuzzel"))
+hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("noctalia msg panel-toggle launcher"))
 hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd("hypr-command-palette"))
 
 -- 工作区 1–10；数字键 0 对应工作区 10。
@@ -144,8 +203,20 @@ for workspace = 1, 10 do
 end
 
 hl.bind(mainMod .. " + CTRL + Down", hl.dsp.focus({ workspace = "empty" }))
-hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
-hl.bind(mainMod .. " + mouse_up", hl.dsp.focus({ workspace = "e-1" }))
+local externalPointersOnly = {
+  device = { inclusive = false, list = trackpadDevices },
+}
+hl.bind(
+  mainMod .. " + mouse_down",
+  hl.dsp.focus({ workspace = "e+1" }),
+  externalPointersOnly
+)
+hl.bind(
+  mainMod .. " + mouse_up",
+  hl.dsp.focus({ workspace = "e-1" }),
+  externalPointersOnly
+)
+
 hl.bind(mainMod .. " + CTRL + Right", hl.dsp.focus({ workspace = "r+1" }))
 hl.bind(mainMod .. " + CTRL + Left", hl.dsp.focus({ workspace = "r-1" }))
 hl.bind(

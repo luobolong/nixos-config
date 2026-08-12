@@ -335,12 +335,22 @@ systemctl list-timers 'snapper-*'
 | `Super + J` | 切换 Dwindle 分割方向 |
 | `Super + Ctrl + H` / `Super + Ctrl + L` | 向后 / 向前切换活动分组 |
 | `Super + 方向键` | 向对应方向切换焦点 |
-| `Alt + Tab` | 循环切换焦点 |
+| `Alt + Tab` | 打开 Noctalia 窗口总览；连续按键切换选择，松开 `Alt` 确认 |
 | `Super + Shift + 方向键` | 按 50 像素调整当前窗口大小 |
 | `Super + Ctrl + Shift + 方向键` | 向对应方向移动当前窗口 |
 | `Super + 鼠标左键` | 拖动窗口 |
 | `Super + 鼠标右键` | 调整窗口大小 |
 | `Super + Z` / `Super + X` | 按住并移动鼠标以拖动 / 调整窗口大小 |
+
+### 触控板手势
+
+| 手势 | 动作 |
+|---|---|
+| 三指左右滑动 | 1:1 跟手切换相邻工作区 |
+| 四指滑动 | 拖拽浮动窗口或重排平铺窗口 |
+| 四指拖拽期间按 `Super + Shift + 数字键` | 将窗口拖到对应工作区并跟随 |
+| 四指捏合 | 取消活动窗口最大化 |
+| 四指张开 | 切换活动窗口最大化状态 |
 
 ### 启动应用
 
@@ -352,7 +362,7 @@ systemctl list-timers 'snapper-*'
 | `Super + C` | 打开 VS Code |
 | `Super + B` | 打开 Firefox |
 | `Ctrl + Shift + Escape` | 打开 Mission Center；终端中也可运行 `btop` |
-| `Super + A` | 打开 Fuzzel 应用查找器 |
+| `Super + A` | 打开 Noctalia 应用启动器 |
 | `Super + /` | 显示快捷键说明 |
 
 ### 工作区与暂存区

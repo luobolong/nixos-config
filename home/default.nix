@@ -97,7 +97,7 @@ let
         $'split\tWindow  ·  SUPER + J  ·  Toggle Dwindle split direction' \
         $'group-prev\tWindow  ·  SUPER + CTRL + H  ·  Previous window in group' \
         $'group-next\tWindow  ·  SUPER + CTRL + L  ·  Next window in group' \
-        $'cycle\tWindow  ·  ALT + Tab  ·  Cycle window focus' \
+        $'window-overview\tWindow  ·  ALT + Tab  ·  Open Noctalia window overview' \
         $'focus-left\tFocus  ·  SUPER + Left  ·  Focus left' \
         $'focus-right\tFocus  ·  SUPER + Right  ·  Focus right' \
         $'focus-up\tFocus  ·  SUPER + Up  ·  Focus up' \
@@ -198,7 +198,7 @@ let
         split) dispatch layoutmsg togglesplit ;;
         group-prev) dispatch changegroupactive b ;;
         group-next) dispatch changegroupactive f ;;
-        cycle) dispatch cyclenext ;;
+        window-overview) noctalia msg window-switcher ;;
         focus-left) dispatch movefocus l ;;
         focus-right) dispatch movefocus r ;;
         focus-up) dispatch movefocus u ;;
@@ -217,7 +217,7 @@ let
         editor) dispatch exec code ;;
         browser) dispatch exec firefox ;;
         monitor) dispatch exec missioncenter ;;
-        launcher) dispatch exec fuzzel ;;
+        launcher) noctalia msg panel-toggle launcher ;;
         lock) dispatch exec hyprlock ;;
         workspace-empty) dispatch workspace empty ;;
         workspace-next-existing) dispatch workspace 'e+1' ;;
