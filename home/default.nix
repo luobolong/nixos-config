@@ -52,6 +52,13 @@ let
         --add-flags "--wayland-text-input-version=3"
     '';
   };
+  qqWayland = pkgs.qq.override {
+    commandLineArgs = lib.concatStringsSep " " [
+      "--ozone-platform=wayland"
+      "--enable-wayland-ime"
+      "--wayland-text-input-version=3"
+    ];
+  };
   screenshot = pkgs.writeShellApplication {
     name = "hypr-screenshot";
     runtimeInputs = with pkgs; [
@@ -117,6 +124,7 @@ let
         $'browser\tApplication  ·  SUPER + B / F  ·  Open Firefox' \
         $'monitor\tApplication  ·  CTRL + SHIFT + Escape  ·  Open system monitor' \
         $'launcher\tApplication  ·  SUPER + A  ·  Open application launcher' \
+        $'clipboard\tApplication  ·  SUPER + V  ·  Open Noctalia clipboard' \
         $'lock\tSystem  ·  SUPER + L  ·  Lock the screen' \
         $'workspace-empty\tWorkspace  ·  SUPER + CTRL + Down  ·  Switch to an empty workspace' \
         $'workspace-next-existing\tWorkspace  ·  SUPER + Wheel Down  ·  Next existing workspace' \
@@ -218,6 +226,7 @@ let
         browser) dispatch exec firefox ;;
         monitor) dispatch exec missioncenter ;;
         launcher) noctalia msg panel-toggle launcher ;;
+        clipboard) noctalia msg panel-toggle clipboard ;;
         lock) dispatch exec hyprlock ;;
         workspace-empty) dispatch workspace empty ;;
         workspace-next-existing) dispatch workspace 'e+1' ;;
@@ -268,7 +277,7 @@ in
       jetbrains.datagrip
       jetbrains.goland
       spotify
-      qq
+      qqWayland
       flclash
       dolphin
       kdePackages.baloo-widgets

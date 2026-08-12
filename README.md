@@ -363,6 +363,7 @@ systemctl list-timers 'snapper-*'
 | `Super + B` | 打开 Firefox |
 | `Ctrl + Shift + Escape` | 打开 Mission Center；终端中也可运行 `btop` |
 | `Super + A` | 打开 Noctalia 应用启动器 |
+| `Super + V` | 打开 Noctalia 剪贴板 |
 | `Super + /` | 显示快捷键说明 |
 
 ### 工作区与暂存区

@@ -190,6 +190,7 @@ hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("firefox"))
 hl.bind(mainMod .. " + F", hl.dsp.exec_cmd("firefox"))
 hl.bind("CTRL + SHIFT + Escape", hl.dsp.exec_cmd("missioncenter"))
 hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("noctalia msg panel-toggle launcher"))
+hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("noctalia msg panel-toggle clipboard"))
 hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd("hypr-command-palette"))
 
 -- 工作区 1–10；数字键 0 对应工作区 10。
