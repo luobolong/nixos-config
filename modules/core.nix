@@ -53,6 +53,7 @@ in
     };
   };
   programs.zsh.enable = true;
+  programs.nix-ld.enable = true;
   security.sudo.wheelNeedsPassword = true;
 
   nix = {
@@ -117,6 +118,7 @@ in
     git
     curl
     wget
+    btrfs-assistant
     btrfs-progs
     disko
     sbctl

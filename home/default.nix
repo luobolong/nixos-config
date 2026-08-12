@@ -377,6 +377,10 @@ in
     syntaxHighlighting.enable = true;
     dotDir = "${config.xdg.configHome}/zsh";
     history.path = "${config.xdg.stateHome}/zsh/history";
+
+    initContent = ''
+      bindkey -e
+    '';
   };
   programs.starship = {
     enable = true;
