@@ -301,6 +301,8 @@ in
       commandPalette
       brightnessctl
       playerctl
+      mpv
+      mpvpaper
       networkmanagerapplet
       nwg-displays
       xlsclients
@@ -626,6 +628,49 @@ in
   programs.noctalia = {
     enable = true;
     systemd.enable = true;
+    # NyxNiri-inspired transparent, capsule-style bar. Keep this scoped to
+    # bar defaults so settings changed in Noctalia's UI remain independent.
+    settings.bar = {
+      order = [ "default" ];
+      default = {
+        background_opacity = 0.0;
+        border_width = 0.0;
+        capsule = true;
+        capsule_border = "outline";
+        capsule_foreground = "#FFFFFF";
+        capsule_opacity = 0.79;
+        capsule_padding = 10.0;
+        capsule_radius = 80;
+        capsule_thickness = 1.0;
+        color = "#FFFFFF";
+        enabled = true;
+        panel_overlap = 12;
+        font_family = "JetBrainsMono Nerd Font";
+        margin_ends = 14;
+        margin_edge = 5;
+        scale = 1.1;
+        shadow = false;
+        start = [
+          "launcher"
+          "settings"
+          "workspaces"
+          "active_window"
+        ];
+        center = [ "clock" ];
+        end = [
+          "media"
+          "tray"
+          "wallpaper"
+          "mpvpaper"
+          "volume"
+          "notifications"
+          "session"
+        ];
+        thickness = 26;
+      };
+    };
+    settings.plugins.enabled = [ "noctalia/mpvpaper" ];
+    settings.widget.mpvpaper.type = "noctalia/mpvpaper:mpvpaper";
     # Keep Kitty and KDE/Qt out of dynamic templates so their fixed
     # Catppuccin Mocha theme is not overwritten on palette changes.
     settings.theme.templates = {
