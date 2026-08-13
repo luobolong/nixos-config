@@ -1,11 +1,21 @@
-{ config, lib, pkgs, hostname, username, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  hostname,
+  username,
+  ...
+}:
 let
   # ben 与 root 的声明式登录密码均为 q。安装完成后应尽快替换此哈希。
   loginPasswordHash = "$6$R1okLc57kK.c4j7/$t7Vr4cPUATqr1LthGUK8rX1MePp8yKUPltzSzLNbWT7OaN153SYID5hrvb3hse.Mgh6g54v1PFYheRHPx/l8W1";
 in
 {
-  networking.hostName = hostname;
-  networking.networkmanager.enable = true;
+  networking = {
+    hostName = hostname;
+    networkmanager.enable = true;
+    firewall.enable = false;
+  };
 
   time.timeZone = "Asia/Taipei";
   i18n.defaultLocale = "en_US.UTF-8";
@@ -31,17 +41,27 @@ in
         isNormalUser = true;
         description = username;
         hashedPassword = loginPasswordHash;
-        extraGroups = [ "networkmanager" "wheel" "video" "audio" "input" ];
+        extraGroups = [
+          "networkmanager"
+          "wheel"
+          "video"
+          "audio"
+          "input"
+        ];
         shell = pkgs.zsh;
       };
     };
   };
   programs.zsh.enable = true;
+  programs.nix-ld.enable = true;
   security.sudo.wheelNeedsPassword = true;
 
   nix = {
     settings = {
-      experimental-features = [ "nix-command" "flakes" ];
+      experimental-features = [
+        "nix-command"
+        "flakes"
+      ];
       extra-substituters = [ "https://noctalia.cachix.org" ];
       extra-trusted-public-keys = [
         "noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4="
@@ -63,6 +83,9 @@ in
   nixpkgs.config.allowUnfree = true;
 
   boot = {
+    # 跟随 nixos-unstable 提供的最新 Linux 内核系列。
+    kernelPackages = pkgs.linuxPackages_latest;
+
     loader = {
       # Lanzaboote 接管 systemd-boot，并为每个系统代次生成 UKI。
       systemd-boot = {
@@ -70,7 +93,8 @@ in
         configurationLimit = 10;
       };
       efi.canTouchEfiVariables = true;
-      timeout = 5;
+      # rEFInd 负责第一层选择；这里仅为选择 NixOS 系统代次保留短暂停顿。
+      timeout = 2;
     };
 
     lanzaboote = {
@@ -94,6 +118,7 @@ in
     git
     curl
     wget
+    btrfs-assistant
     btrfs-progs
     disko
     sbctl

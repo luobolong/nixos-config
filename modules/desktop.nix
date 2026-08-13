@@ -65,6 +65,7 @@
       noto-fonts-color-emoji
       noto-fonts-monochrome-emoji
       sarasa-gothic
+      nerd-fonts.cousine
       nerd-fonts.jetbrains-mono
     ];
     fontconfig = {

@@ -1,4 +1,9 @@
-{ appimageTools, fetchurl, lib, makeDesktopItem }:
+{
+  appimageTools,
+  fetchurl,
+  lib,
+  makeDesktopItem,
+}:
 let
   pname = "flclash";
   version = "0.8.94";
@@ -17,6 +22,7 @@ let
 in
 appimageTools.wrapType2 {
   inherit pname version src;
+  extraPkgs = pkgs: [ pkgs.libepoxy ];
   extraInstallCommands = ''
     mkdir -p $out/share/applications
     cp ${desktopItem}/share/applications/${pname}.desktop $out/share/applications/

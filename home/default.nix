@@ -1,6 +1,64 @@
-{ config, inputs, lib, pkgs, username, ... }:
+{
+  config,
+  inputs,
+  lib,
+  pkgs,
+  username,
+  ...
+}:
 let
   flclash = pkgs.callPackage ../packages/flclash.nix { };
+  catppuccinKde = pkgs.catppuccin-kde.override {
+    flavour = [ "mocha" ];
+    accents = [ "mauve" ];
+    winDecStyles = [ "modern" ];
+  };
+  catppuccinKvantum = pkgs.catppuccin-kvantum.override {
+    variant = "mocha";
+    accent = "mauve";
+  };
+  dolphinUiStyle = pkgs.writeText "dolphin-ui.qss" ''
+    QWidget {
+      font-size: 9pt;
+    }
+  '';
+  dolphin = pkgs.symlinkJoin {
+    name = "dolphin-kvantum";
+    paths = [ pkgs.kdePackages.dolphin ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    postBuild = ''
+      wrapProgram "$out/bin/dolphin" \
+        --set QT_QPA_PLATFORMTHEME qt6ct \
+        --set QT_STYLE_OVERRIDE kvantum \
+        --add-flags "-stylesheet ${dolphinUiStyle}" \
+        --prefix QT_PLUGIN_PATH : "${
+          lib.makeSearchPath "lib/qt-6/plugins" [
+            pkgs.kdePackages.qt6ct
+            pkgs.kdePackages.qtstyleplugin-kvantum
+          ]
+        }"
+    '';
+  };
+  spotify = pkgs.symlinkJoin {
+    name = "spotify-wayland";
+    paths = [ pkgs.spotify ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    postBuild = ''
+      wrapProgram "$out/bin/spotify" \
+        --set NIXOS_OZONE_WL 1 \
+        --add-flags "--enable-features=UseOzonePlatform" \
+        --add-flags "--ozone-platform=wayland" \
+        --add-flags "--enable-wayland-ime" \
+        --add-flags "--wayland-text-input-version=3"
+    '';
+  };
+  qqWayland = pkgs.qq.override {
+    commandLineArgs = lib.concatStringsSep " " [
+      "--ozone-platform=wayland"
+      "--enable-wayland-ime"
+      "--wayland-text-input-version=3"
+    ];
+  };
   screenshot = pkgs.writeShellApplication {
     name = "hypr-screenshot";
     runtimeInputs = with pkgs; [
@@ -27,78 +85,175 @@ let
       satty --filename "$raw_file" --output-filename "$file"
     '';
   };
-  shortcutsHelpText = pkgs.writeText "hyprland-shortcuts.txt" ''
-    Hyprland 快捷键说明
-    ==================
-
-    提示：SUPER 是 Windows 键；在此窗口按 q 退出。
-
-    窗口与会话
-      SUPER + Q / ALT + F4              关闭当前窗口
-      SUPER + ALT + F4                  强制结束当前窗口进程
-      SUPER + W                         切换窗口浮动
-      SUPER + G                         切换窗口分组
-      SUPER + SHIFT + W                 先浮动，再切换窗口置顶
-      SUPER + L                         锁定屏幕
-      SHIFT + F11 / SUPER + D           切换全屏
-      SUPER + J                         切换 Dwindle 分割方向
-
-    分组导航
-      SUPER + CTRL + H                  向后切换活动分组
-      SUPER + CTRL + L                  向前切换活动分组
-
-    窗口焦点与位置
-      SUPER + 方向键                    切换焦点
-      ALT + Tab                         循环切换焦点
-      SUPER + CTRL + SHIFT + 方向键     向指定方向移动窗口
-      SUPER + SHIFT + 方向键            向指定方向调整窗口大小
-      SUPER + 鼠标左键                  拖动窗口
-      SUPER + 鼠标右键                  调整窗口大小
-      SUPER + Z                         按住并移动鼠标以拖动窗口
-      SUPER + X                         按住并移动鼠标以调整窗口大小
-
-    常用应用
-      SUPER + T                         终端
-      SUPER + ALT + T                   切换下拉终端
-      SUPER + E                         文件管理器
-      SUPER + C                         文本编辑器
-      SUPER + B                         浏览器
-      CTRL + SHIFT + Escape             系统监视器
-      SUPER + A                         Fuzzel 应用查找器
-      SUPER + /                         打开本说明
-
-    工作区
-      SUPER + 1…9 / 0                   切换到工作区 1…9 / 10
-      SUPER + SHIFT + 1…9 / 0           移动窗口到工作区 1…9 / 10
-      SUPER + CTRL + Down               切换到空工作区
-      SUPER + mouse_down / mouse_up     下一个 / 上一个已存在工作区
-      SUPER + CTRL + Right / Left       下一个 / 上一个相对工作区
-      SUPER + ALT + CTRL + Right / Left 移动窗口到下一个 / 上一个相对工作区
-      SUPER + S / M                     切换特殊工作区 S / M
-      SUPER + SHIFT + S / M             移动窗口到特殊工作区并跟随
-      SUPER + ALT + S / M               静默移动窗口到特殊工作区
-
-    屏幕捕获
-      SUPER + SHIFT + P                 颜色选择器
-      SUPER + P                         截取屏幕区域
-      SUPER + CTRL + P                  冻结并截取屏幕区域
-      SUPER + ALT + P                   截取当前显示器
-      Print                             截取所有显示器
-
-    多媒体
-      XF86AudioRaise/LowerVolume        调整音量
-      XF86AudioMute                     静音
-      XF86MonBrightnessUp/Down          调整屏幕亮度
-  '';
-  shortcutsHelp = pkgs.writeShellApplication {
-    name = "hypr-shortcuts-help";
+  commandPalette = pkgs.writeShellApplication {
+    name = "hypr-command-palette";
     runtimeInputs = with pkgs; [
-      kitty
-      less
+      brightnessctl
+      fuzzel
+      hyprland
+      pipewire
     ];
     text = ''
-      exec kitty --class shortcuts-help --title "快捷键说明" \
-        less -R -- ${shortcutsHelpText}
+      entries="$(${pkgs.coreutils}/bin/printf '%s\n' \
+        $'close\tWindow  ·  SUPER + Q / ALT + F4  ·  Close the active window' \
+        $'force-kill\tWindow  ·  SUPER + ALT + F4  ·  Force-kill the active window' \
+        $'float\tWindow  ·  SUPER + W  ·  Toggle floating' \
+        $'group\tWindow  ·  SUPER + G  ·  Toggle grouping' \
+        $'pin\tWindow  ·  SUPER + SHIFT + W  ·  Toggle floating and pinning' \
+        $'fullscreen\tWindow  ·  SUPER + D / SHIFT + F11  ·  Toggle fullscreen' \
+        $'split\tWindow  ·  SUPER + J  ·  Toggle Dwindle split direction' \
+        $'group-prev\tWindow  ·  SUPER + CTRL + H  ·  Previous window in group' \
+        $'group-next\tWindow  ·  SUPER + CTRL + L  ·  Next window in group' \
+        $'window-overview\tWindow  ·  ALT + Tab  ·  Open Noctalia window overview' \
+        $'focus-left\tFocus  ·  SUPER + Left  ·  Focus left' \
+        $'focus-right\tFocus  ·  SUPER + Right  ·  Focus right' \
+        $'focus-up\tFocus  ·  SUPER + Up  ·  Focus up' \
+        $'focus-down\tFocus  ·  SUPER + Down  ·  Focus down' \
+        $'move-left\tWindow  ·  SUPER + CTRL + SHIFT + Left  ·  Move left' \
+        $'move-right\tWindow  ·  SUPER + CTRL + SHIFT + Right  ·  Move right' \
+        $'move-up\tWindow  ·  SUPER + CTRL + SHIFT + Up  ·  Move up' \
+        $'move-down\tWindow  ·  SUPER + CTRL + SHIFT + Down  ·  Move down' \
+        $'resize-left\tWindow  ·  SUPER + SHIFT + Left  ·  Shrink horizontally' \
+        $'resize-right\tWindow  ·  SUPER + SHIFT + Right  ·  Grow horizontally' \
+        $'resize-up\tWindow  ·  SUPER + SHIFT + Up  ·  Shrink vertically' \
+        $'resize-down\tWindow  ·  SUPER + SHIFT + Down  ·  Grow vertically' \
+        $'terminal\tApplication  ·  SUPER + T  ·  Open terminal' \
+        $'dropdown\tApplication  ·  SUPER + ALT + T  ·  Toggle dropdown terminal' \
+        $'files\tApplication  ·  SUPER + E  ·  Open file manager' \
+        $'editor\tApplication  ·  SUPER + C  ·  Open VS Code' \
+        $'browser\tApplication  ·  SUPER + B / F  ·  Open Firefox' \
+        $'monitor\tApplication  ·  CTRL + SHIFT + Escape  ·  Open system monitor' \
+        $'launcher\tApplication  ·  SUPER + A  ·  Open application launcher' \
+        $'clipboard\tApplication  ·  SUPER + V  ·  Open Noctalia clipboard' \
+        $'lock\tSystem  ·  SUPER + L  ·  Lock the screen' \
+        $'workspace-empty\tWorkspace  ·  SUPER + CTRL + Down  ·  Switch to an empty workspace' \
+        $'workspace-next-existing\tWorkspace  ·  SUPER + Wheel Down  ·  Next existing workspace' \
+        $'workspace-prev-existing\tWorkspace  ·  SUPER + Wheel Up  ·  Previous existing workspace' \
+        $'workspace-next\tWorkspace  ·  SUPER + CTRL + Right  ·  Next relative workspace' \
+        $'workspace-prev\tWorkspace  ·  SUPER + CTRL + Left  ·  Previous relative workspace' \
+        $'move-workspace-next\tWorkspace  ·  SUPER + ALT + CTRL + Right  ·  Move window to next workspace' \
+        $'move-workspace-prev\tWorkspace  ·  SUPER + ALT + CTRL + Left  ·  Move window to previous workspace' \
+        $'special-s\tWorkspace  ·  SUPER + S  ·  Toggle special workspace S' \
+        $'special-m\tWorkspace  ·  SUPER + M  ·  Toggle special workspace M' \
+        $'move-special-s\tWorkspace  ·  SUPER + SHIFT + S  ·  Move window to S and follow' \
+        $'move-special-m\tWorkspace  ·  SUPER + SHIFT + M  ·  Move window to M and follow' \
+        $'move-special-s-silent\tWorkspace  ·  SUPER + ALT + S  ·  Move window silently to S' \
+        $'move-special-m-silent\tWorkspace  ·  SUPER + ALT + M  ·  Move window silently to M' \
+        $'picker\tCapture  ·  SUPER + SHIFT + P  ·  Pick a color' \
+        $'screenshot-area\tCapture  ·  SUPER + P  ·  Capture a screen region' \
+        $'screenshot-freeze\tCapture  ·  SUPER + CTRL + P  ·  Freeze and capture a screen region' \
+        $'screenshot-output\tCapture  ·  SUPER + ALT + P  ·  Capture the current display' \
+        $'screenshot-screen\tCapture  ·  Print  ·  Capture all displays' \
+        $'volume-up\tMedia  ·  Volume Up  ·  Raise volume by 5%' \
+        $'volume-down\tMedia  ·  Volume Down  ·  Lower volume by 5%' \
+        $'volume-mute\tMedia  ·  Mute  ·  Toggle mute' \
+        $'brightness-up\tMedia  ·  Brightness Up  ·  Raise brightness by 5%' \
+        $'brightness-down\tMedia  ·  Brightness Down  ·  Lower brightness by 5%' \
+        $'workspace-1\tWorkspace  ·  SUPER + 1  ·  Switch to workspace 1' \
+        $'workspace-2\tWorkspace  ·  SUPER + 2  ·  Switch to workspace 2' \
+        $'workspace-3\tWorkspace  ·  SUPER + 3  ·  Switch to workspace 3' \
+        $'workspace-4\tWorkspace  ·  SUPER + 4  ·  Switch to workspace 4' \
+        $'workspace-5\tWorkspace  ·  SUPER + 5  ·  Switch to workspace 5' \
+        $'workspace-6\tWorkspace  ·  SUPER + 6  ·  Switch to workspace 6' \
+        $'workspace-7\tWorkspace  ·  SUPER + 7  ·  Switch to workspace 7' \
+        $'workspace-8\tWorkspace  ·  SUPER + 8  ·  Switch to workspace 8' \
+        $'workspace-9\tWorkspace  ·  SUPER + 9  ·  Switch to workspace 9' \
+        $'workspace-10\tWorkspace  ·  SUPER + 0  ·  Switch to workspace 10' \
+        $'move-workspace-1\tWorkspace  ·  SUPER + SHIFT + 1  ·  Move window to workspace 1' \
+        $'move-workspace-2\tWorkspace  ·  SUPER + SHIFT + 2  ·  Move window to workspace 2' \
+        $'move-workspace-3\tWorkspace  ·  SUPER + SHIFT + 3  ·  Move window to workspace 3' \
+        $'move-workspace-4\tWorkspace  ·  SUPER + SHIFT + 4  ·  Move window to workspace 4' \
+        $'move-workspace-5\tWorkspace  ·  SUPER + SHIFT + 5  ·  Move window to workspace 5' \
+        $'move-workspace-6\tWorkspace  ·  SUPER + SHIFT + 6  ·  Move window to workspace 6' \
+        $'move-workspace-7\tWorkspace  ·  SUPER + SHIFT + 7  ·  Move window to workspace 7' \
+        $'move-workspace-8\tWorkspace  ·  SUPER + SHIFT + 8  ·  Move window to workspace 8' \
+        $'move-workspace-9\tWorkspace  ·  SUPER + SHIFT + 9  ·  Move window to workspace 9' \
+        $'move-workspace-10\tWorkspace  ·  SUPER + SHIFT + 0  ·  Move window to workspace 10'
+      )"
+
+      choice="$(
+        ${pkgs.coreutils}/bin/printf '%s\n' "$entries" | fuzzel \
+          --dmenu \
+          --only-match \
+          --no-sort \
+          --with-nth=2 \
+          --accept-nth=1 \
+          --match-nth=2 \
+          --prompt='⌕  ' \
+          --placeholder='Search shortcuts, applications, or actions…' \
+          --lines=16 \
+          --width=72 \
+          --font='Inter:size=12' \
+          --counter \
+          --border-radius=14 \
+          --selection-radius=8 \
+          --inner-pad=8 \
+          --horizontal-pad=24 \
+          --vertical-pad=10
+      )" || exit 0
+
+      dispatch() {
+        hyprctl --quiet dispatch "$@"
+      }
+
+      case "$choice" in
+        close) dispatch killactive ;;
+        force-kill) dispatch forcekillactive ;;
+        float) dispatch togglefloating ;;
+        group) dispatch togglegroup ;;
+        pin) dispatch setfloating; dispatch pin ;;
+        fullscreen) dispatch fullscreen 0 ;;
+        split) dispatch layoutmsg togglesplit ;;
+        group-prev) dispatch changegroupactive b ;;
+        group-next) dispatch changegroupactive f ;;
+        window-overview) noctalia msg window-switcher ;;
+        focus-left) dispatch movefocus l ;;
+        focus-right) dispatch movefocus r ;;
+        focus-up) dispatch movefocus u ;;
+        focus-down) dispatch movefocus d ;;
+        move-left) dispatch movewindow l ;;
+        move-right) dispatch movewindow r ;;
+        move-up) dispatch movewindow u ;;
+        move-down) dispatch movewindow d ;;
+        resize-left) dispatch resizeactive -50 0 ;;
+        resize-right) dispatch resizeactive 50 0 ;;
+        resize-up) dispatch resizeactive 0 -50 ;;
+        resize-down) dispatch resizeactive 0 50 ;;
+        terminal) dispatch exec kitty ;;
+        dropdown) dispatch togglespecialworkspace terminal ;;
+        files) dispatch exec dolphin ;;
+        editor) dispatch exec code ;;
+        browser) dispatch exec firefox ;;
+        monitor) dispatch exec missioncenter ;;
+        launcher) noctalia msg panel-toggle launcher ;;
+        clipboard) noctalia msg panel-toggle clipboard ;;
+        lock) dispatch exec hyprlock ;;
+        workspace-empty) dispatch workspace empty ;;
+        workspace-next-existing) dispatch workspace 'e+1' ;;
+        workspace-prev-existing) dispatch workspace 'e-1' ;;
+        workspace-next) dispatch workspace 'r+1' ;;
+        workspace-prev) dispatch workspace 'r-1' ;;
+        move-workspace-next) dispatch movetoworkspace 'r+1' ;;
+        move-workspace-prev) dispatch movetoworkspace 'r-1' ;;
+        special-s) dispatch togglespecialworkspace S ;;
+        special-m) dispatch togglespecialworkspace M ;;
+        move-special-s) dispatch movetoworkspace special:S ;;
+        move-special-m) dispatch movetoworkspace special:M ;;
+        move-special-s-silent) dispatch movetoworkspacesilent special:S ;;
+        move-special-m-silent) dispatch movetoworkspacesilent special:M ;;
+        picker) dispatch exec 'hyprpicker -a' ;;
+        screenshot-area) dispatch exec 'hypr-screenshot area' ;;
+        screenshot-freeze) dispatch exec 'hypr-screenshot area true' ;;
+        screenshot-output) dispatch exec 'hypr-screenshot output' ;;
+        screenshot-screen) dispatch exec 'hypr-screenshot screen' ;;
+        volume-up) wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+ ;;
+        volume-down) wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- ;;
+        volume-mute) wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle ;;
+        brightness-up) brightnessctl set 5%+ ;;
+        brightness-down) brightnessctl set 5%- ;;
+        workspace-*) dispatch workspace "''${choice#workspace-}" ;;
+        move-workspace-*) dispatch movetoworkspace "''${choice#move-workspace-}" ;;
+      esac
     '';
   };
 in
@@ -118,12 +273,21 @@ in
     packages = with pkgs; [
       # 桌面应用
       vscode
+      jetbrains.idea
+      jetbrains.datagrip
+      jetbrains.goland
       spotify
+      qqWayland
       flclash
-      kdePackages.dolphin
+      dolphin
+      kdePackages.baloo-widgets
+      kdePackages.ffmpegthumbs
       kdePackages.kio-extras
+      catppuccinKde
       firefox
+      localsend
       mission-center
+      obs-studio
       pavucontrol
 
       # Hyprland 与 Wayland 桌面工具
@@ -134,10 +298,12 @@ in
       grim
       slurp
       screenshot
-      shortcutsHelp
+      commandPalette
       brightnessctl
       playerctl
       networkmanagerapplet
+      nwg-displays
+      xlsclients
 
       # 终端与文件检索工具
       fastfetch
@@ -181,12 +347,23 @@ in
       lua-language-server
       nil
       nixfmt
+      codex
     ];
     preferXdgDirectories = true;
   };
 
   programs.home-manager.enable = true;
-  programs.git.enable = true;
+  programs.git = {
+    enable = true;
+    settings = {
+      user = {
+        name = "luobolong";
+        email = "benjcarrot@gmail.com";
+        signingKey = "223526AB6B297BE2";
+      };
+      commit.gpgSign = true;
+    };
+  };
   programs.gpg.enable = true;
   programs.direnv = {
     enable = true;
@@ -200,6 +377,10 @@ in
     syntaxHighlighting.enable = true;
     dotDir = "${config.xdg.configHome}/zsh";
     history.path = "${config.xdg.stateHome}/zsh/history";
+
+    initContent = ''
+      bindkey -e
+    '';
   };
   programs.starship = {
     enable = true;
@@ -208,19 +389,46 @@ in
   gtk = {
     enable = true;
     iconTheme = {
-      name = "Papirus";
+      name = "Papirus-Dark";
       package = pkgs.papirus-icon-theme;
     };
   };
   qt = {
     enable = true;
-    platformTheme.name = "gtk3";
+    platformTheme.name = "qtct";
+    style.name = "kvantum";
+    kvantum = {
+      enable = true;
+      themes = [ catppuccinKvantum ];
+      settings.General.theme = "catppuccin-mocha-mauve";
+    };
+    qt5ctSettings.Appearance = {
+      color_scheme_path = "${catppuccinKde}/share/color-schemes/CatppuccinMochaMauve.colors";
+      custom_palette = true;
+      icon_theme = "Papirus-Dark";
+      standard_dialogs = "default";
+      style = "kvantum";
+    };
+    qt6ctSettings.Appearance = {
+      color_scheme_path = "${catppuccinKde}/share/color-schemes/CatppuccinMochaMauve.colors";
+      custom_palette = true;
+      icon_theme = "Papirus-Dark";
+      standard_dialogs = "default";
+      style = "kvantum";
+    };
   };
   programs.kitty = {
     enable = true;
+    themeFile = "Catppuccin-Mocha";
     settings = {
       font_family = "JetBrainsMono Nerd Font";
-      font_size = 12;
+      bold_font = "auto";
+      italic_font = "auto";
+      bold_italic_font = "auto";
+      font_size = 11;
+      window_padding_width = 15;
+      enable_audio_bell = "no";
+      cursor_trail = 1;
       background_opacity = "0.90";
       dynamic_background_opacity = true;
       confirm_os_window_close = 0;
@@ -260,17 +468,88 @@ in
     source = inputs.astronvim;
     recursive = true;
   };
+  xdg.configFile."nvim/lua/plugins/absolute-line-numbers.lua".text = ''
+    return {
+      "AstroNvim/astrocore",
+      opts = {
+        options = {
+          opt = {
+            number = true,
+            relativenumber = false,
+          },
+        },
+      },
+    }
+  '';
 
   xdg.configFile."kdeglobals".text = ''
+    [Colors:View]
+    BackgroundNormal=#00000000
+
+    [General]
+    ColorScheme=CatppuccinMochaMauve
+    TerminalApplication=kitty
+
     [Icons]
-    Theme=Papirus
+    Theme=Papirus-Dark
+
+    [UiSettings]
+    ColorScheme=CatppuccinMochaMauve
+
+    [Wallet]
+    Enabled=false
   '';
+
+  # Mirror HyDE's compact, transparent Dolphin layout.
+  xdg.configFile."dolphinrc".text = ''
+    MenuBar=Disabled
+
+    [General]
+    ShowSelectionToggle=false
+    ShowStatusBar=false
+
+    [IconsMode]
+    MaximumTextLines=1
+    PreviewSize=112
+
+    [InformationPanel]
+    dateFormat=ShortFormat
+
+    [KFileDialog Settings]
+    Places Icons Auto-resize=false
+    Places Icons Static Size=16
+
+    [MainWindow]
+    MenuBar=Disabled
+    ToolBarsMovable=Disabled
+
+    [MainWindow][Toolbar mainToolBar]
+    IconSize=16
+    ToolButtonStyle=IconOnly
+
+    [PlacesPanel]
+    IconSize=16
+
+    [Toolbar mainToolBar]
+    ToolButtonStyle=IconOnly
+  '';
+
+  # Dolphin stores dock placement and visibility separately from dolphinrc.
+  # Keep the Places and Information panels on the right, with the unavailable
+  # Konsole terminal panel hidden.
+  xdg.stateFile."dolphinstaterc" = {
+    force = true;
+    text = ''
+      [State]
+      State=AAAA/wAAAAD9AAAAAwAAAAAAAACTAAAD4PwCAAAAAfsAAAAWAGYAbwBsAGQAZQByAHMARABvAGMAawAAAAAA/////wAAAAAA////AAAAAQAAALUAAAJy/AIAAAAC+wAAABQAcABsAGEAYwBlAHMARABvAGMAawEAAAAAAAAAdgAAAEEA////+wAAABAAaQBuAGYAbwBEAG8AYwBrAQAAAH0AAAH1AAAA1wD///8AAAADAAAFXgAAATv8AQAAAAH7AAAAGAB0AGUAcgBtAGkAbgBhAGwARABvAGMAawAAAAAAAAAFXgAAAI0A////AAAEogAAAnIAAAAEAAAABAAAAAgAAAAI/AAAAAEAAAABAAAAAQAAABYAbQBhAGkAbgBUAG8AbwBsAEIAYQByAwAAAAD/////AAAAAAAAAAA=
+    '';
+  };
 
   xdg.configFile."fuzzel/fuzzel.ini".text = ''
     [main]
     include=${inputs.catppuccin-fuzzel}/themes/catppuccin-mocha/mauve.ini
     font=Inter:size=12
-    icon-theme=Papirus
+    icon-theme=Papirus-Dark
     terminal=kitty
   '';
 
@@ -347,8 +626,30 @@ in
   programs.noctalia = {
     enable = true;
     systemd.enable = true;
-    # 留空可让 Noctalia 设置界面管理配置。
-    settings = { };
+    # Keep Kitty and KDE/Qt out of dynamic templates so their fixed
+    # Catppuccin Mocha theme is not overwritten on palette changes.
+    settings.theme.templates = {
+      enable_builtin_templates = true;
+      builtin_ids = [
+        "alacritty"
+        "btop"
+        "cava"
+        "emacs"
+        "foot"
+        "ghostty"
+        "gtk3"
+        "gtk4"
+        "helix"
+        "labwc"
+        "niri"
+        "hyprland"
+        "mango"
+        "scroll"
+        "sway"
+        "starship"
+        "wezterm"
+      ];
+    };
   };
 
   services.mako.enable = false;
