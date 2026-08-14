@@ -1,7 +1,9 @@
 { lib, ... }:
 {
-  # Replace this with the actual disk's /dev/disk/by-id/... path before
-  # installation.
+  # The VMware installation uses a single virtual SATA disk. Keep this layout
+  # in sync with the installed disk: ESP on partition 1 and Btrfs on partition
+  # 2. In particular, do not declare a swap partition that does not exist,
+  # because resume support would make the initrd wait for it indefinitely.
   disko.devices.disk.main = {
     type = "disk";
     device = lib.mkDefault "/dev/sda";
@@ -19,19 +21,6 @@
             format = "vfat";
             mountpoint = "/boot";
             mountOptions = [ "umask=0077" ];
-          };
-        };
-
-        swap = {
-          # Match this host's 64 GiB of RAM to reserve enough space for the
-          # hibernation image.
-          size = "64G";
-          content = {
-            type = "swap";
-            # Disko configures this partition as boot.resumeDevice.
-            # Hibernation cannot use randomEncryption because its key changes
-            # on every boot.
-            resumeDevice = true;
           };
         };
 

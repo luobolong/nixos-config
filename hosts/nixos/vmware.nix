@@ -21,6 +21,7 @@ in
   # newer kernel used by this configuration.
   boot.initrd.availableKernelModules = [
     "ahci"
+    "dm_mod"
     "sd_mod"
     "btrfs"
   ];
@@ -29,6 +30,7 @@ in
   # required to discover and mount the VMware Btrfs root filesystem.
   boot.initrd.kernelModules = lib.mkForce [
     "ahci"
+    "dm_mod"
     "sd_mod"
     "btrfs"
   ];
