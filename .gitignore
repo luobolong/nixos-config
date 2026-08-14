@@ -3,3 +3,4 @@ result-*
 .direnv
 *.qcow2
 *.iso
+.idea/
