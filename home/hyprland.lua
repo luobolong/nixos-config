@@ -13,7 +13,7 @@ hl.monitor({
   output = "",
   mode = "preferred",
   position = "auto",
-  scale = 2,
+  scale = 1,
 })
 
 -- nwg-displays writes these files after the first successful Apply. Keep the
