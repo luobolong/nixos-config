@@ -21,6 +21,10 @@ let
     QWidget {
       font-size: 9pt;
     }
+
+    QDockWidget#placesDock {
+      min-height: 350px;
+    }
   '';
   dolphin = pkgs.symlinkJoin {
     name = "dolphin-kvantum";
