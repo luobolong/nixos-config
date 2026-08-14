@@ -8,6 +8,10 @@
   # required for authentication.
   programs.hyprlock.enable = true;
 
+  programs.niri = {
+    enable = true;
+  };
+
   programs.noctalia = {
     enable = true;
     recommendedServices.enable = true;

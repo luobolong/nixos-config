@@ -464,6 +464,7 @@ in
       enable = true;
       settings = {
         Hyprland = [ "kitty.desktop" ];
+        niri = [ "kitty.desktop" ];
         default = [ "kitty.desktop" ];
       };
     };
@@ -600,6 +601,17 @@ in
     $DRY_RUN_CMD ${pkgs.rsync}/bin/rsync -rL --chmod=u+w ${inputs.rime-ice}/ ${config.home.homeDirectory}/.local/share/fcitx5/rime/
   '';
 
+  # niri's config.kdl includes "noctalia.kdl". Before Noctalia renders it for the first time,
+  # pre-create an empty file to prevent the include from failing. The existence of this file
+  # also signals to Noctalia's apply.sh that an include statement already exists (avoiding
+  # attempts to append to the read-only config.kdl).
+  home.activation.ensureNoctaliaNiriColors = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    $DRY_RUN_CMD mkdir -p ${config.xdg.configHome}/niri
+    if [[ ! -f ${config.xdg.configHome}/niri/noctalia.kdl ]]; then
+      $DRY_RUN_CMD touch ${config.xdg.configHome}/niri/noctalia.kdl
+    fi
+  '';
+
   xdg.configFile."fcitx5/profile".text = ''
     [Groups/0]
     Name=Default
@@ -637,6 +649,9 @@ in
     configType = "lua";
     extraConfig = builtins.readFile ./hyprland.lua;
   };
+
+  # niri scrolling tiling compositor configuration
+  xdg.configFile."niri/config.kdl".source = ./niri.kdl;
 
   programs.noctalia = {
     enable = true;
