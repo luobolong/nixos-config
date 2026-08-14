@@ -1,6 +1,7 @@
 { lib, ... }:
 {
-  # 安装前必须把这里改成实际磁盘的 /dev/disk/by-id/... 路径。
+  # Replace this with the actual disk's /dev/disk/by-id/... path before
+  # installation.
   disko.devices.disk.main = {
     type = "disk";
     device = lib.mkDefault "/dev/disk/by-id/CHANGE_ME";
@@ -22,12 +23,14 @@
         };
 
         swap = {
-          # 与本机 64 GiB 内存等大，为休眠镜像预留足够空间。
+          # Match this host's 64 GiB of RAM to reserve enough space for the
+          # hibernation image.
           size = "64G";
           content = {
             type = "swap";
-            # 由 Disko 将此分区配置为 boot.resumeDevice。
-            # 休眠不能使用每次开机更换密钥的 randomEncryption。
+            # Disko configures this partition as boot.resumeDevice.
+            # Hibernation cannot use randomEncryption because its key changes
+            # on every boot.
             resumeDevice = true;
           };
         };

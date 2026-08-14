@@ -297,7 +297,7 @@ in
       x11.enable = true;
     };
     packages = with pkgs; [
-      # 桌面应用
+      # Desktop applications
       vscode
       jetbrains.idea
       jetbrains.datagrip
@@ -316,7 +316,7 @@ in
       obs-studio
       pavucontrol
 
-      # Hyprland 与 Wayland 桌面工具
+      # Hyprland and Wayland desktop tools
       fuzzel
       wl-clipboard
       hyprpicker
@@ -333,7 +333,7 @@ in
       nwg-displays
       xlsclients
 
-      # 终端与文件检索工具
+      # Terminal and file search tools
       fastfetch
       btop
       ripgrep
@@ -343,7 +343,7 @@ in
       which
       lsof
 
-      # 数据处理、传输与归档工具
+      # Data processing, transfer, and archive tools
       jq
       yq-go
       rsync
@@ -351,7 +351,7 @@ in
       unzip
       p7zip
 
-      # 硬件、存储与网络诊断
+      # Hardware, storage, and network diagnostics
       pciutils
       usbutils
       smartmontools
@@ -359,12 +359,12 @@ in
       lm_sensors
       dnsutils
 
-      # NixOS 日常维护工具
+      # Routine NixOS maintenance tools
       nh
       nix-output-monitor
       nvd
 
-      # 开发、构建与语言工具
+      # Development, build, and language tools
       cmake
       pkg-config
       shellcheck
@@ -593,7 +593,8 @@ in
     ]
   '';
 
-  # rime-ice 需要在用户目录写入编译产物，因此部署时复制为可写文件。
+  # rime-ice writes compiled artifacts into the user directory, so deploy it
+  # as a writable copy.
   home.activation.installRimeIce = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     $DRY_RUN_CMD mkdir -p ${config.home.homeDirectory}/.local/share/fcitx5/rime
     $DRY_RUN_CMD ${pkgs.rsync}/bin/rsync -rL --chmod=u+w ${inputs.rime-ice}/ ${config.home.homeDirectory}/.local/share/fcitx5/rime/
@@ -618,10 +619,10 @@ in
   '';
 
   xdg.configFile."fcitx5/conf/classicui.conf".text = ''
-    # 横向候选列表
+    # Horizontal candidate list
     Vertical Candidate List=False
 
-    # 根据各屏幕 DPI 缩放
+    # Scale according to each display's DPI
     PerScreenDPI=True
 
     Font="Noto Sans 12"
@@ -708,6 +709,9 @@ in
     };
   };
 
+  # Dolphin delegates removable and secondary-drive mounts to UDisks2, which
+  # needs a PolicyKit authentication agent in the graphical user session.
+  services.hyprpolkitagent.enable = true;
   services.mako.enable = false;
   services.gpg-agent = {
     enable = true;

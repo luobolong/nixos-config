@@ -7,7 +7,8 @@
   ...
 }:
 let
-  # ben 与 root 的声明式登录密码均为 q。安装完成后应尽快替换此哈希。
+  # The declarative login password for both ben and root is q. Replace this
+  # hash as soon as possible after installation.
   loginPasswordHash = "$6$R1okLc57kK.c4j7/$t7Vr4cPUATqr1LthGUK8rX1MePp8yKUPltzSzLNbWT7OaN153SYID5hrvb3hse.Mgh6g54v1PFYheRHPx/l8W1";
 in
 {
@@ -33,7 +34,8 @@ in
   console.keyMap = "us";
 
   users = {
-    # 强制同步声明式密码，确保声明配置是账户密码的唯一来源。
+    # Force declarative password synchronization so this configuration remains
+    # the single source of truth for account passwords.
     mutableUsers = false;
     users = {
       root.hashedPassword = loginPasswordHash;
@@ -83,17 +85,19 @@ in
   nixpkgs.config.allowUnfree = true;
 
   boot = {
-    # 跟随 nixos-unstable 提供的最新 Linux 内核系列。
+    # Follow the latest Linux kernel series provided by nixos-unstable.
     kernelPackages = pkgs.linuxPackages_latest;
 
     loader = {
-      # Lanzaboote 接管 systemd-boot，并为每个系统代次生成 UKI。
+      # Lanzaboote takes over systemd-boot and generates a UKI for each system
+      # generation.
       systemd-boot = {
         enable = lib.mkForce false;
         configurationLimit = 10;
       };
       efi.canTouchEfiVariables = true;
-      # rEFInd 负责第一层选择；这里仅为选择 NixOS 系统代次保留短暂停顿。
+      # rEFInd handles the first-stage selection; keep only a short delay here
+      # for choosing a NixOS system generation.
       timeout = 2;
     };
 
@@ -102,8 +106,10 @@ in
       pkiBundle = "/var/lib/sbctl";
       configurationLimit = 10;
 
-      # 首次启动时生成密钥。生成后需再次 nixos-rebuild 才会签名 UKI。
-      # 固件密钥注册保持手动，避免在未知主板上自动修改 UEFI 密钥。
+      # Generate keys on the first boot. Rebuild NixOS again afterward to sign
+      # the UKIs.
+      # Keep firmware key enrollment manual to avoid automatically modifying
+      # UEFI keys on unknown motherboards.
       autoGenerateKeys.enable = true;
       autoEnrollKeys.enable = false;
     };
