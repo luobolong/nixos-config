@@ -42,32 +42,14 @@ layout {
         proportion 0.66667
     }
     default-column-width { proportion 0.5; }
-    // Focus ring/border width is fixed here; colors are overridden by noctalia.kdl.
+    // Keep only the focus ring; its colors are overridden by noctalia.kdl.
     focus-ring {
         width 2
     }
     border {
-        width 2
+        off
     }
 }
-
-// Named workspaces. niri's `focus-workspace <number>` uses “positional index” rather than fixed numbering,
-// and declaring named workspaces also occupies the leading indices. To achieve Hyprland's “fixed numbering” semantics,
-// we declare 1–10 as named workspaces and bind them by name, while also adding S/M/terminal special workspaces.
-// Name-based addressing is order-independent, so they don't interfere with each other. Named workspaces persist even when empty.
-workspace "1"
-workspace "2"
-workspace "3"
-workspace "4"
-workspace "5"
-workspace "6"
-workspace "7"
-workspace "8"
-workspace "9"
-workspace "10"
-workspace "S"
-workspace "M"
-workspace "terminal"
 
 // Catppuccin glass effect, corresponding to window_rule in hyprland.lua.
 window-rule {
@@ -75,18 +57,13 @@ window-rule {
     opacity 0.90
 }
 
-// Dropdown terminal floats and is pinned to the terminal workspace.
-window-rule {
-    match app-id="dropdown-terminal"
-    open-on-workspace "terminal"
-    open-floating true
-    default-column-width { proportion 0.8; }
-}
-
 spawn-at-startup "fcitx5" "-d" "--replace"
-spawn-at-startup "kitty" "--class" "dropdown-terminal" "--title" "dropdown-terminal"
 
 prefer-no-csd
+
+hotkey-overlay {
+    skip-at-startup
+}
 
 environment {
     // On VMware, force niri-spawned apps to use llvmpipe software rendering.
@@ -106,9 +83,10 @@ binds {
     Alt+F4      { close-window; }
     Mod+Alt+F4  { close-window; }                      // niri has no force-kill, only requests close
     Mod+W       { toggle-window-floating; }          // Hyprland: toggle floating
-    Mod+G       { consume-window-into-column; }        // Hyprland: toggle group (niri column stack)
+    Mod+G       { center-column; }
     Mod+L       { spawn "hyprlock"; }                  // Lock screen
     Mod+D       { fullscreen-window; }
+    Mod+Shift+F { fullscreen-window; }
     Shift+F11   { fullscreen-window; }
     Mod+Ctrl+H  { focus-window-up; }                   // Hyprland: previous in group
     Mod+Ctrl+L  { focus-window-down; }                 // Hyprland: next in group
@@ -146,40 +124,40 @@ binds {
     // Common applications (matching Hyprland)
     // ============================================================
     Mod+T             { spawn "kitty"; }
-    Mod+Alt+T         { focus-workspace "terminal"; }   // Workspace with dropdown terminal
     Mod+E             { spawn "dolphin"; }
     Mod+C             { spawn "code"; }
     Mod+B             { spawn "firefox"; }
-    Mod+F             { spawn "firefox"; }
+    Mod+F             { maximize-column; }
+    Mod+M             { maximize-window-to-edges; }
     Ctrl+Shift+Escape { spawn "missioncenter"; }
     Mod+A             { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
     Mod+V             { spawn "noctalia" "msg" "panel-toggle" "clipboard"; }
 
     // ============================================================
-    // Workspaces 1–10 (matching Hyprland, 0 corresponds to workspace 10)
-    // Using named addressing to avoid positional index conflicts.
+    // Dynamic workspace indices; 0 maps to index 10. If the requested index
+    // does not exist yet, niri selects its trailing empty workspace.
     // ============================================================
-    Mod+1 { focus-workspace "1"; }
-    Mod+2 { focus-workspace "2"; }
-    Mod+3 { focus-workspace "3"; }
-    Mod+4 { focus-workspace "4"; }
-    Mod+5 { focus-workspace "5"; }
-    Mod+6 { focus-workspace "6"; }
-    Mod+7 { focus-workspace "7"; }
-    Mod+8 { focus-workspace "8"; }
-    Mod+9 { focus-workspace "9"; }
-    Mod+0 { focus-workspace "10"; }
+    Mod+1 { focus-workspace 1; }
+    Mod+2 { focus-workspace 2; }
+    Mod+3 { focus-workspace 3; }
+    Mod+4 { focus-workspace 4; }
+    Mod+5 { focus-workspace 5; }
+    Mod+6 { focus-workspace 6; }
+    Mod+7 { focus-workspace 7; }
+    Mod+8 { focus-workspace 8; }
+    Mod+9 { focus-workspace 9; }
+    Mod+0 { focus-workspace 10; }
 
-    Mod+Shift+1 { move-column-to-workspace "1"; }
-    Mod+Shift+2 { move-column-to-workspace "2"; }
-    Mod+Shift+3 { move-column-to-workspace "3"; }
-    Mod+Shift+4 { move-column-to-workspace "4"; }
-    Mod+Shift+5 { move-column-to-workspace "5"; }
-    Mod+Shift+6 { move-column-to-workspace "6"; }
-    Mod+Shift+7 { move-column-to-workspace "7"; }
-    Mod+Shift+8 { move-column-to-workspace "8"; }
-    Mod+Shift+9 { move-column-to-workspace "9"; }
-    Mod+Shift+0 { move-column-to-workspace "10"; }
+    Mod+Shift+1 { move-column-to-workspace 1; }
+    Mod+Shift+2 { move-column-to-workspace 2; }
+    Mod+Shift+3 { move-column-to-workspace 3; }
+    Mod+Shift+4 { move-column-to-workspace 4; }
+    Mod+Shift+5 { move-column-to-workspace 5; }
+    Mod+Shift+6 { move-column-to-workspace 6; }
+    Mod+Shift+7 { move-column-to-workspace 7; }
+    Mod+Shift+8 { move-column-to-workspace 8; }
+    Mod+Shift+9 { move-column-to-workspace 9; }
+    Mod+Shift+0 { move-column-to-workspace 10; }
 
     // ============================================================
     // Relative workspace navigation (corresponding to Hyprland's r+1/r-1, empty)
@@ -193,16 +171,6 @@ binds {
     // External mouse wheel switches workspaces (corresponding to Hyprland's Mod+wheel)
     Mod+WheelScrollDown cooldown-ms=150 { focus-workspace-down; }
     Mod+WheelScrollUp   cooldown-ms=150 { focus-workspace-up; }
-
-    // ============================================================
-    // Special workspaces S / M (corresponding to Hyprland special:S / special:M)
-    // ============================================================
-    Mod+S       { focus-workspace "S"; }
-    Mod+M       { focus-workspace "M"; }
-    Mod+Shift+S { move-column-to-workspace "S"; }
-    Mod+Shift+M { move-column-to-workspace "M"; }
-    Mod+Alt+S   { move-column-to-workspace "S" focus=false; }  // Silent move
-    Mod+Alt+M   { move-column-to-workspace "M" focus=false; }
 
     // ============================================================
     // Screen capture (matching Hyprland, screenshots use niri built-in)
