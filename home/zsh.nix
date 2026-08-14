@@ -10,9 +10,10 @@ in
 {
   home.sessionVariables.MANPAGER = "bat -l man -p";
 
-  # programs.starship generates this file declaratively. Replace an existing
-  # copy instead of trying to reuse the fixed Home Manager backup suffix.
-  xdg.configFile."starship.toml".force = true;
+  # programs.starship declares its generated config through home.file using
+  # this absolute XDG path. Force that same entry so a stale fixed-suffix
+  # backup cannot block later activations.
+  home.file."${config.xdg.configHome}/starship.toml".force = true;
 
   programs = {
     bat.enable = true;
