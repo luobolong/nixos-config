@@ -1,6 +1,6 @@
-# NixOS Hyprland 工作站
+# NixOS Hyprland / niri 工作站
 
-一套可以直接放到 GitHub 管理的 NixOS 配置。它使用 Flakes、Home Manager、Disko 和 Btrfs，提供 Hyprland + Noctalia v5 桌面、雾凇拼音和常用桌面/开发软件。
+一套可以直接放到 GitHub 管理的 NixOS 配置。它使用 Flakes、Home Manager、Disko 和 Btrfs，提供 Hyprland 与 niri 两套 Noctalia v5 桌面（在登录界面自由选择）、雾凇拼音和常用桌面/开发软件。
 
 > [!WARNING]
 > 安装命令会**清空目标磁盘的全部数据**。执行 Disko 前，务必备份数据并反复确认磁盘的 `/dev/disk/by-id/...` 路径。不要使用容易变化的 `/dev/sda` 或 `/dev/nvme0n1`。
@@ -14,9 +14,9 @@
 - Snapper：分别为 `/` 和 `/home` 自动创建快照，并按小时、天、周、月清理
 - rEFInd（10 秒）→ systemd-boot（2 秒）→ Lanzaboote UKI；支持 UEFI Secure Boot，最多保留 10 个系统代次
 - 每周自动清理 7 天前的 Nix 代次，并优化 Nix Store
-- Hyprland（UWSM 会话，Lua 配置）+ Noctalia v5
+- Hyprland（UWSM 会话，Lua 配置）与 niri（滚动平铺，KDL 配置）+ Noctalia v5
 - greetd + tuigreet 登录界面
-- Kitty（Hyprland 模糊背景）+ Zsh + Starship 提示符
+- Kitty（Wayland 模糊背景）+ Zsh + Starship 提示符
 - NetworkManager、蓝牙、PipeWire
 - Fcitx5 + Rime + rime-ice（雾凇拼音）+ Catppuccin Mocha Sapphire 皮肤
 - Inter、Source Serif 4、Noto CJK/Emoji、Sarasa Gothic 字体 + Papirus Dark 图标主题 + Adwaita 32px 鼠标主题
@@ -44,7 +44,9 @@
 │   └── snapper.nix
 ├── home/
 │   ├── default.nix
-│   └── hyprland.lua
+│   ├── hyprland.lua
+│   ├── niri.kdl
+│   └── zsh.nix
 ├── secrets/
 │   └── claude-code.yaml
 └── packages/
@@ -205,7 +207,7 @@ sudo nixos-install --flake .#nixos --no-root-passwd
 sudo reboot
 ```
 
-拔掉安装 U 盘后，应先看到只包含 `systemd-boot` 和 `Windows` 的 rEFInd 菜单；选择带 NixOS 图标的 `systemd-boot` 后，再选择 NixOS 系统代次。首次登录在 tuigreet 中输入用户名 `ben`、密码 `q`，并选择 Hyprland。此时先保持固件 Secure Boot 关闭，首次启动的 rEFInd 和 UKI 尚未签名。
+拔掉安装 U 盘后，应先看到只包含 `systemd-boot` 和 `Windows` 的 rEFInd 菜单；选择带 NixOS 图标的 `systemd-boot` 后，再选择 NixOS 系统代次。首次登录在 tuigreet 中输入用户名 `ben`、密码 `q`，并选择 Hyprland 或 niri 会话（tuigreet 会记住上次选择）。此时先保持固件 Secure Boot 关闭，首次启动的 rEFInd 和 UKI 尚未签名。
 
 ## 首次登录
 
@@ -293,7 +295,7 @@ nvim
 
 ### Noctalia
 
-Noctalia 作为用户服务随 Hyprland 启动。它的图形设置保存在 `~/.config/noctalia`。检查服务：
+Noctalia 作为用户服务随桌面（Hyprland 或 niri）启动。它的图形设置保存在 `~/.config/noctalia`。检查服务：
 
 ```bash
 systemctl --user status noctalia
@@ -350,7 +352,9 @@ systemctl list-timers 'snapper-*'
 
 根目录和 Home 使用独立的持久化 Btrfs 子卷，系统状态、用户文件、应用配置和缓存都会正常跨重启保留。`XDG_PROJECTS_DIR` 指向 `~/Workspace`；需要释放空间时可按需清理 `~/.cache`。
 
-## 常用 Hyprland 快捷键
+## Hyprland 会话快捷键
+
+以下快捷键适用于 Hyprland 会话。niri 会话的键位见后文，两者尽量保持一致。
 
 | 快捷键 | 动作 |
 |---|---|
@@ -420,6 +424,77 @@ systemctl list-timers 'snapper-*'
 | `Print` | 截取所有显示器并用 Satty 标注 |
 
 截图完成后会打开 Satty 进行标注。在 Satty 中复制结果到剪贴板，或保存到 XDG 图片目录下的 `Screenshots` 子目录。
+
+## niri 会话快捷键
+
+niri 是滚动平铺合成器，键位在 `home/niri.kdl` 中定义，并尽量与 Hyprland 会话保持一致。列（column）是 niri 的基本布局单位，因此部分动作以列为对象。
+
+### 窗口与会话
+
+| 快捷键 | 动作 |
+|---|---|
+| `Super + Q` / `Alt + F4` | 关闭当前窗口（niri 无强制杀死，仅请求关闭） |
+| `Super + W` | 切换当前窗口浮动 |
+| `Super + G` / `Super + ,` | 把右侧窗口并入当前列 |
+| `Super + .` | 从列中弹出当前窗口 |
+| `Super + [` / `Super + ]` | 向左 / 向右并入或弹出窗口 |
+| `Super + L` | 使用 Hyprlock 锁定屏幕 |
+| `Shift + F11` / `Super + D` | 切换全屏 |
+| `Super + Ctrl + H` / `Super + Ctrl + L` | 聚焦列内上 / 下一个窗口 |
+| `Alt + Tab` | 打开 Noctalia 窗口切换器 |
+| `Super + J` / `Super + \` | 切换列标签视图 |
+| `Super + R` | 在预设列宽间循环 |
+| `Super + Shift + R` | 重置窗口高度 |
+| `Super + Home` / `Super + End` | 居中 / 最大化当前列 |
+| `Super + O` | 切换概览模式 |
+| `Super + Shift + /` | 显示快捷键速查 |
+
+### 焦点、移动与调整
+
+| 快捷键 | 动作 |
+|---|---|
+| `Super + Left/Right` | 聚焦左 / 右列 |
+| `Super + Up/Down` | 聚焦列内上 / 下窗口 |
+| `Super + Ctrl + Shift + Left/Right` | 左 / 右移动当前列 |
+| `Super + Ctrl + Shift + Up/Down` | 上 / 下移动当前窗口 |
+| `Super + Shift + Left/Right` / `Super + -` / `Super + =` | 按 10% 调整列宽 |
+| `Super + Shift + Up/Down` | 按 10% 调整窗口高度 |
+
+### 启动应用
+
+| 快捷键 | 动作 |
+|---|---|
+| `Super + T` | 打开 Kitty |
+| `Super + Alt + T` | 切换到下拉终端工作区 |
+| `Super + E` | 打开 Dolphin |
+| `Super + C` | 打开 VS Code |
+| `Super + B` / `Super + F` | 打开 Firefox |
+| `Ctrl + Shift + Escape` | 打开 Mission Center |
+| `Super + A` | 打开 Noctalia 应用启动器 |
+| `Super + V` | 打开 Noctalia 剪贴板 |
+
+### 工作区与暂存区
+
+| 快捷键 | 动作 |
+|---|---|
+| `Super + 1..9` / `Super + 0` | 切换到具名工作区 1..9 / 10 |
+| `Super + Shift + 1..9` / `Super + Shift + 0` | 移动当前列到工作区 1..9 / 10 |
+| `Super + Ctrl + Down` / `Super + Ctrl + Right` | 切换到下一个工作区 |
+| `Super + Ctrl + Left` | 切换到上一个工作区 |
+| `Super + Alt + Ctrl + Right/Left` | 移动列到下 / 上一个工作区 |
+| `Super + 鼠标滚轮下 / 上` | 下一个 / 上一个工作区 |
+| `Super + S` / `Super + M` | 切换到暂存区 S / M |
+| `Super + Shift + S` / `Super + Shift + M` | 移动列到暂存区 S / M 并跟随 |
+| `Super + Alt + S` / `Super + Alt + M` | 静默移动列到暂存区 S / M |
+
+### 屏幕捕获
+
+| 快捷键 | 动作 |
+|---|---|
+| `Super + Shift + P` | 选取颜色并复制到剪贴板 |
+| `Super + P` / `Super + Ctrl + P` | 交互式区域截图 |
+| `Super + Alt + P` / `Print` | 截取当前显示器 |
+| `Alt + Print` | 截取当前窗口（niri 特色） |
 
 ## 注意事项
 
