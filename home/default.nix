@@ -258,6 +258,8 @@ let
   };
 in
 {
+  imports = [ ./zsh.nix ];
+
   home = {
     inherit username;
     homeDirectory = "/home/${username}";
@@ -371,22 +373,6 @@ in
     enable = true;
     enableZshIntegration = true;
     nix-direnv.enable = true;
-  };
-  programs.zsh = {
-    enable = true;
-    enableCompletion = true;
-    autosuggestion.enable = true;
-    syntaxHighlighting.enable = true;
-    dotDir = "${config.xdg.configHome}/zsh";
-    history.path = "${config.xdg.stateHome}/zsh/history";
-
-    initContent = ''
-      bindkey -e
-    '';
-  };
-  programs.starship = {
-    enable = true;
-    enableZshIntegration = true;
   };
   gtk = {
     enable = true;
@@ -671,8 +657,8 @@ in
     };
     settings.plugins.enabled = [ "noctalia/mpvpaper" ];
     settings.widget.mpvpaper.type = "noctalia/mpvpaper:mpvpaper";
-    # Keep Kitty and KDE/Qt out of dynamic templates so their fixed
-    # Catppuccin Mocha theme is not overwritten on palette changes.
+    # Keep Kitty, Starship, and KDE/Qt out of dynamic templates so their fixed
+    # configurations are not overwritten on palette changes.
     settings.theme.templates = {
       enable_builtin_templates = true;
       builtin_ids = [
@@ -691,7 +677,6 @@ in
         "mango"
         "scroll"
         "sway"
-        "starship"
         "wezterm"
       ];
     };

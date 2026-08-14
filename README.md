@@ -252,6 +252,12 @@ fcitx5 -r
 
 然后打开 `fcitx5-configtool`，确认 Input Method 中存在 `Rime`。
 
+### Zsh
+
+Zsh 采用 [radleylewis/zsh](https://github.com/radleylewis/zsh) 的精简方案，并由 Home Manager 声明式管理插件及依赖。配置包含 Starship、zoxide、fzf、eza、bat、fast-syntax-highlighting、autosuggestions、history substring search 和 vi mode。
+
+常用快捷键：`Ctrl+R` 搜索历史，`Ctrl+T` 搜索包含隐藏文件的文件，`Ctrl+F` 搜索普通文件，`Ctrl+Left/Right` 按单词移动，`Up/Down` 按子串搜索历史，`Ctrl+\` 切换自动建议。
+
 ### AstroNvim
 
 首次运行会下载 AstroNvim 插件：
