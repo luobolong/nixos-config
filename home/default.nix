@@ -650,8 +650,12 @@ in
     extraConfig = builtins.readFile ./hyprland.lua;
   };
 
-  # niri scrolling tiling compositor configuration
-  xdg.configFile."niri/config.kdl".source = ./niri.kdl;
+  # This file is fully managed here. Replace an existing copy directly so a
+  # stale .hm-backup from an earlier activation cannot block future rebuilds.
+  xdg.configFile."niri/config.kdl" = {
+    source = ./niri.kdl;
+    force = true;
+  };
 
   programs.noctalia = {
     enable = true;
