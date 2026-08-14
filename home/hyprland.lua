@@ -134,11 +134,12 @@ hl.window_rule({
 local centeredBitwardenPopouts = {}
 
 local function centerBitwardenPopout(window)
-  if window == nil or window.class ~= "firefox" or centeredBitwardenPopouts[window.stable_id] then
+  local stableId = window and window.stable_id
+  if stableId == nil or window.class ~= "firefox" or centeredBitwardenPopouts[stableId] then
     return
   end
 
-  local title = string.lower(window.title)
+  local title = string.lower(window.title or "")
   local isBitwardenPopout = title == "bitwarden"
     or (
       string.find(title, "extension:", 1, true) ~= nil
@@ -149,7 +150,7 @@ local function centerBitwardenPopout(window)
     return
   end
 
-  centeredBitwardenPopouts[window.stable_id] = true
+  centeredBitwardenPopouts[stableId] = true
   hl.dispatch(hl.dsp.window.float({ action = "set", window = window }))
   hl.dispatch(hl.dsp.window.center({ window = window }))
 end
@@ -157,8 +158,9 @@ end
 hl.on("window.open", centerBitwardenPopout)
 hl.on("window.title", centerBitwardenPopout)
 hl.on("window.destroy", function(window)
-  if window ~= nil then
-    centeredBitwardenPopouts[window.stable_id] = nil
+  local stableId = window and window.stable_id
+  if stableId ~= nil then
+    centeredBitwardenPopouts[stableId] = nil
   end
 end)
 

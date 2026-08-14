@@ -72,6 +72,9 @@ let
       export ANTHROPIC_AUTH_TOKEN
       ANTHROPIC_AUTH_TOKEN="$(< "$token_file")"
 
+      export ANTHROPIC_BASE_URL="https://openapi.troncode.cn"
+      export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC="1"
+
       if [[ "$ANTHROPIC_AUTH_TOKEN" == "REPLACE_WITH_REAL_TOKEN" ]]; then
         echo "Claude Code token is still a placeholder; run: sops secrets/claude-code.yaml" >&2
         exit 1
