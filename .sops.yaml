@@ -1,0 +1,10 @@
+keys:
+  - &ben BE48D3A097141427657B9BB7223526AB6B297BE2
+  - &nixos age1ewfk7lvr7c7gfvzf7wqkq6u76s2xn8a6lqfn95kfure7dmpvwpkqesarqd
+creation_rules:
+  - path_regex: secrets/.*\.yaml$
+    key_groups:
+      - pgp:
+          - *ben
+        age:
+          - *nixos

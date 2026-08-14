@@ -1,6 +1,7 @@
 { lib, ... }:
 {
-  # VMware 分支固定使用虚拟机中的单块系统盘。
+  # Replace this with the actual disk's /dev/disk/by-id/... path before
+  # installation.
   disko.devices.disk.main = {
     type = "disk";
     device = lib.mkDefault "/dev/sda";
@@ -18,6 +19,19 @@
             format = "vfat";
             mountpoint = "/boot";
             mountOptions = [ "umask=0077" ];
+          };
+        };
+
+        swap = {
+          # Match this host's 64 GiB of RAM to reserve enough space for the
+          # hibernation image.
+          size = "64G";
+          content = {
+            type = "swap";
+            # Disko configures this partition as boot.resumeDevice.
+            # Hibernation cannot use randomEncryption because its key changes
+            # on every boot.
+            resumeDevice = true;
           };
         };
 

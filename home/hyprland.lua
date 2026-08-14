@@ -120,6 +120,50 @@ hl.window_rule({
   opacity = "0.90 override 0.78 override 1.0 override",
 })
 
+-- Keep the system monitor as a centered utility window.
+hl.window_rule({
+  name = "mission-center-float",
+  match = { class = "^io[.]missioncenter[.]MissionCenter$" },
+  float = true,
+  center = true,
+})
+
+-- Recent Firefox versions initially expose the Bitwarden pop-out as a generic
+-- Firefox window and only add the extension name later. React to that title
+-- change so static-rule timing cannot leave the pop-out tiled.
+local centeredBitwardenPopouts = {}
+
+local function centerBitwardenPopout(window)
+  local stableId = window and window.stable_id
+  if stableId == nil or window.class ~= "firefox" or centeredBitwardenPopouts[stableId] then
+    return
+  end
+
+  local title = string.lower(window.title or "")
+  local isBitwardenPopout = title == "bitwarden"
+    or (
+      string.find(title, "extension:", 1, true) ~= nil
+      and string.find(title, "bitwarden", 1, true) ~= nil
+    )
+
+  if not isBitwardenPopout then
+    return
+  end
+
+  centeredBitwardenPopouts[stableId] = true
+  hl.dispatch(hl.dsp.window.float({ action = "set", window = window }))
+  hl.dispatch(hl.dsp.window.center({ window = window }))
+end
+
+hl.on("window.open", centerBitwardenPopout)
+hl.on("window.title", centerBitwardenPopout)
+hl.on("window.destroy", function(window)
+  local stableId = window and window.stable_id
+  if stableId ~= nil then
+    centeredBitwardenPopouts[stableId] = nil
+  end
+end)
+
 hl.on("hyprland.start", function()
   -- The compositor has initialized on VMware SVGA3D at this point. Make
   -- subsequently spawned desktop applications use Mesa llvmpipe instead.
@@ -136,7 +180,7 @@ hl.on("hyprland.start", function()
   )
 end)
 
--- 窗口与会话操作。
+-- Window and session actions.
 hl.bind(mainMod .. " + Q", hl.dsp.window.close())
 hl.bind("ALT + F4", hl.dsp.window.close())
 hl.bind(mainMod .. " + ALT + F4", hl.dsp.window.kill())
@@ -184,7 +228,7 @@ for key, step in pairs(resizeSteps) do
   )
 end
 
--- 常用应用。
+-- Frequently used applications.
 hl.bind(mainMod .. " + T", hl.dsp.exec_cmd(terminal))
 hl.bind(mainMod .. " + ALT + T", hl.dsp.workspace.toggle_special("terminal"))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
@@ -196,7 +240,7 @@ hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("noctalia msg panel-toggle launcher")
 hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("noctalia msg panel-toggle clipboard"))
 hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd("hypr-command-palette"))
 
--- 工作区 1–10；数字键 0 对应工作区 10。
+-- Workspaces 1–10; digit key 0 maps to workspace 10.
 for workspace = 1, 10 do
   local key = workspace % 10
   hl.bind(mainMod .. " + " .. key, hl.dsp.focus({ workspace = workspace }))
@@ -247,14 +291,15 @@ end
 bindSpecialWorkspace("S", "S")
 bindSpecialWorkspace("M", "M")
 
--- 屏幕捕获。
+-- Screen capture.
 hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd("hyprpicker -a"))
 hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("hypr-screenshot area"))
 hl.bind(mainMod .. " + CTRL + P", hl.dsp.exec_cmd("hypr-screenshot area true"))
 hl.bind(mainMod .. " + ALT + P", hl.dsp.exec_cmd("hypr-screenshot output"))
 hl.bind("Print", hl.dsp.exec_cmd("hypr-screenshot screen"))
 
--- 音量与亮度按键在锁屏时也可用，并支持长按重复。
+-- Volume and brightness keys remain available while locked and support
+-- press-and-hold repeating.
 local mediaFlags = { locked = true, repeating = true }
 hl.bind(
   "XF86AudioRaiseVolume",
@@ -282,7 +327,7 @@ hl.bind(
   mediaFlags
 )
 
--- Super + 鼠标左/右键移动和调整窗口大小。
+-- Super + left/right mouse button moves or resizes windows.
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 hl.bind(mainMod .. " + Z", hl.dsp.window.drag(), { mouse = true })

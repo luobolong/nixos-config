@@ -59,6 +59,30 @@ let
       "--wayland-text-input-version=3"
     ];
   };
+  claudeCode = pkgs.writeShellApplication {
+    name = "claude";
+    text = ''
+      token_file="/run/secrets/claude-code-auth-token"
+
+      if [[ ! -r "$token_file" ]]; then
+        echo "Claude Code token is unavailable; rebuild NixOS after configuring the SOPS secret." >&2
+        exit 1
+      fi
+
+      export ANTHROPIC_AUTH_TOKEN
+      ANTHROPIC_AUTH_TOKEN="$(< "$token_file")"
+
+      export ANTHROPIC_BASE_URL="https://openapi.troncode.cn"
+      export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC="1"
+
+      if [[ "$ANTHROPIC_AUTH_TOKEN" == "REPLACE_WITH_REAL_TOKEN" ]]; then
+        echo "Claude Code token is still a placeholder; run: sops secrets/claude-code.yaml" >&2
+        exit 1
+      fi
+
+      exec ${lib.getExe pkgs.claude-code} "$@"
+    '';
+  };
   screenshot = pkgs.writeShellApplication {
     name = "hypr-screenshot";
     runtimeInputs = with pkgs; [
@@ -258,6 +282,8 @@ let
   };
 in
 {
+  imports = [ ./zsh.nix ];
+
   home = {
     inherit username;
     homeDirectory = "/home/${username}";
@@ -271,7 +297,7 @@ in
       x11.enable = true;
     };
     packages = with pkgs; [
-      # 桌面应用
+      # Desktop applications
       vscode
       jetbrains.idea
       jetbrains.datagrip
@@ -290,7 +316,7 @@ in
       obs-studio
       pavucontrol
 
-      # Hyprland 与 Wayland 桌面工具
+      # Hyprland and Wayland desktop tools
       fuzzel
       wl-clipboard
       hyprpicker
@@ -301,11 +327,13 @@ in
       commandPalette
       brightnessctl
       playerctl
+      mpv
+      mpvpaper
       networkmanagerapplet
       nwg-displays
       xlsclients
 
-      # 终端与文件检索工具
+      # Terminal and file search tools
       fastfetch
       btop
       ripgrep
@@ -315,7 +343,7 @@ in
       which
       lsof
 
-      # 数据处理、传输与归档工具
+      # Data processing, transfer, and archive tools
       jq
       yq-go
       rsync
@@ -323,7 +351,7 @@ in
       unzip
       p7zip
 
-      # 硬件、存储与网络诊断
+      # Hardware, storage, and network diagnostics
       pciutils
       usbutils
       smartmontools
@@ -331,12 +359,12 @@ in
       lm_sensors
       dnsutils
 
-      # NixOS 日常维护工具
+      # Routine NixOS maintenance tools
       nh
       nix-output-monitor
       nvd
 
-      # 开发、构建与语言工具
+      # Development, build, and language tools
       cmake
       pkg-config
       shellcheck
@@ -348,6 +376,8 @@ in
       nil
       nixfmt
       codex
+      claudeCode
+      sops
     ];
     preferXdgDirectories = true;
   };
@@ -369,22 +399,6 @@ in
     enable = true;
     enableZshIntegration = true;
     nix-direnv.enable = true;
-  };
-  programs.zsh = {
-    enable = true;
-    enableCompletion = true;
-    autosuggestion.enable = true;
-    syntaxHighlighting.enable = true;
-    dotDir = "${config.xdg.configHome}/zsh";
-    history.path = "${config.xdg.stateHome}/zsh/history";
-
-    initContent = ''
-      bindkey -e
-    '';
-  };
-  programs.starship = {
-    enable = true;
-    enableZshIntegration = true;
   };
   gtk = {
     enable = true;
@@ -579,7 +593,8 @@ in
     ]
   '';
 
-  # rime-ice 需要在用户目录写入编译产物，因此部署时复制为可写文件。
+  # rime-ice writes compiled artifacts into the user directory, so deploy it
+  # as a writable copy.
   home.activation.installRimeIce = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     $DRY_RUN_CMD mkdir -p ${config.home.homeDirectory}/.local/share/fcitx5/rime
     $DRY_RUN_CMD ${pkgs.rsync}/bin/rsync -rL --chmod=u+w ${inputs.rime-ice}/ ${config.home.homeDirectory}/.local/share/fcitx5/rime/
@@ -604,10 +619,10 @@ in
   '';
 
   xdg.configFile."fcitx5/conf/classicui.conf".text = ''
-    # 横向候选列表
+    # Horizontal candidate list
     Vertical Candidate List=False
 
-    # 根据各屏幕 DPI 缩放
+    # Scale according to each display's DPI
     PerScreenDPI=True
 
     Font="Noto Sans 12"
@@ -626,8 +641,51 @@ in
   programs.noctalia = {
     enable = true;
     systemd.enable = true;
-    # Keep Kitty and KDE/Qt out of dynamic templates so their fixed
-    # Catppuccin Mocha theme is not overwritten on palette changes.
+    # NyxNiri-inspired transparent, capsule-style bar. Keep this scoped to
+    # bar defaults so settings changed in Noctalia's UI remain independent.
+    settings.bar = {
+      order = [ "default" ];
+      default = {
+        background_opacity = 0.0;
+        border_width = 0.0;
+        capsule = true;
+        capsule_border = "outline";
+        capsule_foreground = "#FFFFFF";
+        capsule_opacity = 0.79;
+        capsule_padding = 10.0;
+        capsule_radius = 80;
+        capsule_thickness = 1.0;
+        color = "#FFFFFF";
+        enabled = true;
+        panel_overlap = 12;
+        font_family = "JetBrainsMono Nerd Font";
+        margin_ends = 14;
+        margin_edge = 5;
+        scale = 1.1;
+        shadow = false;
+        start = [
+          "launcher"
+          "settings"
+          "workspaces"
+          "active_window"
+        ];
+        center = [ "clock" ];
+        end = [
+          "media"
+          "tray"
+          "wallpaper"
+          "mpvpaper"
+          "volume"
+          "notifications"
+          "session"
+        ];
+        thickness = 26;
+      };
+    };
+    settings.plugins.enabled = [ "noctalia/mpvpaper" ];
+    settings.widget.mpvpaper.type = "noctalia/mpvpaper:mpvpaper";
+    # Keep Kitty, Starship, and KDE/Qt out of dynamic templates so their fixed
+    # configurations are not overwritten on palette changes.
     settings.theme.templates = {
       enable_builtin_templates = true;
       builtin_ids = [
@@ -646,12 +704,14 @@ in
         "mango"
         "scroll"
         "sway"
-        "starship"
         "wezterm"
       ];
     };
   };
 
+  # Dolphin delegates removable and secondary-drive mounts to UDisks2, which
+  # needs a PolicyKit authentication agent in the graphical user session.
+  services.hyprpolkitagent.enable = true;
   services.mako.enable = false;
   services.gpg-agent = {
     enable = true;
@@ -661,6 +721,8 @@ in
   services.ssh-agent.enable = true;
 
   home.sessionVariables = {
+    ANTHROPIC_BASE_URL = "https://openapi.troncode.cn";
+    CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = "1";
     NIXOS_OZONE_WL = "1";
     ELECTRON_OZONE_PLATFORM_HINT = "auto";
     TERMINAL = "kitty";

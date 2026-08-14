@@ -4,7 +4,8 @@
     enable = true;
     withUWSM = true;
   };
-  # 系统模块同时安装 Hyprlock，并配置认证所需的 PAM 服务。
+  # The system module also installs Hyprlock and configures the PAM service
+  # required for authentication.
   programs.hyprlock.enable = true;
 
   programs.noctalia = {
