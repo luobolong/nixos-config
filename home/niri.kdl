@@ -4,10 +4,6 @@
 // Noctalia's apply.sh to detect the existing include and skip appending to the read-only config.kdl.
 include "noctalia.kdl"
 
-output {
-    scale 1.0
-}
-
 input {
     keyboard {
         xkb {
