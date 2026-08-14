@@ -20,14 +20,16 @@
 - NetworkManager、蓝牙、PipeWire
 - Fcitx5 + Rime + rime-ice（雾凇拼音）+ Catppuccin Mocha Sapphire 皮肤
 - Inter、Source Serif 4、Noto CJK/Emoji、Sarasa Gothic 字体 + Papirus Dark 图标主题 + Adwaita 32px 鼠标主题
-- Dolphin、Fastfetch、Mission Center、btop、Fuzzel（Catppuccin Mocha）、Satty、Hyprlock、Neovim + AstroNvim v5、VS Code、IntelliJ IDEA Ultimate、DataGrip、GoLand、Spotify、QQ、FlClash
+- Dolphin、Fastfetch、Mission Center、btop、Fuzzel（Catppuccin Mocha）、Satty、Hyprlock、Neovim + AstroNvim v5、VS Code、IntelliJ IDEA Ultimate、DataGrip、GoLand、Claude Code、Codex、Spotify、QQ、FlClash
 - GnuPG + GPG Agent、SSH Agent、direnv + nix-direnv
+- sops-nix：使用 GPG 与本机 SSH host key 对敏感配置加密
 - jq、yq、rsync、Zip/7-Zip、常用硬件诊断、NixOS 维护与基础构建工具
 
 ## 目录结构
 
 ```text
 .
+├── .sops.yaml
 ├── flake.nix
 ├── hosts/nixos/
 │   ├── default.nix
@@ -38,10 +40,13 @@
 │   ├── desktop.nix
 │   ├── fonts.conf
 │   ├── refind.nix
+│   ├── secrets.nix
 │   └── snapper.nix
 ├── home/
 │   ├── default.nix
 │   └── hyprland.lua
+├── secrets/
+│   └── claude-code.yaml
 └── packages/
     └── flclash.nix
 ```
@@ -203,6 +208,24 @@ sudo reboot
 拔掉安装 U 盘后，应先看到只包含 `systemd-boot` 和 `Windows` 的 rEFInd 菜单；选择带 NixOS 图标的 `systemd-boot` 后，再选择 NixOS 系统代次。首次登录在 tuigreet 中输入用户名 `ben`、密码 `q`，并选择 Hyprland。此时先保持固件 Secure Boot 关闭，首次启动的 rEFInd 和 UKI 尚未签名。
 
 ## 首次登录
+
+### Claude Code
+
+Claude Code 默认连接 `https://openapi.troncode.cn`，并通过 `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1` 关闭非必要流量。`ANTHROPIC_AUTH_TOKEN` 不会写入 Nix store 或全局会话环境：`claude` 启动器只在运行时从 `/run/secrets/claude-code-auth-token` 读取它。
+
+当获得真实令牌后，编辑 SOPS 密文：
+
+```bash
+sops secrets/claude-code.yaml
+```
+
+把解密后的占位值替换为真实的 `sk-...`，保存后磁盘上仍只保留密文。然后应用配置：
+
+```bash
+sudo nixos-rebuild switch --flake .#nixos
+```
+
+如果密文文件尚未加入 Git，运行 Flake 命令前先执行 `git add .sops.yaml modules/secrets.nix secrets/claude-code.yaml`。
 
 ### UKI 与 Secure Boot
 

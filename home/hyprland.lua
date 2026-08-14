@@ -120,6 +120,48 @@ hl.window_rule({
   opacity = "0.90 override 0.78 override 1.0 override",
 })
 
+-- Keep the system monitor as a centered utility window.
+hl.window_rule({
+  name = "mission-center-float",
+  match = { class = "^io[.]missioncenter[.]MissionCenter$" },
+  float = true,
+  center = true,
+})
+
+-- Recent Firefox versions initially expose the Bitwarden pop-out as a generic
+-- Firefox window and only add the extension name later. React to that title
+-- change so static-rule timing cannot leave the pop-out tiled.
+local centeredBitwardenPopouts = {}
+
+local function centerBitwardenPopout(window)
+  if window == nil or window.class ~= "firefox" or centeredBitwardenPopouts[window.stable_id] then
+    return
+  end
+
+  local title = string.lower(window.title)
+  local isBitwardenPopout = title == "bitwarden"
+    or (
+      string.find(title, "extension:", 1, true) ~= nil
+      and string.find(title, "bitwarden", 1, true) ~= nil
+    )
+
+  if not isBitwardenPopout then
+    return
+  end
+
+  centeredBitwardenPopouts[window.stable_id] = true
+  hl.dispatch(hl.dsp.window.float({ action = "set", window = window }))
+  hl.dispatch(hl.dsp.window.center({ window = window }))
+end
+
+hl.on("window.open", centerBitwardenPopout)
+hl.on("window.title", centerBitwardenPopout)
+hl.on("window.destroy", function(window)
+  if window ~= nil then
+    centeredBitwardenPopouts[window.stable_id] = nil
+  end
+end)
+
 hl.on("hyprland.start", function()
   hl.exec_cmd("fcitx5 -d --replace")
   hl.exec_cmd(

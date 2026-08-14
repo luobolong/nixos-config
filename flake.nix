@@ -15,6 +15,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     catppuccin-fuzzel = {
       url = "github:catppuccin/fuzzel";
       flake = false;
@@ -47,18 +52,30 @@
     };
   };
 
-  outputs = inputs@{ self, nixpkgs, home-manager, disko, lanzaboote, noctalia, ... }:
+  outputs =
+    inputs@{
+      self,
+      nixpkgs,
+      home-manager,
+      disko,
+      lanzaboote,
+      noctalia,
+      sops-nix,
+      ...
+    }:
     let
       system = "x86_64-linux";
       hostname = "nixos";
       username = "ben";
-    in {
+    in
+    {
       nixosConfigurations.${hostname} = nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = { inherit inputs hostname username; };
         modules = [
           disko.nixosModules.disko
           lanzaboote.nixosModules.lanzaboote
+          sops-nix.nixosModules.sops
           home-manager.nixosModules.home-manager
           noctalia.nixosModules.default
           ./hosts/nixos
