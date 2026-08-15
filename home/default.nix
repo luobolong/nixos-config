@@ -8,6 +8,7 @@
 }:
 let
   flclash = pkgs.callPackage ../packages/flclash.nix { };
+  deepseekHarness = pkgs.callPackage ../packages/deepseek-harness.nix { };
   catppuccinKde = pkgs.catppuccin-kde.override {
     flavour = [ "mocha" ];
     accents = [ "mauve" ];
@@ -431,6 +432,7 @@ in
       nixfmt
       codex
       claudeCode
+      deepseekHarness
       sops
     ];
     preferXdgDirectories = true;
