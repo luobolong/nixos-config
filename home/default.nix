@@ -91,8 +91,13 @@ let
     name = "hypr-screenshot";
     runtimeInputs = with pkgs; [
       coreutils
+      grim
       grimblast
+      jq
+      niri
       satty
+      slurp
+      wayfreeze
       wl-clipboard
     ];
     text = ''
@@ -102,15 +107,84 @@ let
       mkdir -p "$directory"
       file="$directory/$(date +'%Y-%m-%d_%H-%M-%S-%N').png"
       raw_file="$(mktemp --suffix=.png)"
-      trap 'rm -f "$raw_file"' EXIT
+      freeze_pid=""
 
-      args=()
-      if [[ "$freeze" == "true" ]]; then
-        args+=(--freeze)
+      cleanup() {
+        if [[ -n "$freeze_pid" ]]; then
+          kill "$freeze_pid" 2>/dev/null || true
+          wait "$freeze_pid" 2>/dev/null || true
+        fi
+        rm -f "$raw_file"
+      }
+      trap cleanup EXIT
+
+      unfreeze() {
+        if [[ -n "$freeze_pid" ]]; then
+          kill "$freeze_pid" 2>/dev/null || true
+          wait "$freeze_pid" 2>/dev/null || true
+          freeze_pid=""
+        fi
+      }
+
+      if [[ -n "''${NIRI_SOCKET:-}" ]]; then
+        case "$target" in
+          area)
+            if [[ "$freeze" == "true" ]]; then
+              wayfreeze --hide-cursor &
+              freeze_pid=$!
+              sleep 0.1
+            fi
+
+            geometry="$(slurp)" || exit 0
+            grim -g "$geometry" "$raw_file"
+            ;;
+          output)
+            output="$(niri msg --json focused-output | jq -er '.name')"
+            grim -o "$output" "$raw_file"
+            ;;
+          screen)
+            grim "$raw_file"
+            ;;
+          *)
+            echo "unsupported screenshot target for niri: $target" >&2
+            exit 2
+            ;;
+        esac
+      else
+        args=()
+        if [[ "$freeze" == "true" ]]; then
+          args+=(--freeze)
+        fi
+
+        grimblast "''${args[@]}" save "$target" "$raw_file"
       fi
 
-      grimblast "''${args[@]}" save "$target" "$raw_file"
+      unfreeze
       satty --filename "$raw_file" --output-filename "$file"
+    '';
+  };
+  displayPower = pkgs.writeShellApplication {
+    name = "wayland-display-power";
+    runtimeInputs = with pkgs; [
+      hyprland
+      niri
+    ];
+    text = ''
+      action="''${1:-}"
+      if [[ "$action" != "on" && "$action" != "off" ]]; then
+        echo "usage: wayland-display-power on|off" >&2
+        exit 2
+      fi
+
+      if [[ -n "''${NIRI_SOCKET:-}" ]]; then
+        if [[ "$action" == "on" ]]; then
+          niri msg action power-on-monitors
+        else
+          niri msg action power-off-monitors
+        fi
+      elif [[ -n "''${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
+        hyprctl dispatch dpms "$action"
+      fi
     '';
   };
   commandPalette = pkgs.writeShellApplication {
@@ -736,6 +810,29 @@ in
   # needs a PolicyKit authentication agent in the graphical user session.
   services.hyprpolkitagent.enable = true;
   services.mako.enable = false;
+  # Override the system-wide unit enabled by programs.hyprlock with a complete,
+  # user-managed service. The DPMS helper supports both compositor sessions.
+  services.hypridle = {
+    enable = true;
+    settings = {
+      general = {
+        lock_cmd = "pidof hyprlock || hyprlock";
+        before_sleep_cmd = "loginctl lock-session";
+        after_sleep_cmd = "${lib.getExe displayPower} on";
+      };
+      listener = [
+        {
+          timeout = 300;
+          on-timeout = "loginctl lock-session";
+        }
+        {
+          timeout = 330;
+          on-timeout = "${lib.getExe displayPower} off";
+          on-resume = "${lib.getExe displayPower} on";
+        }
+      ];
+    };
+  };
   services.gpg-agent = {
     enable = true;
     enableZshIntegration = true;

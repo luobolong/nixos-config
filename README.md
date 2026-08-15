@@ -427,74 +427,103 @@ systemctl list-timers 'snapper-*'
 
 ## niri 会话快捷键
 
-niri 是滚动平铺合成器，键位在 `home/niri.kdl` 中定义，并尽量与 Hyprland 会话保持一致。列（column）是 niri 的基本布局单位，因此部分动作以列为对象。
+niri 是滚动平铺合成器，键位在 `home/niri.kdl` 中定义。列（column）是横向滚动布局的基本单位，列内窗口纵向排列；工作区保持动态模型，并可通过数字索引快速切换。
 
 ### 窗口与会话
 
 | 快捷键 | 动作 |
 |---|---|
-| `Super + Q` / `Alt + F4` | 关闭当前窗口（niri 无强制杀死，仅请求关闭） |
+| `Super + Q` / `Alt + F4` | 关闭当前窗口 |
 | `Super + W` | 切换当前窗口浮动 |
-| `Super + G` / `Super + ,` | 把右侧窗口并入当前列 |
-| `Super + .` | 从列中弹出当前窗口 |
-| `Super + [` / `Super + ]` | 向左 / 向右并入或弹出窗口 |
-| `Super + L` | 使用 Hyprlock 锁定屏幕 |
-| `Shift + F11` / `Super + D` | 切换全屏 |
-| `Super + Ctrl + H` / `Super + Ctrl + L` | 聚焦列内上 / 下一个窗口 |
-| `Alt + Tab` | 打开 Noctalia 窗口切换器 |
-| `Super + J` / `Super + \` | 切换列标签视图 |
-| `Super + R` | 在预设列宽间循环 |
-| `Super + Shift + R` | 重置窗口高度 |
-| `Super + Home` / `Super + End` | 居中 / 最大化当前列 |
+| `Super + Shift + V` | 在浮动层和平铺层之间切换焦点 |
+| `Super + Shift + F` | 切换全屏 |
+| `Super + F` / `Super + M` | 最大化列 / 将窗口最大化到屏幕边缘 |
+| `Super + Alt + L` | 使用 Hyprlock 锁定屏幕；锁屏器异常退出后仍可再次调用 |
+| `Alt + Tab` | 打开 niri 原生最近窗口切换器；可在其中按 `A` / `W` / `O` 切换全部、当前工作区或当前显示器范围 |
+| `Super + Tab` | 在当前工作区和上一个工作区之间切换 |
+| `Super + \` | 切换当前列的标签视图 |
 | `Super + O` | 切换概览模式 |
+| `Super + Escape` | 解除或恢复应用程序的快捷键抑制 |
+| `Super + Shift + E` | 退出 niri（会显示确认对话框） |
 | `Super + Shift + /` | 显示快捷键速查 |
 
 ### 焦点、移动与调整
 
 | 快捷键 | 动作 |
 |---|---|
-| `Super + Left/Right` | 聚焦左 / 右列 |
-| `Super + Up/Down` | 聚焦列内上 / 下窗口 |
-| `Super + Ctrl + Shift + Left/Right` | 左 / 右移动当前列 |
-| `Super + Ctrl + Shift + Up/Down` | 上 / 下移动当前窗口 |
-| `Super + Shift + Left/Right` / `Super + -` / `Super + =` | 按 10% 调整列宽 |
-| `Super + Shift + Up/Down` | 按 10% 调整窗口高度 |
+| `Super + Left/Right` 或 `Super + H/L` | 聚焦左 / 右列 |
+| `Super + Up/Down` 或 `Super + K/J` | 聚焦列内上 / 下窗口 |
+| `Super + Ctrl + Left/Right` 或 `Super + Ctrl + H/L` | 左 / 右移动当前列 |
+| `Super + Ctrl + Up/Down` 或 `Super + Ctrl + K/J` | 在列内上 / 下移动当前窗口 |
+| `Super + Shift + 方向键` 或 `Super + Shift + H/J/K/L` | 聚焦对应方向的显示器 |
+| `Super + Ctrl + Shift + 方向键` 或 `Super + Ctrl + Shift + H/J/K/L` | 把当前列移到对应方向的显示器 |
+| `Super + Home/End` | 聚焦工作区的第一列 / 最后一列 |
+| `Super + Ctrl + Home/End` | 把当前列移到工作区最前 / 最后 |
+| `Super + G` / `Super + Ctrl + G` | 居中当前列 / 居中所有完整可见列 |
+| `Super + Ctrl + F` | 将当前列扩展到剩余可用宽度 |
+| `Super + R` / `Super + Shift + R` | 正向 / 反向循环预设列宽 |
+| `Super + Ctrl + R` | 将当前窗口高度重置为自动 |
+| `Super + -/=` | 按 10% 缩小 / 放大列宽 |
+| `Super + Shift + -/=` | 按 10% 缩小 / 放大窗口高度 |
+| `Super + [` / `Super + ]` | 向左 / 向右并入或弹出当前窗口 |
+| `Super + ,` / `Super + .` | 把右侧窗口并入当前列 / 从当前列弹出底部窗口 |
 
 ### 启动应用
 
 | 快捷键 | 动作 |
 |---|---|
 | `Super + T` | 打开 Kitty |
-| `Super + Alt + T` | 切换到下拉终端工作区 |
 | `Super + E` | 打开 Dolphin |
 | `Super + C` | 打开 VS Code |
-| `Super + B` / `Super + F` | 打开 Firefox |
+| `Super + B` | 打开 Firefox |
 | `Ctrl + Shift + Escape` | 打开 Mission Center |
 | `Super + A` | 打开 Noctalia 应用启动器 |
 | `Super + V` | 打开 Noctalia 剪贴板 |
 
-### 工作区与暂存区
+### 媒体与亮度
 
 | 快捷键 | 动作 |
 |---|---|
-| `Super + 1..9` / `Super + 0` | 切换到具名工作区 1..9 / 10 |
-| `Super + Shift + 1..9` / `Super + Shift + 0` | 移动当前列到工作区 1..9 / 10 |
-| `Super + Ctrl + Down` / `Super + Ctrl + Right` | 切换到下一个工作区 |
-| `Super + Ctrl + Left` | 切换到上一个工作区 |
-| `Super + Alt + Ctrl + Right/Left` | 移动列到下 / 上一个工作区 |
-| `Super + 鼠标滚轮下 / 上` | 下一个 / 上一个工作区 |
-| `Super + S` / `Super + M` | 切换到暂存区 S / M |
-| `Super + Shift + S` / `Super + Shift + M` | 移动列到暂存区 S / M 并跟随 |
-| `Super + Alt + S` / `Super + Alt + M` | 静默移动列到暂存区 S / M |
+| 音量增加 / 降低 / 静音键 | 以 5% 调整默认输出音量或切换静音；最大音量限制为 100% |
+| 麦克风静音键 | 切换默认输入设备静音 |
+| 播放 / 暂停 / 停止 / 上一首 / 下一首键 | 通过 Playerctl 控制当前 MPRIS 播放器 |
+| 亮度增加 / 降低键 | 以 5% 调整背光亮度 |
+
+### 动态工作区
+
+| 快捷键 | 动作 |
+|---|---|
+| `Super + 1..9` / `Super + 0` | 切换到动态索引 1..9 / 10；超出当前数量时进入末尾空工作区 |
+| `Super + Shift + 1..9` / `Super + Shift + 0` | 把当前列移到动态索引 1..9 / 10 并跟随 |
+| `Super + PageDown/PageUp` 或 `Super + U/I` | 切换到下 / 上一个工作区 |
+| `Super + Ctrl + PageDown/PageUp` 或 `Super + Ctrl + U/I` | 把当前列移到下 / 上一个工作区并跟随 |
+| `Super + Shift + PageDown/PageUp` 或 `Super + Shift + U/I` | 向下 / 向上重排当前工作区 |
+| `Super + 鼠标滚轮下 / 上` | 切换到下 / 上一个工作区 |
+| `Super + Ctrl + 鼠标滚轮下 / 上` | 把当前列移到下 / 上一个工作区并跟随 |
+
+每个显示器拥有独立的动态工作区列表，末尾始终保留一个空工作区。使用 `Super + O` 打开概览，可以直接观察和拖动各工作区及窗口。
+
+### 鼠标与触控板
+
+| 操作 | 动作 |
+|---|---|
+| `Super + 鼠标左键拖动` | 移动窗口；拖动时点按右键可在浮动和平铺之间切换目标 |
+| `Super + 鼠标右键拖动` | 调整窗口大小 |
+| 触控板三指左右滑动 | 横向滚动当前工作区的列 |
+| 触控板三指上下滑动 | 切换动态工作区 |
+| 触控板四指上下滑动 | 打开或关闭概览 |
 
 ### 屏幕捕获
 
 | 快捷键 | 动作 |
 |---|---|
 | `Super + Shift + P` | 选取颜色并复制到剪贴板 |
-| `Super + P` / `Super + Ctrl + P` | 交互式区域截图 |
-| `Super + Alt + P` / `Print` | 截取当前显示器 |
-| `Alt + Print` | 截取当前窗口（niri 特色） |
+| `Super + P` | 交互式区域截图 |
+| `Super + Ctrl + P` | 冻结画面后进行交互式区域截图 |
+| `Super + Alt + P` | 截取当前显示器 |
+| `Print` | 截取所有显示器 |
+
+Hyprland 与 niri 共用 `hypr-screenshot` 脚本，截图后都会打开 Satty 进行标注、复制或保存。两套会话也共用闲置策略：闲置 5 分钟自动锁屏，5 分 30 秒关闭显示器；恢复输入时自动点亮，并在系统睡眠前锁屏。
 
 ## 注意事项
 
