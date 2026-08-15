@@ -163,30 +163,6 @@ let
       satty --filename "$raw_file" --output-filename "$file"
     '';
   };
-  displayPower = pkgs.writeShellApplication {
-    name = "wayland-display-power";
-    runtimeInputs = with pkgs; [
-      hyprland
-      niri
-    ];
-    text = ''
-      action="''${1:-}"
-      if [[ "$action" != "on" && "$action" != "off" ]]; then
-        echo "usage: wayland-display-power on|off" >&2
-        exit 2
-      fi
-
-      if [[ -n "''${NIRI_SOCKET:-}" ]]; then
-        if [[ "$action" == "on" ]]; then
-          niri msg action power-on-monitors
-        else
-          niri msg action power-off-monitors
-        fi
-      elif [[ -n "''${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
-        hyprctl dispatch dpms "$action"
-      fi
-    '';
-  };
   commandPalette = pkgs.writeShellApplication {
     name = "hypr-command-palette";
     runtimeInputs = with pkgs; [
@@ -557,6 +533,22 @@ in
       projects = "${config.home.homeDirectory}/Workspace";
     };
   };
+
+  # Keep the network and Bluetooth services available without starting their
+  # legacy tray applets automatically; Noctalia provides the desktop controls.
+  xdg.configFile."autostart/nm-applet.desktop".text = ''
+    [Desktop Entry]
+    Type=Application
+    Name=NetworkManager Applet
+    Hidden=true
+  '';
+  xdg.configFile."autostart/blueman.desktop".text = ''
+    [Desktop Entry]
+    Type=Application
+    Name=Blueman Applet
+    Hidden=true
+  '';
+
   xdg.configFile."nvim" = {
     source = inputs.astronvim;
     recursive = true;
@@ -679,14 +671,15 @@ in
     $DRY_RUN_CMD ${pkgs.rsync}/bin/rsync -rL --chmod=u+w ${inputs.rime-ice}/ ${config.home.homeDirectory}/.local/share/fcitx5/rime/
   '';
 
-  # niri's config.kdl includes "noctalia.kdl". Before Noctalia renders it for the first time,
-  # pre-create an empty file to prevent the include from failing. The existence of this file
-  # also signals to Noctalia's apply.sh that an include statement already exists (avoiding
-  # attempts to append to the read-only config.kdl).
-  home.activation.ensureNoctaliaNiriColors = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+  # Keep niri's runtime-generated includes writable and available on first login.
+  # The noctalia.kdl file also signals to Noctalia that config.kdl already includes it.
+  home.activation.ensureNiriRuntimeIncludes = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     $DRY_RUN_CMD mkdir -p ${config.xdg.configHome}/niri
     if [[ ! -f ${config.xdg.configHome}/niri/noctalia.kdl ]]; then
       $DRY_RUN_CMD touch ${config.xdg.configHome}/niri/noctalia.kdl
+    fi
+    if [[ ! -f ${config.xdg.configHome}/niri/monitor.kdl ]]; then
+      $DRY_RUN_CMD touch ${config.xdg.configHome}/niri/monitor.kdl
     fi
   '';
 
@@ -810,29 +803,6 @@ in
   # needs a PolicyKit authentication agent in the graphical user session.
   services.hyprpolkitagent.enable = true;
   services.mako.enable = false;
-  # Override the system-wide unit enabled by programs.hyprlock with a complete,
-  # user-managed service. The DPMS helper supports both compositor sessions.
-  services.hypridle = {
-    enable = true;
-    settings = {
-      general = {
-        lock_cmd = "pidof hyprlock || hyprlock";
-        before_sleep_cmd = "loginctl lock-session";
-        after_sleep_cmd = "${lib.getExe displayPower} on";
-      };
-      listener = [
-        {
-          timeout = 300;
-          on-timeout = "loginctl lock-session";
-        }
-        {
-          timeout = 330;
-          on-timeout = "${lib.getExe displayPower} off";
-          on-resume = "${lib.getExe displayPower} on";
-        }
-      ];
-    };
-  };
   services.gpg-agent = {
     enable = true;
     enableZshIntegration = true;

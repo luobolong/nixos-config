@@ -523,7 +523,7 @@ niri 是滚动平铺合成器，键位在 `home/niri.kdl` 中定义。列（colu
 | `Super + Alt + P` | 截取当前显示器 |
 | `Print` | 截取所有显示器 |
 
-Hyprland 与 niri 共用 `hypr-screenshot` 脚本，截图后都会打开 Satty 进行标注、复制或保存。两套会话也共用闲置策略：闲置 5 分钟自动锁屏，5 分 30 秒关闭显示器；恢复输入时自动点亮，并在系统睡眠前锁屏。
+Hyprland 与 niri 共用 `hypr-screenshot` 脚本，截图后都会打开 Satty 进行标注、复制或保存。系统不会自动锁屏或关闭显示器，需要时使用对应会话的手动锁屏快捷键。
 
 ## 注意事项
 

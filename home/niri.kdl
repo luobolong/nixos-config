@@ -1,12 +1,8 @@
-// Noctalia's niri template renders ~/.config/niri/noctalia.kdl (focus ring/border colors),
-// which is loaded via the include below. default.nix's activation script pre-creates an empty file
-// to ensure the include succeeds on first login (before Noctalia writes to it), and allows
-// Noctalia's apply.sh to detect the existing include and skip appending to the read-only config.kdl.
+// Runtime-generated settings stay writable while the main config remains managed by Home Manager.
+// Noctalia writes colors to noctalia.kdl; nwg-displays writes outputs to monitor.kdl.
+// default.nix pre-creates both files so these includes also work on the first login.
 include "noctalia.kdl"
-
-output "DP-1" {
-    scale 2.0
-}
+include "monitor.kdl"
 
 input {
     keyboard {
@@ -56,10 +52,23 @@ layout {
     }
 }
 
+// Match Hyprland's four-pass background blur while keeping colors neutral.
+blur {
+    passes 4
+    offset 3
+    noise 0.02
+    saturation 1.0
+}
+
 // Catppuccin glass effect, corresponding to window_rule in hyprland.lua.
 window-rule {
     match app-id=r#"^(kitty|org\.kde\.dolphin)$"#
     opacity 0.90
+    background-effect {
+        // Reuse the blurred wallpaper for better performance and stability.
+        xray true
+        blur true
+    }
 }
 
 spawn-at-startup "fcitx5" "-d" "--replace"

@@ -4,9 +4,10 @@
     enable = true;
     withUWSM = true;
   };
-  # The system module also installs Hyprlock and configures the PAM service
-  # required for authentication.
-  programs.hyprlock.enable = true;
+  # Install Hyprlock and its PAM service directly. The programs.hyprlock module
+  # also enables Hypridle automatically, which is intentionally not wanted.
+  environment.systemPackages = [ pkgs.hyprlock ];
+  security.pam.services.hyprlock = { };
 
   programs.niri = {
     enable = true;
