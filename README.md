@@ -390,7 +390,6 @@ systemctl list-timers 'snapper-*'
 | 快捷键 | 动作 |
 |---|---|
 | `Super + T` | 打开 Kitty |
-| `Super + Alt + T` | 切换下拉 Kitty 终端 |
 | `Super + E` | 打开文件管理器 |
 | `Super + C` | 打开 VS Code |
 | `Super + B` | 打开 Firefox |

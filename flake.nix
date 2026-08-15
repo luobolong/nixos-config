@@ -46,6 +46,11 @@
       flake = false;
     };
 
+    linuxqq-clipsync = {
+      url = "github:SHORiN-KiWATA/linuxqq-clipsync";
+      flake = false;
+    };
+
     astronvim = {
       url = "github:AstroNvim/template";
       flake = false;

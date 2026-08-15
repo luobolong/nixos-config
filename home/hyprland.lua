@@ -66,6 +66,8 @@ hl.config({
       passes = 4,
       -- Keep blur strength consistent while window opacity changes.
       ignore_opacity = true,
+      -- Blur the complete workspace behind an opened special workspace.
+      special = true,
     },
   },
   animations = {
@@ -116,7 +118,7 @@ hl.gesture({
 -- while focused, the second while unfocused, and fullscreen stays opaque.
 hl.window_rule({
   name = "catppuccin-glass-apps",
-  match = { class = "^(kitty|dropdown-terminal|org[.]kde[.]dolphin)$" },
+  match = { class = "^(kitty|org[.]kde[.]dolphin)$" },
   opacity = "0.90 override 0.78 override 1.0 override",
 })
 
@@ -174,15 +176,6 @@ end)
 
 hl.on("hyprland.start", function()
   hl.exec_cmd("fcitx5 -d --replace")
-  hl.exec_cmd(
-    "kitty --class dropdown-terminal --title dropdown-terminal",
-    {
-      workspace = "special:terminal silent",
-      float = true,
-      size = { "monitor_w*0.8", "monitor_h*0.5" },
-      center = true,
-    }
-  )
 end)
 
 -- Window and session actions.
@@ -235,7 +228,6 @@ end
 
 -- Frequently used applications.
 hl.bind(mainMod .. " + T", hl.dsp.exec_cmd(terminal))
-hl.bind(mainMod .. " + ALT + T", hl.dsp.workspace.toggle_special("terminal"))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("code"))
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("firefox"))

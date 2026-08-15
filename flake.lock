@@ -149,6 +149,22 @@
         "type": "github"
       }
     },
+    "linuxqq-clipsync": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1786706543,
+        "narHash": "sha256-ztbtsCCxA4qKEE9/qprcxbbbfD4uG70DAeLKzezLIxQ=",
+        "owner": "SHORiN-KiWATA",
+        "repo": "linuxqq-clipsync",
+        "rev": "cbbca254f6dad6155bf55236a195f5343cddbe25",
+        "type": "github"
+      },
+      "original": {
+        "owner": "SHORiN-KiWATA",
+        "repo": "linuxqq-clipsync",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1786599213,
@@ -243,6 +259,7 @@
         "disko": "disko",
         "home-manager": "home-manager",
         "lanzaboote": "lanzaboote",
+        "linuxqq-clipsync": "linuxqq-clipsync",
         "nixpkgs": "nixpkgs",
         "noctalia": "noctalia",
         "rime-ice": "rime-ice",

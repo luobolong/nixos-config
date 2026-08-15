@@ -64,6 +64,29 @@ let
       "--wayland-text-input-version=3"
     ];
   };
+  linuxqqClipsync = pkgs.rustPlatform.buildRustPackage {
+    pname = "linuxqq-clipsync";
+    version = "0.1.0";
+    src = inputs.linuxqq-clipsync;
+    cargoLock.lockFile = "${inputs.linuxqq-clipsync}/Cargo.lock";
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    postInstall = ''
+      wrapProgram "$out/bin/linuxqq-clipsync" \
+        --prefix PATH : "${
+          lib.makeBinPath [
+            pkgs.clipnotify
+            pkgs.wl-clipboard
+            pkgs.xclip
+          ]
+        }"
+    '';
+    meta = {
+      description = "Synchronize the X11 and Wayland clipboards for Linux QQ";
+      homepage = "https://github.com/SHORiN-KiWATA/linuxqq-clipsync";
+      license = lib.licenses.mit;
+      mainProgram = "linuxqq-clipsync";
+    };
+  };
   claudeCode = pkgs.writeShellApplication {
     name = "claude";
     text = ''
@@ -197,7 +220,6 @@ let
         $'resize-up\tWindow  ·  SUPER + SHIFT + Up  ·  Shrink vertically' \
         $'resize-down\tWindow  ·  SUPER + SHIFT + Down  ·  Grow vertically' \
         $'terminal\tApplication  ·  SUPER + T  ·  Open terminal' \
-        $'dropdown\tApplication  ·  SUPER + ALT + T  ·  Toggle dropdown terminal' \
         $'files\tApplication  ·  SUPER + E  ·  Open file manager' \
         $'editor\tApplication  ·  SUPER + C  ·  Open VS Code' \
         $'browser\tApplication  ·  SUPER + B / F  ·  Open Firefox' \
@@ -299,7 +321,6 @@ let
         resize-up) dispatch resizeactive 0 -50 ;;
         resize-down) dispatch resizeactive 0 50 ;;
         terminal) dispatch exec kitty ;;
-        dropdown) dispatch togglespecialworkspace terminal ;;
         files) dispatch exec dolphin ;;
         editor) dispatch exec code ;;
         browser) dispatch exec firefox ;;
@@ -359,6 +380,7 @@ in
       jetbrains.goland
       spotify
       qqWayland
+      linuxqqClipsync
       flclash
       dolphin
       kdePackages.baloo-widgets
@@ -826,6 +848,20 @@ in
     pinentry.package = pkgs.pinentry-qt;
   };
   services.ssh-agent.enable = true;
+
+  systemd.user.services.linuxqq-clipsync = {
+    Unit = {
+      Description = "Synchronize X11 and Wayland clipboards for Linux QQ";
+      After = [ "graphical-session.target" ];
+      PartOf = [ "graphical-session.target" ];
+    };
+    Service = {
+      ExecStart = lib.getExe linuxqqClipsync;
+      Restart = "on-failure";
+      RestartSec = 3;
+    };
+    Install.WantedBy = [ "graphical-session.target" ];
+  };
 
   home.sessionVariables = {
     ANTHROPIC_BASE_URL = "https://openapi.troncode.cn";
