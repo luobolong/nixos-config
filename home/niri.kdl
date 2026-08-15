@@ -71,6 +71,12 @@ window-rule {
     }
 }
 
+// QQ uses one app-id for both windows; the title keeps the main window tiled.
+window-rule {
+    match app-id="^QQ$" title="^图片查看器$"
+    open-floating true
+}
+
 spawn-at-startup "fcitx5" "-d" "--replace"
 
 prefer-no-csd

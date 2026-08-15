@@ -128,6 +128,14 @@ hl.window_rule({
   center = true,
 })
 
+-- QQ reuses the same class for its main window and image viewer, so also
+-- match the viewer's title to keep only that utility window floating.
+hl.window_rule({
+  name = "qq-image-viewer-float",
+  match = { class = "^QQ$", title = "^图片查看器$" },
+  float = true,
+})
+
 -- Recent Firefox versions initially expose the Bitwarden pop-out as a generic
 -- Firefox window and only add the extension name later. React to that title
 -- change so static-rule timing cannot leave the pop-out tiled.
