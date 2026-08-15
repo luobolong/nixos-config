@@ -21,22 +21,22 @@
 
   # This host's local exFAT data disk. Use its filesystem UUID rather than the
   # unstable /dev/sda name, and do not block boot if the disk is unavailable.
-  fileSystems."/sda" = {
-    device = "/dev/disk/by-uuid/6B1E-7840";
-    fsType = "exfat";
-    options = [
-      "rw"
-      "nofail"
-      "x-systemd.device-timeout=10s"
-      "nosuid"
-      "nodev"
-      "uid=1000"
-      "gid=100"
-      "fmask=0022"
-      "dmask=0022"
-      "errors=remount-ro"
-    ];
-  };
+  #fileSystems."/sda" = {
+  #  device = "/dev/disk/by-uuid/6B1E-7840";
+  #  fsType = "exfat";
+  #  options = [
+  #    "rw"
+  #    "nofail"
+  #    "x-systemd.device-timeout=10s"
+  #    "nosuid"
+  #    "nodev"
+  #    "uid=1000"
+  #    "gid=100"
+  #    "fmask=0022"
+  #    "dmask=0022"
+  #    "errors=remount-ro"
+  #  ];
+  #};
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 
