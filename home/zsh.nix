@@ -178,7 +178,7 @@ in
       settings = {
         "$schema" = "https://starship.rs/config-schema.json";
         add_newline = false;
-        format = "$directory$os$git_branch$git_status$nodejs$rust$golang$php $character";
+        format = "$os$directory$git_branch$git_status$nodejs$rust$golang$php$character";
 
         os = {
           disabled = false;
@@ -189,6 +189,7 @@ in
             Arch = "󰣇";
             CachyOS = "󰣇";
             Macos = "";
+            NixOS = "❄️";
           };
         };
 
