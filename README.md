@@ -20,7 +20,7 @@
 - NetworkManager、蓝牙、PipeWire
 - Fcitx5 + Rime + rime-ice（雾凇拼音）+ Catppuccin Mocha Sapphire 皮肤
 - Inter、Source Serif 4、Noto CJK/Emoji、Sarasa Gothic 字体 + Papirus Dark 图标主题 + Adwaita 32px 鼠标主题
-- Dolphin、Fastfetch、Mission Center、btop、Fuzzel（Catppuccin Mocha）、Satty、Hyprlock、Neovim + AstroNvim v5、VS Code、IntelliJ IDEA Ultimate、DataGrip、GoLand、Claude Code、Codex、Spotify、QQ、FlClash
+- Dolphin、Fastfetch、Mission Center、btop、Fuzzel（Catppuccin Mocha）、Satty、Hyprlock、Neovim + AstroNvim v5、VS Code、IntelliJ IDEA Ultimate、DataGrip、GoLand、Claude Code、Codex、CC Switch、Spotify、QQ、FlClash
 - GnuPG + GPG Agent、SSH Agent、direnv + nix-direnv
 - sops-nix：使用 GPG 与本机 SSH host key 对敏感配置加密
 - jq、yq、rsync、Zip/7-Zip、常用硬件诊断、NixOS 维护与基础构建工具
@@ -47,8 +47,6 @@
 │   ├── hyprland.lua
 │   ├── niri.kdl
 │   └── zsh.nix
-├── secrets/
-│   └── claude-code.yaml
 └── packages/
     └── flclash.nix
 ```
@@ -213,21 +211,7 @@ sudo reboot
 
 ### Claude Code
 
-Claude Code 默认连接 `https://openapi.troncode.cn`，并通过 `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1` 关闭非必要流量。`ANTHROPIC_AUTH_TOKEN` 不会写入 Nix store 或全局会话环境：`claude` 启动器只在运行时从 `/run/secrets/claude-code-auth-token` 读取它。
-
-当获得真实令牌后，编辑 SOPS 密文：
-
-```bash
-sops secrets/claude-code.yaml
-```
-
-把解密后的占位值替换为真实的 `sk-...`，保存后磁盘上仍只保留密文。然后应用配置：
-
-```bash
-sudo nixos-rebuild switch --flake .#nixos
-```
-
-如果密文文件尚未加入 Git，运行 Flake 命令前先执行 `git add .sops.yaml modules/secrets.nix secrets/claude-code.yaml`。
+Claude Code 的 API 供应商、令牌与代理设置完全由 **CC Switch** 管理（桌面应用，用于切换 Claude Code / Codex / Gemini CLI 等 AI 编码工具的供应商）。首次使用先启动 CC Switch 添加并启用供应商，之后直接运行 `claude` 即可，无需在系统中配置任何环境变量或密钥。
 
 ### UKI 与 Secure Boot
 

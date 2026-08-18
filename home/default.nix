@@ -87,30 +87,6 @@ let
       mainProgram = "linuxqq-clipsync";
     };
   };
-  claudeCode = pkgs.writeShellApplication {
-    name = "claude";
-    text = ''
-      token_file="/run/secrets/claude-code-auth-token"
-
-      if [[ ! -r "$token_file" ]]; then
-        echo "Claude Code token is unavailable; rebuild NixOS after configuring the SOPS secret." >&2
-        exit 1
-      fi
-
-      export ANTHROPIC_AUTH_TOKEN
-      ANTHROPIC_AUTH_TOKEN="$(< "$token_file")"
-
-      export ANTHROPIC_BASE_URL="https://openapi.troncode.cn"
-      export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC="1"
-
-      if [[ "$ANTHROPIC_AUTH_TOKEN" == "REPLACE_WITH_REAL_TOKEN" ]]; then
-        echo "Claude Code token is still a placeholder; run: sops secrets/claude-code.yaml" >&2
-        exit 1
-      fi
-
-      exec ${lib.getExe pkgs.claude-code} "$@"
-    '';
-  };
   screenshot = pkgs.writeShellApplication {
     name = "hypr-screenshot";
     runtimeInputs = with pkgs; [
@@ -456,7 +432,7 @@ in
       nil
       nixfmt
       codex
-      claudeCode
+      claude-code
       deepseekHarness
       sops
     ];
@@ -868,8 +844,6 @@ in
   };
 
   home.sessionVariables = {
-    ANTHROPIC_BASE_URL = "https://openapi.troncode.cn";
-    CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = "1";
     NIXOS_OZONE_WL = "1";
     ELECTRON_OZONE_PLATFORM_HINT = "auto";
     TERMINAL = "kitty";
