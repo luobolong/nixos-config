@@ -367,6 +367,8 @@ systemctl list-timers 'snapper-*'
 | `Super + Shift + W` | 切换窗口置顶；平铺窗口会先转为浮动 |
 | `Super + J` | 切换 Dwindle 分割方向 |
 | `Super + Ctrl + H` / `Super + Ctrl + L` | 向后 / 向前切换活动分组 |
+| `Super + Alt + Z` | 切换 2 倍屏幕放大；放大画面跟随鼠标移动，鼠标始终位于画面中心 |
+| `Super + Alt + 滚轮上 / 下` | 以 0.25 倍为一级放大 / 缩小屏幕，范围为 1–10 倍；滚轮不会传递给当前应用 |
 | `Super + 方向键` | 向对应方向切换焦点 |
 | `Alt + Tab` | 打开 Noctalia 窗口总览；连续按键切换选择，松开 `Alt` 确认 |
 | `Super + Shift + 方向键` | 按 50 像素调整当前窗口大小 |

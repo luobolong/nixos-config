@@ -207,6 +207,8 @@ let
         $'group-prev\tWindow  ·  SUPER + CTRL + H  ·  Previous window in group' \
         $'group-next\tWindow  ·  SUPER + CTRL + L  ·  Next window in group' \
         $'window-overview\tWindow  ·  ALT + Tab  ·  Open Noctalia window overview' \
+        $'zoom-toggle\tAccessibility  ·  SUPER + ALT + Z  ·  Toggle 2x screen magnification' \
+        $'zoom-adjust\tAccessibility  ·  SUPER + ALT + Wheel  ·  Adjust screen magnification' \
         $'focus-left\tFocus  ·  SUPER + Left  ·  Focus left' \
         $'focus-right\tFocus  ·  SUPER + Right  ·  Focus right' \
         $'focus-up\tFocus  ·  SUPER + Up  ·  Focus up' \
@@ -382,6 +384,7 @@ in
       qqWayland
       linuxqqClipsync
       flclash
+      cc-switch
       dolphin
       kdePackages.baloo-widgets
       kdePackages.ffmpegthumbs

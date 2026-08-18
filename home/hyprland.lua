@@ -41,6 +41,18 @@ hl.config({
       middle_button_emulation = false,
     },
   },
+  cursor = {
+    -- Keep the zoom camera attached to the pointer and follow it rigidly, so
+    -- the pointer stays centered while the magnified viewport moves with it.
+    zoom_detached_camera = false,
+    zoom_rigid = true,
+  },
+  binds = {
+    -- Consume every bound wheel event. A nonzero scroll delay lets events
+    -- arriving during the delay pass through to the focused application.
+    pass_mouse_when_bound = false,
+    scroll_event_delay = 0,
+  },
   gestures = {
     -- Responsive, macOS-like one-workspace-at-a-time swipes.
     workspace_swipe_distance = 250,
@@ -195,6 +207,36 @@ hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))
 hl.bind(mainMod .. " + CTRL + H", hl.dsp.group.prev())
 hl.bind(mainMod .. " + CTRL + L", hl.dsp.group.next())
 hl.bind("ALT + Tab", hl.dsp.exec_cmd("noctalia msg window-switcher"))
+
+local function setZoom(targetZoom)
+  hl.config({ cursor = { zoom_factor = math.min(10, math.max(1, targetZoom)) } })
+end
+
+local function adjustZoom(delta)
+  local currentZoom = tonumber(hl.get_config("cursor.zoom_factor")) or 1
+  setZoom(currentZoom + delta)
+end
+
+-- Toggle Hyprland's built-in cursor-centered magnifier at 2x zoom, or adjust
+-- it in 0.25x steps while Super+Alt is held.
+hl.bind(mainMod .. " + ALT + Z", function()
+  local currentZoom = tonumber(hl.get_config("cursor.zoom_factor")) or 1
+  setZoom(currentZoom > 1 and 1 or 2)
+end)
+hl.bind(
+  mainMod .. " + ALT + mouse_up",
+  function()
+    adjustZoom(0.25)
+  end,
+  { non_consuming = false }
+)
+hl.bind(
+  mainMod .. " + ALT + mouse_down",
+  function()
+    adjustZoom(-0.25)
+  end,
+  { non_consuming = false }
+)
 
 local directions = {
   left = "l",
