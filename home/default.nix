@@ -9,6 +9,7 @@
 let
   flclash = pkgs.callPackage ../packages/flclash.nix { };
   deepseekHarness = pkgs.callPackage ../packages/deepseek-harness.nix { };
+  audiomonitor = pkgs.callPackage "${inputs.audiomonitor}/default.nix" { };
   catppuccinKde = pkgs.catppuccin-kde.override {
     flavour = [ "mocha" ];
     accents = [ "mauve" ];
@@ -371,6 +372,7 @@ in
       mission-center
       obs-studio
       pavucontrol
+      audiomonitor
 
       # Hyprland and Wayland desktop tools
       fuzzel

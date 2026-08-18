@@ -16,6 +16,23 @@
         "type": "github"
       }
     },
+    "audiomonitor": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1787072952,
+        "narHash": "sha256-+E1lU7Fu9iAGRmJTWjI4TUhGLmn/BO5nU/FSF8ziKxY=",
+        "owner": "luobolong",
+        "repo": "audiomonitor",
+        "rev": "64c8e53f104fdac2f31ded365ac12d82fbe8fea2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "luobolong",
+        "repo": "audiomonitor",
+        "rev": "64c8e53f104fdac2f31ded365ac12d82fbe8fea2",
+        "type": "github"
+      }
+    },
     "catppuccin-fuzzel": {
       "flake": false,
       "locked": {
@@ -255,6 +272,7 @@
     "root": {
       "inputs": {
         "astronvim": "astronvim",
+        "audiomonitor": "audiomonitor",
         "catppuccin-fuzzel": "catppuccin-fuzzel",
         "disko": "disko",
         "home-manager": "home-manager",

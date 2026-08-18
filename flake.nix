@@ -55,6 +55,11 @@
       url = "github:AstroNvim/template";
       flake = false;
     };
+
+    audiomonitor = {
+      url = "github:luobolong/audiomonitor/64c8e53f104fdac2f31ded365ac12d82fbe8fea2";
+      flake = false;
+    };
   };
 
   outputs =
