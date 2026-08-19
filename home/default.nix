@@ -9,7 +9,21 @@
 let
   flclash = pkgs.callPackage ../packages/flclash.nix { };
   deepseekHarness = pkgs.callPackage ../packages/deepseek-harness.nix { };
-  audiomonitor = pkgs.callPackage "${inputs.audiomonitor}/default.nix" { };
+  audiomonitor =
+    inputs.audiomonitor.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs
+      (oldAttrs: {
+        postInstall =
+          builtins.replaceStrings
+            [
+              ''bash "$packageSource/packaging/create-icon.sh" $out/share/icons/hicolor/256x256/apps''
+            ]
+            [
+              ''
+                install -Dm644 "$packageSource/resources/icons/appicon_256.png" \
+                              $out/share/icons/hicolor/256x256/apps/audiomonitor.png''
+            ]
+            oldAttrs.postInstall;
+      });
   catppuccinKde = pkgs.catppuccin-kde.override {
     flavour = [ "mocha" ];
     accents = [ "mauve" ];

@@ -17,19 +17,23 @@
       }
     },
     "audiomonitor": {
-      "flake": false,
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
       "locked": {
-        "lastModified": 1787072952,
-        "narHash": "sha256-+E1lU7Fu9iAGRmJTWjI4TUhGLmn/BO5nU/FSF8ziKxY=",
+        "lastModified": 1787146923,
+        "narHash": "sha256-utaPi/IrHVTsw94ZsIInjDCxuZ1/vnBh90y+Tm1V0eA=",
         "owner": "luobolong",
         "repo": "audiomonitor",
-        "rev": "64c8e53f104fdac2f31ded365ac12d82fbe8fea2",
+        "rev": "16a0ce4bc0520e4077cf8f08e795824999cf0032",
         "type": "github"
       },
       "original": {
         "owner": "luobolong",
         "repo": "audiomonitor",
-        "rev": "64c8e53f104fdac2f31ded365ac12d82fbe8fea2",
+        "rev": "16a0ce4bc0520e4077cf8f08e795824999cf0032",
         "type": "github"
       }
     },

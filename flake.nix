@@ -57,8 +57,8 @@
     };
 
     audiomonitor = {
-      url = "github:luobolong/audiomonitor/64c8e53f104fdac2f31ded365ac12d82fbe8fea2";
-      flake = false;
+      url = "github:luobolong/audiomonitor/16a0ce4bc0520e4077cf8f08e795824999cf0032";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
