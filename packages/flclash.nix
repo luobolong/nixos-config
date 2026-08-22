@@ -6,10 +6,10 @@
 }:
 let
   pname = "flclash";
-  version = "0.8.94";
+  version = "0.8.96";
   src = fetchurl {
     url = "https://github.com/chen08209/FlClash/releases/download/v${version}/FlClash-${version}-linux-amd64.AppImage";
-    sha256 = "a022672d7fee78f89a3f83ae4f6390ddb79600790f532bfd1969995fc51c727d";
+    sha256 = "7a874aac6ce7608d268d25a94690b995c6c06ddd1c66851678c821c8052d3cee";
   };
   desktopItem = makeDesktopItem {
     name = pname;
