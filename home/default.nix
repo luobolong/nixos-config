@@ -449,6 +449,7 @@ in
       nixfmt
       codex
       claude-code
+      polychromatic
       deepseekHarness
       sops
     ];
