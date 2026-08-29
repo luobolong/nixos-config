@@ -1,4 +1,22 @@
-{ lib, modulesPath, ... }:
+{
+  lib,
+  modulesPath,
+  pkgs,
+  ...
+}:
+let
+  # Corrected EDID for the 2880x1800 panel in the Lenovo IdeaPad Pro 5 14APH8.
+  # Source: https://github.com/dgroenen/lenovo-ideapad-pro-5-14-14APH8-120hz-fix
+  lenovo120HzEdid = pkgs.runCommandNoCC "lenovo-ideapad-pro-5-14aph8-edid" {
+    nativeBuildInputs = [ pkgs.buildPackages.xxd ];
+  } ''
+    install -d "$out/lib/firmware/edid"
+    xxd -r -p ${./lenovo-14aph8-edid.hex} \
+      "$out/lib/firmware/edid/lenovo-14aph8.bin"
+    echo "54d2433452c7c1cf02d562a40d31d38db42a696f5ed6544439e5bf1f03e9f6de  $out/lib/firmware/edid/lenovo-14aph8.bin" \
+      | sha256sum --check --strict
+  '';
+in
 {
   imports = [ (modulesPath + "/installer/scan/not-detected.nix") ];
 
@@ -12,10 +30,15 @@
   boot.kernelModules = [ "kvm-amd" ];
   boot.extraModulePackages = [ ];
 
+  # The panel advertises its 120 Hz DisplayID mode with an invalid checksum.
+  # Load the corrected EDID before AMDGPU probes the internal display.
+  boot.kernelParams = [ "drm.edid_firmware=eDP-1:edid/lenovo-14aph8.bin" ];
+  boot.initrd.extraFirmwarePaths = [ "edid/lenovo-14aph8.bin" ];
+
   boot.refindChainloader = {
     enable = true;
-    # Windows Boot Manager resides on a separate ESP; use its PARTUUID to
-    # prevent rEFInd from selecting the wrong partition.
+    # Both ESPs are on the same SSD. Use the Windows ESP's PARTUUID so rEFInd
+    # can distinguish it from the 2 GiB NixOS ESP mounted at /boot.
     windowsEfiPartuuid = "991a77db-c316-4f75-b9df-bc05e179a798";
   };
 
@@ -42,6 +65,7 @@
 
   hardware = {
     enableRedistributableFirmware = true;
+    firmware = [ lenovo120HzEdid ];
 
     # Automatically include amd-ucode in the initrd and load the microcode
     # early during boot.

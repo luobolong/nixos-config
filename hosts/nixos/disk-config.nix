@@ -1,64 +1,49 @@
-{ lib, ... }:
 {
-  # Replace this with the actual disk's /dev/disk/by-id/... path before
-  # installation.
-  disko.devices.disk.main = {
-    type = "disk";
-    device = lib.mkDefault "/dev/disk/by-id/CHANGE_ME";
-    content = {
-      type = "gpt";
-      partitions = {
-        ESP = {
-          priority = 1;
-          name = "ESP";
-          start = "1M";
-          size = "2G";
-          type = "EF00";
-          content = {
-            type = "filesystem";
-            format = "vfat";
-            mountpoint = "/boot";
-            mountOptions = [ "umask=0077" ];
-          };
-        };
+  # Single-disk Windows + NixOS layout. Windows owns the existing GPT, ESP and
+  # recovery partitions; NixOS only mounts three partitions created in the free
+  # space: NIXBOOT, nixos-swap and nixos. Labels keep this independent of
+  # partition numbers, which vary depending on the Windows installation.
+  fileSystems = {
+    "/" = {
+      device = "/dev/disk/by-label/nixos";
+      fsType = "btrfs";
+      options = [
+        "subvol=@root"
+        "compress=zstd"
+        "noatime"
+      ];
+    };
 
-        swap = {
-          # Match this host's 64 GiB of RAM to reserve enough space for the
-          # hibernation image.
-          size = "64G";
-          content = {
-            type = "swap";
-            # Disko configures this partition as boot.resumeDevice.
-            # Hibernation cannot use randomEncryption because its key changes
-            # on every boot.
-            resumeDevice = true;
-          };
-        };
+    "/nix" = {
+      device = "/dev/disk/by-label/nixos";
+      fsType = "btrfs";
+      options = [
+        "subvol=@nix"
+        "compress=zstd"
+        "noatime"
+      ];
+    };
 
-        system = {
-          size = "100%";
-          content = {
-            type = "btrfs";
-            extraArgs = [ "-f" "-L" "nixos" ];
-            subvolumes = {
-              "@root" = {
-                mountpoint = "/";
-                mountOptions = [ "compress=zstd" "noatime" ];
-              };
-              "@root/.snapshots" = { };
-              "@nix" = {
-                mountpoint = "/nix";
-                mountOptions = [ "compress=zstd" "noatime" ];
-              };
-              "@home" = {
-                mountpoint = "/home";
-                mountOptions = [ "compress=zstd" "noatime" ];
-              };
-              "@home/.snapshots" = { };
-            };
-          };
-        };
-      };
+    "/home" = {
+      device = "/dev/disk/by-label/nixos";
+      fsType = "btrfs";
+      options = [
+        "subvol=@home"
+        "compress=zstd"
+        "noatime"
+      ];
+    };
+
+    # Keep a dedicated 2 GiB ESP for NixOS UKIs. The Windows ESP is usually too
+    # small for several Lanzaboote generations, even on a single physical disk.
+    "/boot" = {
+      device = "/dev/disk/by-label/NIXBOOT";
+      fsType = "vfat";
+      options = [ "umask=0077" ];
     };
   };
+
+  # Mount the dedicated 32 GiB swap partition. The initrd automatically tries
+  # non-randomly-encrypted swap devices for resume.
+  swapDevices = [ { device = "/dev/disk/by-label/nixos-swap"; } ];
 }

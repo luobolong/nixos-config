@@ -139,7 +139,6 @@ in
     wget
     btrfsAssistant
     btrfs-progs
-    disko
     sbctl
     vim
   ];

@@ -1,15 +1,15 @@
 # NixOS Hyprland / niri 工作站
 
-一套可以直接放到 GitHub 管理的 NixOS 配置。它使用 Flakes、Home Manager、Disko 和 Btrfs，提供 Hyprland 与 niri 两套 Noctalia v5 桌面（在登录界面自由选择）、雾凇拼音和常用桌面/开发软件。
+一套可以直接放到 GitHub 管理的 NixOS 配置。它使用 Flakes、Home Manager 和 Btrfs，提供 Hyprland 与 niri 两套 Noctalia v5 桌面（在登录界面自由选择）、雾凇拼音和常用桌面/开发软件。
 
 > [!WARNING]
-> 安装命令会**清空目标磁盘的全部数据**。执行 Disko 前，务必备份数据并反复确认磁盘的 `/dev/disk/by-id/...` 路径。不要使用容易变化的 `/dev/sda` 或 `/dev/nvme0n1`。
+> 本配置面向一块硬盘上的 Windows + NixOS。分区前务必备份 Windows、暂停 BitLocker 并确认设备路径；只在 Windows 释放的未分配空间中新建 NixOS 分区，绝不能格式化已有的 Windows ESP、MSR、系统或恢复分区。
 
 ## 包含内容
 
 - NixOS unstable + Flakes
 - Home Manager
-- Disko + GPT + UEFI
+- 单硬盘 Windows + NixOS 双系统，保留 Windows 分区并使用独立的 2 GiB NixOS ESP
 - Btrfs：`@root`、`@nix`、`@home` 分别挂载到 `/`、`/nix`、`/home`，并使用 Zstd 压缩
 - Snapper：分别为 `/` 和 `/home` 自动创建快照，并按小时、天、周、月清理
 - rEFInd（10 秒）→ systemd-boot（2 秒）→ Lanzaboote UKI；支持 UEFI Secure Boot，最多保留 10 个系统代次
@@ -34,7 +34,8 @@
 ├── hosts/nixos/
 │   ├── default.nix
 │   ├── disk-config.nix
-│   └── hardware-configuration.nix
+│   ├── hardware-configuration.nix
+│   └── lenovo-14aph8-edid.hex
 ├── modules/
 │   ├── core.nix
 │   ├── desktop.nix
@@ -81,29 +82,42 @@ hardware.graphics.enable32Bit = true;
 
 如果改用 Intel CPU，需将 KVM 模块和微码选项改为 Intel 对应配置。NVIDIA 显卡通常还需要额外的专有驱动配置；本仓库默认面向 AMD 显卡。
 
-### 3. 调整 Swap 大小
+### 3. Lenovo 14APH8 120 Hz 屏幕修复
 
-默认 Swap 分区与本机 64 GiB 内存等大，并作为休眠恢复设备。可在 `hosts/nixos/disk-config.nix` 中修改：
+`hosts/nixos/hardware-configuration.nix` 已包含 Lenovo IdeaPad Pro 5 14APH8（面板 `MNE007ZA1-5`）的修正 EDID。构建时会把 `lenovo-14aph8-edid.hex` 转为固件、打入 initrd，并加入：
 
 ```nix
-size = "64G";
+boot.kernelParams = [ "drm.edid_firmware=eDP-1:edid/lenovo-14aph8.bin" ];
+boot.initrd.extraFirmwarePaths = [ "edid/lenovo-14aph8.bin" ];
 ```
 
-若机器内存容量不同，请将 Swap 的 `size` 改为不小于实际内存的值。休眠 Swap 未启用随机加密，因为随机密钥会在重启后丢失，导致无法恢复休眠镜像。
+该 EDID 只适用于上述 2880×1800 面板。原始问题可通过内核日志中的 `[drm] DisplayID checksum invalid, remainder is 248` 确认；若电脑使用其他面板，应移除这两个选项和 `hardware.firmware` 中的 `lenovo120HzEdid`。
 
-### 4. 确认 Windows ESP
+### 4. 单硬盘分区规划
 
-rEFInd 的 Windows 条目使用 ESP 的 GPT 分区 UUID，当前配置位于 `hosts/nixos/default.nix`：
+Windows 应先安装，并保留其 ESP、MSR、系统和恢复分区。在 Windows 磁盘管理中压缩系统卷后，未分配空间按以下顺序用于 NixOS：
+
+| 分区 | 建议大小 | 格式/标签 | 用途 |
+|---|---:|---|---|
+| NixOS ESP | 2 GiB | FAT32 / `NIXBOOT` | rEFInd、systemd-boot、Lanzaboote UKI |
+| Swap | 32 GiB | swap / `nixos-swap` | swap；内存不超过 32 GiB 时可用于休眠恢复 |
+| NixOS 系统 | 剩余空间 | Btrfs / `nixos` | `/`、`/nix`、`/home` |
+
+Windows 默认 ESP 往往只有 100–260 MiB，难以容纳多个 UKI 代次，所以本方案在同一块硬盘上使用两个 ESP。`disk-config.nix` 只按标签挂载 NixOS 的三个分区，不声明整盘分区表，因此重建系统不会改动 Windows 分区。
+
+### 5. 确认 Windows ESP
+
+rEFInd 的 Windows 条目使用 Windows ESP 的 GPT 分区 UUID，当前配置位于 `hosts/nixos/hardware-configuration.nix`：
 
 ```nix
 windowsEfiPartuuid = "991a77db-c316-4f75-b9df-bc05e179a798";
 ```
 
-如果 Windows ESP 发生变化，使用 `lsblk -o PATH,FSTYPE,PARTUUID,PARTLABEL` 找到包含 Windows Boot Manager 的 FAT 分区，并同步修改这个值。
+安装时使用 `lsblk -o PATH,SIZE,FSTYPE,LABEL,PARTUUID,PARTLABEL` 找到包含 `EFI/Microsoft/Boot/bootmgfw.efi` 的原 Windows FAT 分区，并把此值改为它的 `PARTUUID`。不要填文件系统 UUID，也不要填新建的 `NIXBOOT` 分区。
 
-## 全新安装
+## 单硬盘双系统安装
 
-以下步骤以官方 NixOS Minimal ISO、UEFI 启动和有线网络为例。
+以下步骤假定 Windows 已经以 UEFI/GPT 模式安装。先在 Windows 中关闭“快速启动”、暂停 BitLocker，然后使用磁盘管理压缩 Windows 卷并保留未分配空间。以下命令中的尖括号是占位符，必须替换为实际设备路径。
 
 ### 1. 启动安装介质并联网
 
@@ -120,7 +134,7 @@ nmtui
 test -d /sys/firmware/efi && echo UEFI || echo "不是 UEFI，请重新启动安装介质"
 ```
 
-### 2. 下载配置
+### 2. 下载并检查配置
 
 把地址替换成你上传后的 GitHub 仓库：
 
@@ -131,65 +145,75 @@ cd YOUR_REPO
 
 如果还没有上传，可以在安装环境中先创建并编辑这套文件；执行 Flake 命令前，记得运行 `git add .`，因为 Nix Flake 不会读取 Git 仓库中未跟踪的文件。
 
-### 3. 找到稳定的磁盘路径
+提交锁文件后检查配置：
 
 ```bash
-ls -l /dev/disk/by-id/
-lsblk -o NAME,SIZE,MODEL,SERIAL,FSTYPE,MOUNTPOINTS
-```
-
-选择代表**整块磁盘**且不带 `-partN` 后缀的路径，例如：
-
-```text
-/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_XXXXXXXX
-```
-
-编辑 `hosts/nixos/disk-config.nix`，把：
-
-```nix
-/dev/disk/by-id/CHANGE_ME
-```
-
-替换成刚确认的路径。再次用 `readlink -f` 检查它指向哪块磁盘：
-
-```bash
-readlink -f /dev/disk/by-id/你的磁盘名称
-```
-
-### 4. 生成锁文件并检查配置
-
-```bash
-nix --extra-experimental-features "nix-command flakes" flake lock
 nix --extra-experimental-features "nix-command flakes" flake check --no-build
 ```
 
-提交生成的 `flake.lock`，以后每次安装都会使用相同的依赖版本。Noctalia v5 当前仍在 Beta，锁文件尤其重要。
-
-### 5. 分区、格式化和挂载
-
-最后一次确认磁盘路径。下一条 Disko 命令会不可恢复地清空该磁盘：
+### 3. 只在未分配空间创建 NixOS 分区
 
 ```bash
-grep -n "device" hosts/nixos/disk-config.nix
+ls -l /dev/disk/by-id/
+lsblk -o PATH,SIZE,MODEL,FSTYPE,LABEL,PARTUUID,PARTLABEL,MOUNTPOINTS
 ```
 
-执行 Disko：
+找到 Windows 所在的整块硬盘，并确认未分配空间来自刚才压缩的 Windows 卷。打开分区工具：
 
 ```bash
-sudo nix --extra-experimental-features "nix-command flakes" \
-  run github:nix-community/disko/latest -- \
-  --mode destroy,format,mount \
-  --root-mountpoint /mnt \
-  ./hosts/nixos/disk-config.nix
+sudo cfdisk /dev/disk/by-id/<同一块硬盘>
 ```
 
-确认结果中 `/mnt`、`/mnt/nix`、`/mnt/home` 和 `/mnt/boot` 都已挂载：
+只在 `Free space` 中依次新建 2 GiB EFI System、32 GiB Linux swap，以及占满剩余空闲空间的 Linux filesystem，然后选择 `Write`。不要删除或改变任何已有分区。
+
+再次运行 `lsblk`，确定三个新分区的路径和原 Windows ESP。检查无误后只格式化三个新分区：
+
+```bash
+sudo mkfs.fat -F 32 -n NIXBOOT <新建的-2GiB-ESP>
+sudo mkswap -L nixos-swap <新建的-swap>
+sudo mkfs.btrfs -f -L nixos <新建的-btrfs>
+```
+
+确认 Windows ESP 的 PARTUUID，并检查其中确实有 Windows Boot Manager：
+
+```bash
+sudo mkdir -p /mnt/windows-esp
+sudo mount <原-Windows-ESP> /mnt/windows-esp
+test -f /mnt/windows-esp/EFI/Microsoft/Boot/bootmgfw.efi && echo "Windows ESP 正确"
+lsblk -no PARTUUID <原-Windows-ESP>
+sudo umount /mnt/windows-esp
+```
+
+把输出的 PARTUUID 写入 `hardware-configuration.nix` 的 `windowsEfiPartuuid`。
+
+### 4. 创建并挂载 Btrfs 子卷
+
+```bash
+sudo mount -o subvolid=5 /dev/disk/by-label/nixos /mnt
+sudo btrfs subvolume create /mnt/@root
+sudo btrfs subvolume create /mnt/@root/.snapshots
+sudo btrfs subvolume create /mnt/@nix
+sudo btrfs subvolume create /mnt/@home
+sudo btrfs subvolume create /mnt/@home/.snapshots
+sudo umount /mnt
+```
+
+```bash
+sudo mount -o subvol=@root,compress=zstd,noatime /dev/disk/by-label/nixos /mnt
+sudo mkdir -p /mnt/nix /mnt/home /mnt/boot
+sudo mount -o subvol=@nix,compress=zstd,noatime /dev/disk/by-label/nixos /mnt/nix
+sudo mount -o subvol=@home,compress=zstd,noatime /dev/disk/by-label/nixos /mnt/home
+sudo mount -o umask=0077 /dev/disk/by-label/NIXBOOT /mnt/boot
+sudo swapon /dev/disk/by-label/nixos-swap
+```
+
+确认挂载来源都属于刚创建的 NixOS 分区：
 
 ```bash
 findmnt -R /mnt
 ```
 
-### 6. 安装 NixOS
+### 5. 安装 NixOS
 
 默认主机名为 `nixos`：
 
@@ -205,9 +229,20 @@ sudo nixos-install --flake .#nixos --no-root-passwd
 sudo reboot
 ```
 
-拔掉安装 U 盘后，应先看到只包含 `systemd-boot` 和 `Windows` 的 rEFInd 菜单；选择带 NixOS 图标的 `systemd-boot` 后，再选择 NixOS 系统代次。首次登录在 tuigreet 中输入用户名 `ben`、密码 `q`，并选择 Hyprland 或 niri 会话（tuigreet 会记住上次选择）。此时先保持固件 Secure Boot 关闭，首次启动的 rEFInd 和 UKI 尚未签名。
+拔掉安装 U 盘后，应先看到只包含 `systemd-boot` 和 `Windows` 的 rEFInd 菜单；两者分别来自同一块硬盘上的 NixOS ESP 和 Windows ESP。选择带 NixOS 图标的 `systemd-boot` 后，再选择 NixOS 系统代次。首次登录在 tuigreet 中输入用户名 `ben`、密码 `q`，并选择 Hyprland 或 niri 会话（tuigreet 会记住上次选择）。此时先保持固件 Secure Boot 关闭，首次启动的 rEFInd 和 UKI 尚未签名。
 
 ## 首次登录
+
+### 验证 120 Hz
+
+重启进入图形会话后确认 EDID 覆盖已加载，并检查当前输出模式：
+
+```bash
+journalctl -b -k | grep -E "edid|DisplayID"
+hyprctl monitors
+```
+
+`hyprctl monitors` 应显示内部屏幕为 `2880x1800@120` 左右；使用 niri 时也可以运行 `niri msg outputs`。如果日志提示找不到 `edid/lenovo-14aph8.bin`，不要仅在桌面会话中添加自定义 modeline，应先检查该文件是否进入 initrd。
 
 ### Claude Code
 
@@ -527,8 +562,8 @@ Hyprland 与 niri 共用 `hypr-screenshot` 脚本，截图后都会打开 Satty 
 - [NixOS / nixpkgs](https://github.com/NixOS/nixpkgs)
 - [Home Manager](https://github.com/nix-community/home-manager)
 - [Catppuccin for Fuzzel](https://github.com/catppuccin/fuzzel)
-- [Disko](https://github.com/nix-community/disko)
 - [Lanzaboote](https://github.com/nix-community/lanzaboote)
+- [Lenovo IdeaPad Pro 5 14APH8 120 Hz EDID fix](https://github.com/dgroenen/lenovo-ideapad-pro-5-14-14APH8-120hz-fix)
 - [Noctalia v5](https://github.com/noctalia-dev/noctalia)
 - [rime-ice](https://github.com/iDvel/rime-ice)
 - [AstroNvim Template](https://github.com/AstroNvim/template)

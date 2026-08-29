@@ -25,11 +25,6 @@
       flake = false;
     };
 
-    disko = {
-      url = "github:nix-community/disko";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     lanzaboote = {
       url = "github:nix-community/lanzaboote/v1.1.0";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -67,7 +62,6 @@
       self,
       nixpkgs,
       home-manager,
-      disko,
       lanzaboote,
       noctalia,
       sops-nix,
@@ -83,7 +77,6 @@
         inherit system;
         specialArgs = { inherit inputs hostname username; };
         modules = [
-          disko.nixosModules.disko
           lanzaboote.nixosModules.lanzaboote
           sops-nix.nixosModules.sops
           home-manager.nixosModules.home-manager
