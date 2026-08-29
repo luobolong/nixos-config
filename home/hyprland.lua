@@ -25,7 +25,7 @@ hl.config({
   input = {
     kb_layout = "us",
     follow_mouse = 1,
-    sensitivity = 0,
+    sensitivity = -0.3,
     accel_profile = "flat",
     touchpad = {
       disable_while_typing = true,
