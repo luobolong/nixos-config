@@ -108,10 +108,10 @@ binds {
     Mod+M repeat=false       { maximize-window-to-edges; }
     Mod+Backslash repeat=false { toggle-column-tabbed-display; }
 
-    // Keep the lock shortcut available even if a previous locker crashed, and
-    // do not allow shortcut-inhibiting clients to swallow it.
+    // Let Noctalia own the lock screen, and do not allow
+    // shortcut-inhibiting clients to swallow the binding.
     Mod+Alt+L repeat=false allow-when-locked=true allow-inhibiting=false {
-        spawn "hyprlock";
+        spawn "noctalia" "msg" "session" "lock";
     }
 
     // Native niri recent-windows owns Alt+Tab. Super+Tab remains a quick

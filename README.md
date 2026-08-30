@@ -423,7 +423,7 @@ niri 是滚动平铺合成器，键位在 `home/niri.kdl` 中定义。列（colu
 | `Super + Shift + V` | 在浮动层和平铺层之间切换焦点 |
 | `Super + Shift + F` | 切换全屏 |
 | `Super + F` / `Super + M` | 最大化列 / 将窗口最大化到屏幕边缘 |
-| `Super + Alt + L` | 使用 Hyprlock 锁定屏幕；锁屏器异常退出后仍可再次调用 |
+| `Super + Alt + L` | 使用 Noctalia 锁定屏幕 |
 | `Alt + Tab` | 打开 niri 原生最近窗口切换器；可在其中按 `A` / `W` / `O` 切换全部、当前工作区或当前显示器范围 |
 | `Super + Tab` | 在当前工作区和上一个工作区之间切换 |
 | `Super + \` | 切换当前列的标签视图 |
