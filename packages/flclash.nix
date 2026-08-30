@@ -1,8 +1,17 @@
 {
   appimageTools,
+  autoPatchelfHook,
   fetchurl,
+  gtk3,
+  keybinder3,
   lib,
+  libayatana-appindicator,
+  libepoxy,
   makeDesktopItem,
+  makeWrapper,
+  stdenv,
+  wrapGAppsHook3,
+  writeShellScript,
 }:
 let
   pname = "flclash";
@@ -10,6 +19,16 @@ let
   src = fetchurl {
     url = "https://github.com/chen08209/FlClash/releases/download/v${version}/FlClash-${version}-linux-amd64.AppImage";
     sha256 = "7a874aac6ce7608d268d25a94690b995c6c06ddd1c66851678c821c8052d3cee";
+  };
+  coreLauncher = writeShellScript "flclash-core-launcher" ''
+    if [[ -x /run/wrappers/bin/FlClashCore ]]; then
+      exec /run/wrappers/bin/FlClashCore "$@"
+    fi
+
+    exec "$(dirname -- "$0")/FlClashCore.unwrapped" "$@"
+  '';
+  contents = appimageTools.extract {
+    inherit pname version src;
   };
   desktopItem = makeDesktopItem {
     name = pname;
@@ -20,13 +39,53 @@ let
     categories = [ "Network" ];
   };
 in
-appimageTools.wrapType2 {
-  inherit pname version src;
-  extraPkgs = pkgs: [ pkgs.libepoxy ];
-  extraInstallCommands = ''
-    mkdir -p $out/share/applications
+stdenv.mkDerivation {
+  inherit pname version;
+
+  dontUnpack = true;
+  dontWrapGApps = true;
+
+  nativeBuildInputs = [
+    autoPatchelfHook
+    makeWrapper
+    wrapGAppsHook3
+  ];
+
+  buildInputs = [
+    gtk3
+    keybinder3
+    libayatana-appindicator
+    libepoxy
+  ];
+
+  installPhase = ''
+    runHook preInstall
+
+    mkdir -p "$out/bin" "$out/libexec/flclash" "$out/share/applications"
+    cp -r ${contents}/. "$out/libexec/flclash/"
+    chmod -R u+w "$out/libexec/flclash"
+
+    mv "$out/libexec/flclash/FlClashCore" "$out/libexec/flclash/FlClashCore.unwrapped"
+    ln -s ${coreLauncher} "$out/libexec/flclash/FlClashCore"
+
     cp ${desktopItem}/share/applications/${pname}.desktop $out/share/applications/
+
+    runHook postInstall
   '';
+
+  preFixup = ''
+    addAutoPatchelfSearchPath "$out/libexec/flclash/lib"
+    addAutoPatchelfSearchPath "$out/libexec/flclash/usr/lib"
+    makeWrapperArgs+=("''${gappsWrapperArgs[@]}")
+  '';
+
+  postFixup = ''
+    makeWrapper "$out/libexec/flclash/FlClash" "$out/bin/flclash" \
+      --chdir "$out/libexec/flclash" \
+      --prefix LD_LIBRARY_PATH : "$out/libexec/flclash/lib:$out/libexec/flclash/usr/lib" \
+      ''${makeWrapperArgs[@]}
+  '';
+
   meta = {
     description = "A multi-platform proxy client based on ClashMeta";
     homepage = "https://github.com/chen08209/FlClash";
