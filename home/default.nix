@@ -552,7 +552,13 @@ in
     };
     mimeApps = {
       enable = true;
-      defaultApplications."inode/directory" = [ "org.kde.dolphin.desktop" ];
+      defaultApplications = {
+        "inode/directory" = [ "org.kde.dolphin.desktop" ];
+        "text/html" = [ "firefox.desktop" ];
+        "application/xhtml+xml" = [ "firefox.desktop" ];
+        "x-scheme-handler/http" = [ "firefox.desktop" ];
+        "x-scheme-handler/https" = [ "firefox.desktop" ];
+      };
     };
     userDirs = {
       enable = true;
