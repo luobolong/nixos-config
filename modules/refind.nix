@@ -18,7 +18,6 @@ let
 
   refindConfig = pkgs.writeText "refind.conf" ''
     timeout ${toString cfg.timeout}
-    default_selection "systemd-boot"
 
     # Only show the two explicitly declared operating-system entries.
     scanfor manual
