@@ -103,6 +103,7 @@ binds {
     Mod+W repeat=false  { toggle-window-floating; }
     Mod+Shift+V repeat=false { switch-focus-between-floating-and-tiling; }
     Mod+Shift+F repeat=false { fullscreen-window; }
+    Mod+F11 repeat=false     { fullscreen-window; }
     Mod+F repeat=false       { maximize-column; }
     Mod+M repeat=false       { maximize-window-to-edges; }
     Mod+Backslash repeat=false { toggle-column-tabbed-display; }
