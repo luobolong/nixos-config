@@ -1,4 +1,23 @@
 { pkgs, ... }:
+let
+  # niri-session still calls import-environment without variable names, which
+  # systemd has deprecated. Preserve its import-all behavior while avoiding the
+  # warning until https://github.com/niri-wm/niri/issues/254 is fixed upstream.
+  niriPackage = pkgs.symlinkJoin {
+    name = "niri-${pkgs.niri.version}-session-env-fix";
+    paths = [ pkgs.niri ];
+    passthru.providedSessions = pkgs.niri.providedSessions;
+    meta = pkgs.niri.meta;
+    postBuild = ''
+      rm "$out/bin/niri-session"
+      substitute ${pkgs.niri}/bin/niri-session "$out/bin/niri-session" \
+        --replace-fail \
+          'systemctl --user import-environment' \
+          'systemctl --user import-environment $(printenv | cut -d= -f1 | tr "\n" " ")'
+      chmod +x "$out/bin/niri-session"
+    '';
+  };
+in
 {
   programs.hyprland = {
     enable = true;
@@ -11,6 +30,7 @@
 
   programs.niri = {
     enable = true;
+    package = niriPackage;
   };
 
   programs.noctalia = {
