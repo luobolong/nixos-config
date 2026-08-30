@@ -1,6 +1,7 @@
 {
   appimageTools,
   autoPatchelfHook,
+  coreutils,
   fetchurl,
   gtk3,
   keybinder3,
@@ -12,6 +13,7 @@
   stdenv,
   wrapGAppsHook3,
   writeShellScript,
+  writeShellScriptBin,
 }:
 let
   pname = "flclash";
@@ -26,6 +28,18 @@ let
     fi
 
     exec "$(dirname -- "$0")/FlClashCore.unwrapped" "$@"
+  '';
+  # FlClash only recognizes a root-owned setuid core as authorized for TUN.
+  # NixOS instead grants the core only CAP_NET_ADMIN through security.wrappers,
+  # so make that narrow authorization look equivalent to FlClash's stat check.
+  # The shim is private to the FlClash process and delegates every other call.
+  statShim = writeShellScriptBin "stat" ''
+    if [[ "$#" -eq 3 && "$1" == "-c" && "$2" == "%U:%G %A" && "''${3##*/}" == "FlClashCore" ]]; then
+      echo "root:root -rwsr-xr-x"
+      exit 0
+    fi
+
+    exec ${coreutils}/bin/stat "$@"
   '';
   contents = appimageTools.extract {
     inherit pname version src;
@@ -82,6 +96,7 @@ stdenv.mkDerivation {
   postFixup = ''
     makeWrapper "$out/libexec/flclash/FlClash" "$out/bin/flclash" \
       --chdir "$out/libexec/flclash" \
+      --prefix PATH : "${statShim}/bin" \
       --prefix LD_LIBRARY_PATH : "$out/libexec/flclash/lib:$out/libexec/flclash/usr/lib" \
       ''${makeWrapperArgs[@]}
   '';

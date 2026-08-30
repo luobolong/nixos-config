@@ -1,8 +1,13 @@
-{ inputs, username, ... }:
+{
+  inputs,
+  username,
+  ...
+}:
 {
   imports = [
     ./disk-config.nix
     ./hardware-configuration.nix
+    ../../modules/clash-verge.nix
     ../../modules/core.nix
     ../../modules/desktop.nix
     ../../modules/flclash.nix
