@@ -78,8 +78,6 @@ window-rule {
     open-floating true
 }
 
-spawn-at-startup "fcitx5" "-d" "--replace"
-
 prefer-no-csd
 
 hotkey-overlay {

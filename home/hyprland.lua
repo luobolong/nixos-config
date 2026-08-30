@@ -186,10 +186,6 @@ hl.on("window.destroy", function(window)
   end
 end)
 
-hl.on("hyprland.start", function()
-  hl.exec_cmd("fcitx5 -d --replace")
-end)
-
 -- Window and session actions.
 hl.bind(mainMod .. " + Q", hl.dsp.window.close())
 hl.bind("ALT + F4", hl.dsp.window.close())
