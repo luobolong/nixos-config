@@ -10,7 +10,6 @@
     ../../modules/clash-verge.nix
     ../../modules/core.nix
     ../../modules/desktop.nix
-    ../../modules/flclash.nix
     ../../modules/refind.nix
     ../../modules/secrets.nix
     ../../modules/snapper.nix

@@ -20,7 +20,7 @@
 - NetworkManager、蓝牙、PipeWire
 - Fcitx5 + Rime + rime-ice（雾凇拼音）+ Catppuccin Mocha Sapphire 皮肤
 - Inter、Source Serif 4、Noto CJK/Emoji、Sarasa Gothic 字体 + Papirus Dark 图标主题 + Adwaita 32px 鼠标主题
-- Dolphin、Fastfetch、Mission Center、btop、Fuzzel（Catppuccin Mocha）、Satty、Hyprlock、Neovim + AstroNvim v5、VS Code、IntelliJ IDEA Ultimate、DataGrip、GoLand、Claude Code、Codex、CC Switch、Spotify、QQ、FlClash
+- Dolphin、Fastfetch、Mission Center、btop、Fuzzel（Catppuccin Mocha）、Satty、Hyprlock、Neovim + AstroNvim v5、VS Code、IntelliJ IDEA Ultimate、DataGrip、GoLand、Claude Code、Codex、CC Switch、Spotify、QQ
 - GnuPG + GPG Agent、SSH Agent、direnv + nix-direnv
 - sops-nix：使用 GPG 与本机 SSH host key 对敏感配置加密
 - jq、yq、rsync、Zip/7-Zip、常用硬件诊断、NixOS 维护与基础构建工具
@@ -48,8 +48,6 @@
 │   ├── hyprland.lua
 │   ├── niri.kdl
 │   └── zsh.nix
-└── packages/
-    └── flclash.nix
 ```
 
 ## 安装前修改
@@ -320,10 +318,6 @@ Noctalia 作为用户服务随桌面（Hyprland 或 niri）启动。它的图形
 systemctl --user status noctalia
 ```
 
-### FlClash
-
-FlClash 使用官方 x86_64 AppImage 发行包封装，版本、SHA-256 和额外运行库已在 `packages/flclash.nix` 中固定。配置目录是 `~/.local/share/com.follow.clash`。
-
 ## 日常维护
 
 应用当前配置：
@@ -458,7 +452,7 @@ niri 是滚动平铺合成器，键位在 `home/niri.kdl` 中定义。列（colu
 | `Super + Shift + V` | 在浮动层和平铺层之间切换焦点 |
 | `Super + Shift + F` | 切换全屏 |
 | `Super + F` / `Super + M` | 最大化列 / 将窗口最大化到屏幕边缘 |
-| `Super + Alt + L` | 使用 Hyprlock 锁定屏幕；锁屏器异常退出后仍可再次调用 |
+| `Super + Alt + L` | 使用 Noctalia 锁定屏幕 |
 | `Alt + Tab` | 打开 niri 原生最近窗口切换器；可在其中按 `A` / `W` / `O` 切换全部、当前工作区或当前显示器范围 |
 | `Super + Tab` | 在当前工作区和上一个工作区之间切换 |
 | `Super + \` | 切换当前列的标签视图 |
@@ -567,4 +561,3 @@ Hyprland 与 niri 共用 `hypr-screenshot` 脚本，截图后都会打开 Satty 
 - [Noctalia v5](https://github.com/noctalia-dev/noctalia)
 - [rime-ice](https://github.com/iDvel/rime-ice)
 - [AstroNvim Template](https://github.com/AstroNvim/template)
-- [FlClash](https://github.com/chen08209/FlClash)

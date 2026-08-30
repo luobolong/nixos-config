@@ -7,7 +7,6 @@
   ...
 }:
 let
-  flclash = pkgs.callPackage ../packages/flclash.nix { };
   chatgpt = pkgs.callPackage ../packages/chatgpt.nix { };
   deepseekHarness = pkgs.callPackage ../packages/deepseek-harness.nix { };
   audiomonitor =
@@ -375,7 +374,6 @@ in
       spotify
       qqWayland
       linuxqqClipsync
-      flclash
       cc-switch
       dolphin
       kdePackages.baloo-widgets
