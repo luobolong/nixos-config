@@ -90,6 +90,14 @@ hl.config({
   },
 })
 
+-- Let maximized windows reach the working-area edges while keeping panels
+-- visible. The regular 5/10 gaps return automatically after unmaximizing.
+hl.workspace_rule({
+  workspace = "f[1]",
+  gaps_in = 0,
+  gaps_out = 0,
+})
+
 local trackpadDevices = {
   "apple-inc.-magic-trackpad",
   "apple-inc.-magic-trackpad-1",
@@ -195,6 +203,7 @@ hl.bind(mainMod .. " + G", hl.dsp.group.toggle())
 hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("hyprlock"))
 hl.bind("SHIFT + F11", hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }))
 hl.bind(mainMod .. " + D", hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }))
+hl.bind(mainMod .. " + M", hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" }))
 hl.bind(mainMod .. " + SHIFT + W", function()
   hl.dispatch(hl.dsp.window.float({ action = "set" }))
   hl.dispatch(hl.dsp.window.pin({ action = "toggle" }))
@@ -324,7 +333,6 @@ local function bindSpecialWorkspace(key, name)
 end
 
 bindSpecialWorkspace("S", "S")
-bindSpecialWorkspace("M", "M")
 
 -- Screen capture.
 hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd("hyprpicker -a"))

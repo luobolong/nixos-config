@@ -194,6 +194,7 @@ let
         $'group\tWindow  ·  SUPER + G  ·  Toggle grouping' \
         $'pin\tWindow  ·  SUPER + SHIFT + W  ·  Toggle floating and pinning' \
         $'fullscreen\tWindow  ·  SUPER + D / SHIFT + F11  ·  Toggle fullscreen' \
+        $'maximize\tWindow  ·  SUPER + M  ·  Toggle maximized' \
         $'split\tWindow  ·  SUPER + J  ·  Toggle Dwindle split direction' \
         $'group-prev\tWindow  ·  SUPER + CTRL + H  ·  Previous window in group' \
         $'group-next\tWindow  ·  SUPER + CTRL + L  ·  Next window in group' \
@@ -228,11 +229,8 @@ let
         $'move-workspace-next\tWorkspace  ·  SUPER + ALT + CTRL + Right  ·  Move window to next workspace' \
         $'move-workspace-prev\tWorkspace  ·  SUPER + ALT + CTRL + Left  ·  Move window to previous workspace' \
         $'special-s\tWorkspace  ·  SUPER + S  ·  Toggle special workspace S' \
-        $'special-m\tWorkspace  ·  SUPER + M  ·  Toggle special workspace M' \
         $'move-special-s\tWorkspace  ·  SUPER + SHIFT + S  ·  Move window to S and follow' \
-        $'move-special-m\tWorkspace  ·  SUPER + SHIFT + M  ·  Move window to M and follow' \
         $'move-special-s-silent\tWorkspace  ·  SUPER + ALT + S  ·  Move window silently to S' \
-        $'move-special-m-silent\tWorkspace  ·  SUPER + ALT + M  ·  Move window silently to M' \
         $'picker\tCapture  ·  SUPER + SHIFT + P  ·  Pick a color' \
         $'screenshot-area\tCapture  ·  SUPER + P  ·  Capture a screen region' \
         $'screenshot-freeze\tCapture  ·  SUPER + CTRL + P  ·  Freeze and capture a screen region' \
@@ -297,6 +295,7 @@ let
         group) dispatch togglegroup ;;
         pin) dispatch setfloating; dispatch pin ;;
         fullscreen) dispatch fullscreen 0 ;;
+        maximize) dispatch fullscreen 1 ;;
         split) dispatch layoutmsg togglesplit ;;
         group-prev) dispatch changegroupactive b ;;
         group-next) dispatch changegroupactive f ;;
@@ -329,11 +328,8 @@ let
         move-workspace-next) dispatch movetoworkspace 'r+1' ;;
         move-workspace-prev) dispatch movetoworkspace 'r-1' ;;
         special-s) dispatch togglespecialworkspace S ;;
-        special-m) dispatch togglespecialworkspace M ;;
         move-special-s) dispatch movetoworkspace special:S ;;
-        move-special-m) dispatch movetoworkspace special:M ;;
         move-special-s-silent) dispatch movetoworkspacesilent special:S ;;
-        move-special-m-silent) dispatch movetoworkspacesilent special:M ;;
         picker) dispatch exec 'hyprpicker -a' ;;
         screenshot-area) dispatch exec 'hypr-screenshot area' ;;
         screenshot-freeze) dispatch exec 'hypr-screenshot area true' ;;
