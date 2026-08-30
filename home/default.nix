@@ -404,6 +404,7 @@ in
       mpvpaper
       networkmanagerapplet
       nwg-displays
+      xwayland-satellite
       xlsclients
 
       # Terminal and file search tools
