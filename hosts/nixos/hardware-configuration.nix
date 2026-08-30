@@ -39,7 +39,7 @@ in
     enable = true;
     # Both ESPs are on the same SSD. Use the Windows ESP's PARTUUID so rEFInd
     # can distinguish it from the 2 GiB NixOS ESP mounted at /boot.
-    windowsEfiPartuuid = "991a77db-c316-4f75-b9df-bc05e179a798";
+    windowsEfiPartuuid = "084dbc6c-e077-48f9-b6d5-ccd76d8f1d42";
   };
 
   # This host's local exFAT data disk. Use its filesystem UUID rather than the
