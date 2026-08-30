@@ -8,6 +8,7 @@
 }:
 let
   flclash = pkgs.callPackage ../packages/flclash.nix { };
+  chatgpt = pkgs.callPackage ../packages/chatgpt.nix { };
   deepseekHarness = pkgs.callPackage ../packages/deepseek-harness.nix { };
   audiomonitor =
     inputs.audiomonitor.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs
@@ -448,8 +449,8 @@ in
       nil
       nixfmt
       codex
+      chatgpt
       claude-code
-      polychromatic
       deepseekHarness
       sops
     ];
@@ -457,6 +458,11 @@ in
   };
 
   programs.home-manager.enable = true;
+  programs.java = {
+    enable = true;
+    # OpenJDK includes lib/src.zip for IDE source navigation.
+    package = pkgs.openjdk25;
+  };
   programs.git = {
     enable = true;
     settings = {
@@ -782,29 +788,15 @@ in
         ];
         center = [ "clock" ];
         end = [
-          "media"
           "tray"
           "wallpaper"
-          "mpvpaper"
+          "network"
+          "bluetooth"
           "volume"
+          "battery"
           "notifications"
           "session"
         ];
-        monitor."DP-2" = {
-          start = [
-            "launcher"
-            "settings"
-            "workspaces"
-          ];
-          end = [
-            "tray"
-            "wallpaper"
-            "mpvpaper"
-            "volume"
-            "notifications"
-            "session"
-          ];
-        };
         thickness = 26;
       };
     };

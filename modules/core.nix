@@ -128,11 +128,6 @@ in
   services.fstrim.enable = true;
   services.openssh.enable = true;
 
-  hardware.openrazer = {
-    enable = true;
-    users = [ username ];
-  };
-
   environment.systemPackages = with pkgs; [
     git
     curl

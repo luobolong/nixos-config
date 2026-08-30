@@ -26,6 +26,7 @@ input {
         natural-scroll
         click-method "clickfinger"
         scroll-method "two-finger"
+        scroll-factor 0.5
         accel-profile "adaptive"
         accel-speed 0.0
     }
