@@ -1,6 +1,6 @@
 # NixOS Hyprland / niri 工作站
 
-一套可以直接放到 GitHub 管理的 NixOS 配置。它使用 Flakes、Home Manager 和 Btrfs，提供 Hyprland 与 niri 两套 Noctalia v5 桌面（在登录界面自由选择）、雾凇拼音和常用桌面/开发软件。
+一套可以直接放到 GitHub 管理的 NixOS 配置。它使用 Flakes、Home Manager 和 Btrfs，提供 Hyprland + Caelestia Shell 与 niri + Noctalia v5 两套桌面（在登录界面自由选择）、雾凇拼音和常用桌面/开发软件。
 
 > [!WARNING]
 > 本配置面向一块硬盘上的 Windows + NixOS。分区前务必备份 Windows、暂停 BitLocker 并确认设备路径；只在 Windows 释放的未分配空间中新建 NixOS 分区，绝不能格式化已有的 Windows ESP、MSR、系统或恢复分区。
@@ -14,7 +14,7 @@
 - Snapper：分别为 `/` 和 `/home` 自动创建快照，并按小时、天、周、月清理
 - rEFInd（10 秒）→ systemd-boot（2 秒）→ Lanzaboote UKI；支持 UEFI Secure Boot，最多保留 10 个系统代次
 - 每周自动清理 7 天前的 Nix 代次，并优化 Nix Store
-- Hyprland（UWSM 会话，Lua 配置）与 niri（滚动平铺，KDL 配置）+ Noctalia v5
+- Hyprland（UWSM 会话，Lua 配置）+ Caelestia Shell，以及 niri（滚动平铺，KDL 配置）+ Noctalia v5
 - greetd + tuigreet 登录界面
 - Kitty（Wayland 模糊背景）+ Zsh + Starship 提示符
 - NetworkManager、蓝牙、PipeWire
@@ -310,9 +310,15 @@ nvim
 
 插件、状态和缓存保存在用户主目录中。AstroNvim 模板本身由 Flake 输入管理。
 
-### Noctalia
+### 桌面 Shell
 
-Noctalia 作为用户服务随桌面（Hyprland 或 niri）启动。它的图形设置保存在 `~/.config/noctalia`。检查服务：
+Hyprland 会话从其 Lua 配置启动 Caelestia Shell，设置保存在 `~/.config/caelestia`。可以查看 Shell IPC 是否可用：
+
+```bash
+caelestia shell -s
+```
+
+niri 会话仍通过用户服务启动 Noctalia，图形设置保存在 `~/.config/noctalia`。检查服务：
 
 ```bash
 systemctl --user status noctalia
@@ -375,7 +381,7 @@ systemctl list-timers 'snapper-*'
 | `Super + Alt + F4` | 强制结束当前窗口进程 |
 | `Super + W` | 切换当前窗口浮动状态 |
 | `Super + G` | 切换窗口分组 |
-| `Super + L` | 使用 Hyprlock 锁定屏幕 |
+| `Super + L` | 使用 Caelestia 锁定屏幕 |
 | `Shift + F11` / `Super + D` | 切换全屏 |
 | `Super + Shift + W` | 切换窗口置顶；平铺窗口会先转为浮动 |
 | `Super + J` | 切换 Dwindle 分割方向 |
@@ -383,7 +389,7 @@ systemctl list-timers 'snapper-*'
 | `Super + Alt + Z` | 切换 2 倍屏幕放大；放大画面跟随鼠标移动，鼠标始终位于画面中心 |
 | `Super + Alt + 滚轮上 / 下` | 以 0.25 倍为一级放大 / 缩小屏幕，范围为 1–10 倍；滚轮不会传递给当前应用 |
 | `Super + 方向键` | 向对应方向切换焦点 |
-| `Alt + Tab` | 打开 Noctalia 窗口总览；连续按键切换选择，松开 `Alt` 确认 |
+| `Alt + Tab` | 切换到下一个窗口；按住可连续切换 |
 | `Super + Shift + 方向键` | 按 50 像素调整当前窗口大小 |
 | `Super + Ctrl + Shift + 方向键` | 向对应方向移动当前窗口 |
 | `Super + 鼠标左键` | 拖动窗口 |
@@ -409,8 +415,8 @@ systemctl list-timers 'snapper-*'
 | `Super + C` | 打开 VS Code |
 | `Super + B` | 打开 Firefox |
 | `Ctrl + Shift + Escape` | 打开 Mission Center；终端中也可运行 `btop` |
-| `Super + A` | 打开 Noctalia 应用启动器 |
-| `Super + V` | 打开 Noctalia 剪贴板 |
+| `Super + A` | 打开 Caelestia 应用启动器 |
+| `Super + V` | 打开 Caelestia 剪贴板历史 |
 | `Super + /` | 显示快捷键说明 |
 
 ### 工作区与暂存区
@@ -558,6 +564,7 @@ Hyprland 与 niri 共用 `hypr-screenshot` 脚本，截图后都会打开 Satty 
 - [Catppuccin for Fuzzel](https://github.com/catppuccin/fuzzel)
 - [Lanzaboote](https://github.com/nix-community/lanzaboote)
 - [Lenovo IdeaPad Pro 5 14APH8 120 Hz EDID fix](https://github.com/dgroenen/lenovo-ideapad-pro-5-14-14APH8-120hz-fix)
+- [Caelestia Shell](https://github.com/caelestia-dots/shell)
 - [Noctalia v5](https://github.com/noctalia-dev/noctalia)
 - [rime-ice](https://github.com/iDvel/rime-ice)
 - [AstroNvim Template](https://github.com/AstroNvim/template)
