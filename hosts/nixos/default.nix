@@ -20,7 +20,10 @@
     useUserPackages = true;
     backupFileExtension = "hm-backup";
     extraSpecialArgs = { inherit inputs username; };
-    sharedModules = [ inputs.noctalia.homeModules.default ];
+    sharedModules = [
+      inputs.caelestia-shell.homeManagerModules.default
+      inputs.noctalia.homeModules.default
+    ];
     users.${username} = import ../../home;
   };
 }

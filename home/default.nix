@@ -198,7 +198,7 @@ let
         $'split\tWindow  ·  SUPER + J  ·  Toggle Dwindle split direction' \
         $'group-prev\tWindow  ·  SUPER + CTRL + H  ·  Previous window in group' \
         $'group-next\tWindow  ·  SUPER + CTRL + L  ·  Next window in group' \
-        $'window-overview\tWindow  ·  ALT + Tab  ·  Open Noctalia window overview' \
+        $'window-cycle\tWindow  ·  ALT + Tab  ·  Cycle to the next window' \
         $'zoom-toggle\tAccessibility  ·  SUPER + ALT + Z  ·  Toggle 2x screen magnification' \
         $'zoom-adjust\tAccessibility  ·  SUPER + ALT + Wheel  ·  Adjust screen magnification' \
         $'focus-left\tFocus  ·  SUPER + Left  ·  Focus left' \
@@ -219,7 +219,7 @@ let
         $'browser\tApplication  ·  SUPER + B / F  ·  Open Firefox' \
         $'monitor\tApplication  ·  CTRL + SHIFT + Escape  ·  Open system monitor' \
         $'launcher\tApplication  ·  SUPER + A  ·  Open application launcher' \
-        $'clipboard\tApplication  ·  SUPER + V  ·  Open Noctalia clipboard' \
+        $'clipboard\tApplication  ·  SUPER + V  ·  Open Caelestia clipboard history' \
         $'lock\tSystem  ·  SUPER + L  ·  Lock the screen' \
         $'workspace-empty\tWorkspace  ·  SUPER + CTRL + Down  ·  Switch to an empty workspace' \
         $'workspace-next-existing\tWorkspace  ·  SUPER + Wheel Down  ·  Next existing workspace' \
@@ -299,7 +299,7 @@ let
         split) dispatch layoutmsg togglesplit ;;
         group-prev) dispatch changegroupactive b ;;
         group-next) dispatch changegroupactive f ;;
-        window-overview) noctalia msg window-switcher ;;
+        window-cycle) dispatch cyclenext ;;
         focus-left) dispatch movefocus l ;;
         focus-right) dispatch movefocus r ;;
         focus-up) dispatch movefocus u ;;
@@ -317,9 +317,9 @@ let
         editor) dispatch exec code ;;
         browser) dispatch exec firefox ;;
         monitor) dispatch exec missioncenter ;;
-        launcher) noctalia msg panel-toggle launcher ;;
-        clipboard) noctalia msg panel-toggle clipboard ;;
-        lock) dispatch exec hyprlock ;;
+        launcher) dispatch global caelestia:launcher ;;
+        clipboard) caelestia clipboard ;;
+        lock) dispatch global caelestia:lock ;;
         workspace-empty) dispatch workspace empty ;;
         workspace-next-existing) dispatch workspace 'e+1' ;;
         workspace-prev-existing) dispatch workspace 'e-1' ;;
@@ -563,7 +563,7 @@ in
   };
 
   # Keep the network and Bluetooth services available without starting their
-  # legacy tray applets automatically; Noctalia provides the desktop controls.
+  # legacy tray applets automatically; both session shells provide the controls.
   xdg.configFile."autostart/nm-applet.desktop".text = ''
     [Desktop Entry]
     Type=Application
@@ -749,6 +749,13 @@ in
     extraConfig = builtins.readFile ./hyprland.lua;
   };
 
+  programs.caelestia = {
+    enable = true;
+    # Starting from Hyprland keeps Caelestia out of the niri session.
+    systemd.enable = false;
+    cli.enable = true;
+  };
+
   # This file is fully managed here. Replace an existing copy directly so a
   # stale .hm-backup from an earlier activation cannot block future rebuilds.
   xdg.configFile."niri/config.kdl" = {
@@ -833,13 +840,22 @@ in
         "helix"
         "labwc"
         "niri"
-        "hyprland"
         "mango"
         "scroll"
         "sway"
         "wezterm"
       ];
     };
+  };
+
+  # The upstream Noctalia module normally attaches to every graphical session.
+  # Bind it to niri so Hyprland can exclusively run Caelestia instead.
+  systemd.user.services.noctalia = {
+    Unit = {
+      After = lib.mkForce [ "niri.service" ];
+      PartOf = lib.mkForce [ "niri.service" ];
+    };
+    Install.WantedBy = lib.mkForce [ "niri.service" ];
   };
 
   # Dolphin delegates removable and secondary-drive mounts to UDisks2, which

@@ -3,10 +3,9 @@ local mainMod = "SUPER"
 local terminal = "kitty"
 local fileManager = "dolphin"
 
--- Noctalia generates this module when its Hyprland template is enabled. Keep
--- startup working before the first render or when the template is disabled.
-pcall(function()
-  require("noctalia").apply_theme()
+-- Caelestia is scoped to the Hyprland session; Noctalia remains niri-only.
+hl.on("hyprland.start", function()
+  hl.exec_cmd("caelestia shell -d")
 end)
 
 hl.monitor({
@@ -200,7 +199,7 @@ hl.bind("ALT + F4", hl.dsp.window.close())
 hl.bind(mainMod .. " + ALT + F4", hl.dsp.window.kill())
 hl.bind(mainMod .. " + W", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + G", hl.dsp.group.toggle())
-hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("hyprlock"))
+hl.bind(mainMod .. " + L", hl.dsp.global("caelestia:lock"))
 hl.bind("SHIFT + F11", hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }))
 hl.bind(mainMod .. " + D", hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }))
 hl.bind(mainMod .. " + M", hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" }))
@@ -211,7 +210,7 @@ end)
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))
 hl.bind(mainMod .. " + CTRL + H", hl.dsp.group.prev())
 hl.bind(mainMod .. " + CTRL + L", hl.dsp.group.next())
-hl.bind("ALT + Tab", hl.dsp.exec_cmd("noctalia msg window-switcher"))
+hl.bind("ALT + Tab", hl.dsp.window.cycle_next(), { repeating = true })
 
 local function setZoom(targetZoom)
   hl.config({ cursor = { zoom_factor = math.min(10, math.max(1, targetZoom)) } })
@@ -280,8 +279,8 @@ hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("code"))
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("firefox"))
 hl.bind(mainMod .. " + F", hl.dsp.exec_cmd("firefox"))
 hl.bind("CTRL + SHIFT + Escape", hl.dsp.exec_cmd("missioncenter"))
-hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("noctalia msg panel-toggle launcher"))
-hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("noctalia msg panel-toggle clipboard"))
+hl.bind(mainMod .. " + A", hl.dsp.global("caelestia:launcher"))
+hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("caelestia clipboard"))
 hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd("hypr-command-palette"))
 
 -- Workspaces 1–10; digit key 0 maps to workspace 10.
