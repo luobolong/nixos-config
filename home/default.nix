@@ -658,13 +658,18 @@ in
     '';
   };
 
-  xdg.configFile."fuzzel/fuzzel.ini".text = ''
-    [main]
-    include=${inputs.catppuccin-fuzzel}/themes/catppuccin-mocha/mauve.ini
-    font=Inter:size=12
-    icon-theme=Papirus-Dark
-    terminal=kitty
-  '';
+  # This file is fully managed here. Replace an existing copy directly so a
+  # stale .hm-backup from an earlier activation cannot block future rebuilds.
+  xdg.configFile."fuzzel/fuzzel.ini" = {
+    force = true;
+    text = ''
+      [main]
+      include=${inputs.catppuccin-fuzzel}/themes/catppuccin-mocha/mauve.ini
+      font=Inter:size=12
+      icon-theme=Papirus-Dark
+      terminal=kitty
+    '';
+  };
 
   xdg.configFile."satty/config.toml".text = ''
     [general]
