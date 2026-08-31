@@ -3,11 +3,6 @@ local mainMod = "SUPER"
 local terminal = "kitty"
 local fileManager = "dolphin"
 
--- Caelestia is scoped to the Hyprland session; Noctalia remains niri-only.
-hl.on("hyprland.start", function()
-  hl.exec_cmd("caelestia shell -d")
-end)
-
 hl.monitor({
   output = "",
   mode = "preferred",

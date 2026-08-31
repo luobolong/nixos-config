@@ -744,15 +744,24 @@ in
     enable = true;
     package = null;
     portalPackage = null;
-    systemd.enable = true;
+    systemd = {
+      enable = true;
+      # The non-UWSM session does not start this target automatically.
+      # It contains desktop autostart entries such as fcitx5.
+      enableXdgAutostart = true;
+    };
     configType = "lua";
     extraConfig = builtins.readFile ./hyprland.lua;
   };
 
   programs.caelestia = {
     enable = true;
-    # Starting from Hyprland keeps Caelestia out of the niri session.
-    systemd.enable = false;
+    # Starting through the user manager gives Caelestia the Home Manager Qt
+    # environment while keeping it scoped to the Hyprland session.
+    systemd = {
+      enable = true;
+      target = "hyprland-session.target";
+    };
     cli.enable = true;
   };
 
