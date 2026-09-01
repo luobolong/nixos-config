@@ -189,7 +189,7 @@ in
             Arch = "󰣇";
             CachyOS = "󰣇";
             Macos = "";
-            NixOS = "❄️";
+            NixOS = "󱄅";
           };
         };
 
