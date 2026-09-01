@@ -1,528 +1,538 @@
-# NixOS Hyprland / niri 工作站
+# NixOS Configuration
 
-一套可以直接放到 GitHub 管理的 NixOS 配置。它使用 Flakes、Home Manager、Disko 和 Btrfs，提供 Hyprland 与 niri 两套 Noctalia v5 桌面（在登录界面自由选择）、雾凇拼音和常用桌面/开发软件。
+面向 AMD x86-64 工作站与 Lenovo IdeaPad Pro 5 14APH8 笔记本的个人 NixOS 和 Home Manager 配置。
 
-> [!WARNING]
-> 安装命令会**清空目标磁盘的全部数据**。执行 Disko 前，务必备份数据并反复确认磁盘的 `/dev/disk/by-id/...` 路径。不要使用容易变化的 `/dev/sda` 或 `/dev/nvme0n1`。
+[English](README.en.md)
 
-## 包含内容
+---
 
-- NixOS unstable + Flakes
-- Home Manager
-- Disko + GPT + UEFI
-- Btrfs：`@root`、`@nix`、`@home` 分别挂载到 `/`、`/nix`、`/home`，并使用 Zstd 压缩
-- Snapper：分别为 `/` 和 `/home` 自动创建快照，并按小时、天、周、月清理
-- rEFInd（10 秒）→ systemd-boot（2 秒）→ Lanzaboote UKI；支持 UEFI Secure Boot，最多保留 10 个系统代次
-- 每周自动清理 7 天前的 Nix 代次，并优化 Nix Store
-- Hyprland（UWSM 会话，Lua 配置）与 niri（滚动平铺，KDL 配置）+ Noctalia v5
-- greetd + tuigreet 登录界面
-- Kitty（Wayland 模糊背景）+ Zsh + Starship 提示符
-- NetworkManager、蓝牙、PipeWire
-- Fcitx5 + Rime + rime-ice（雾凇拼音）+ Catppuccin Mocha Sapphire 皮肤
-- Inter、Source Serif 4、Noto CJK/Emoji、Sarasa Gothic 字体 + Papirus Dark 图标主题 + Adwaita 32px 鼠标主题
-- Dolphin、Fastfetch、Mission Center、btop、Fuzzel（Catppuccin Mocha）、Satty、Hyprlock、Neovim + AstroNvim v5、VS Code、IntelliJ IDEA Ultimate、DataGrip、GoLand、Claude Code、Codex、CC Switch、Spotify、QQ
-- GnuPG + GPG Agent、SSH Agent、direnv + nix-direnv
-- sops-nix：使用 GPG 与本机 SSH host key 对敏感配置加密
-- jq、yq、rsync、Zip/7-Zip、常用硬件诊断、NixOS 维护与基础构建工具
+## 中文
 
-## 目录结构
+### 项目概览
 
-```text
+这是一套面向个人设备的完整系统配置，而不是可直接套用到任意机器的通用模块库。它同时管理 NixOS、Home Manager、启动链、磁盘挂载、桌面会话、开发工具和常用应用。
+
+| 项目 | 当前值 |
+|---|---|
+| 架构 | <code>x86_64-linux</code> |
+| Flake 输出 | <code>nixosConfigurations.nixos</code> |
+| 主机名 | <code>nixos</code> |
+| 用户名 | <code>ben</code> |
+| Nixpkgs | <code>nixos-unstable</code> |
+| NixOS / Home Manager state version | <code>25.11</code> |
+| 时区 | <code>Asia/Taipei</code> |
+| 桌面会话 | Hyprland 与 niri |
+| 登录管理器 | greetd + tuigreet |
+| 系统盘 | Btrfs，启用 zstd 压缩与 Snapper |
+| 启动链 | rEFInd → systemd-boot / Lanzaboote → UKI |
+
+主要能力：
+
+- 使用 Flake 统一组合 NixOS、Home Manager、Lanzaboote、sops-nix 与 Noctalia。
+- 同时提供 Hyprland 动态平铺和 niri 滚动平铺会话。
+- 由 Noctalia 提供状态栏、启动器、剪贴板、通知、壁纸和会话界面。
+- 使用 Fcitx5 + Rime Ice，提供中英文输入。
+- 使用 PipeWire、NetworkManager、BlueZ/Blueman、UDisks2 与桌面门户。
+- 使用 Btrfs 子卷、每小时 Snapper 快照、周期清理和 TRIM。
+- 打包 ChatGPT Linux 客户端、DeepSeek Harness、Linux QQ 剪贴板同步和 AudioMonitor。
+- 为 Wayland、Electron、Qt/KDE 和 GTK 应用统一 Catppuccin Mocha 风格。
+
+### 分支模型
+
+<code>master</code> 是带 Disko 的 AMD x86-64 基线配置；<code>laptop</code> 是当前 Lenovo 笔记本的设备专用配置。<code>master</code> 是 <code>laptop</code> 的祖先，通用改动应保持同步，设备差异保留在下表所列文件中。
+
+| 范围 | <code>master</code> | <code>laptop</code> |
+|---|---|---|
+| 用途 | 新磁盘部署基线 | 已安装的 Lenovo IdeaPad Pro 5 14APH8 |
+| 磁盘管理 | 引入 Disko，并将其加入 Flake、系统模块和维护工具 | 不引入 Disko，只声明现有文件系统 |
+| 磁盘布局 | 将 <code>/dev/disk/by-id/CHANGE_ME</code> 重新分区为 2 GiB ESP、64 GiB swap 和 Btrfs 系统分区 | 依赖已有 2 GiB <code>NIXBOOT</code>、32 GiB <code>nixos-swap</code> 与 <code>nixos</code> 标签；不会创建分区 |
+| Btrfs 子卷 | Disko 创建 <code>@root</code>、<code>@nix</code>、<code>@home</code> 及快照子卷 | 挂载已有 <code>@root</code>、<code>@nix</code>、<code>@home</code> |
+| Windows 双启动 | Windows ESP 使用 PARTUUID <code>991a77db-c316-4f75-b9df-bc05e179a798</code>，并应位于不会被 Disko 清除的另一块磁盘上 | 同一 SSD 上的 Windows ESP 使用 <code>084dbc6c-e077-48f9-b6d5-ccd76d8f1d42</code> |
+| 内置屏幕 | 无 EDID 覆盖 | 在 initrd 中加载校正 EDID，修复 2880×1800 面板的 120 Hz 模式 |
+| Noctalia 默认栏 | 包含媒体与 mpvpaper，并为 <code>DP-2</code> 提供单独布局 | 默认栏显示网络、蓝牙和电池，不设置 <code>DP-2</code> 覆盖 |
+| Flake 锁文件 | 包含 Disko 输入闭包 | 移除 Disko 输入闭包 |
+
+可用以下命令核对两个已提交分支的实际差异：
+
+~~~bash
+git diff --stat master...laptop
+git diff master...laptop -- flake.nix home/default.nix hosts/nixos modules/core.nix
+~~~
+
+### 仓库结构
+
+~~~text
 .
-├── .sops.yaml
-├── flake.nix
+├── .sops.yaml                        # GPG 与 Age 加密接收者规则
+├── flake.nix                         # 输入、主机输出、检查与格式化器
+├── flake.lock
 ├── hosts/nixos/
-│   ├── default.nix
-│   ├── disk-config.nix
-│   └── hardware-configuration.nix
+│   ├── default.nix                   # 主机模块入口和 Home Manager 接线
+│   ├── disk-config.nix               # 分支相关的磁盘布局或挂载
+│   ├── hardware-configuration.nix    # AMD 硬件、ESP 和笔记本 EDID
+│   └── lenovo-14aph8-edid.hex        # laptop 分支的校正 EDID
 ├── modules/
-│   ├── core.nix
-│   ├── desktop.nix
-│   ├── fonts.conf
-│   ├── refind.nix
-│   ├── secrets.nix
-│   └── snapper.nix
+│   ├── core.nix                      # 用户、Nix、内核、SSH 和系统工具
+│   ├── desktop.nix                   # Wayland 会话、音频、蓝牙、输入法和字体
+│   ├── refind.nix                    # rEFInd + Lanzaboote 安装链
+│   ├── snapper.nix                   # root/home 快照策略
+│   ├── clash-verge.nix               # Clash Verge service/TUN 配置
+│   ├── secrets.nix                   # sops-nix Age 密钥来源
+│   ├── fonts.conf                    # Fontconfig 字体优先级
+│   └── patches/                      # 本地软件修补
 ├── home/
-│   ├── default.nix
-│   ├── hyprland.lua
-│   ├── niri.kdl
-│   └── zsh.nix
-```
+│   ├── default.nix                   # Home Manager、应用、主题和用户服务
+│   ├── hyprland.lua                  # Hyprland Lua 配置
+│   ├── niri.kdl                      # niri 配置
+│   ├── niri-smart-direction.sh       # niri 浮动窗口智能方向操作
+│   └── zsh.nix                       # Zsh、Starship、fzf 和终端工具
+└── packages/
+    ├── chatgpt.nix                   # ChatGPT 官方 Linux 二进制封装
+    ├── deepseek-harness.nix          # DeepSeek Harness NPM 构建
+    └── deepseek-harness/package-lock.json
+~~~
 
-## 安装前修改
+### 安装前修改
 
-### 1. 修改主机名和用户名
+#### 主机名与用户名
 
-编辑 `flake.nix`：
+在 <code>flake.nix</code> 中修改下列值：
 
-```nix
-hostname = "nixos";
-username = "ben";
-```
+~~~nix
+let
+  system = "x86_64-linux";
+  hostname = "nixos";
+  username = "ben";
+in
+~~~
 
-如果修改了主机名，也要把目录 `hosts/nixos` 改成相同名称，并同步修改 `flake.nix` 中的：
+- <code>hostname</code> 同时决定 <code>networking.hostName</code> 和 Flake 输出名。改为 <code>my-host</code> 后，安装与重建目标也要改为 <code>.#my-host</code>。
+- <code>hosts/nixos</code> 是固定的源码目录名，不会随主机名自动变化，也不需要仅因修改主机名而重命名。
+- <code>username</code> 会传给 NixOS 用户和 Home Manager 配置。修改后，还应检查 <code>home/default.nix</code> 中的 Git 姓名、邮箱、签名密钥及其他个人设置。
+- 文档里的 <code>ben</code> 和 <code>nixos</code> 命令示例都要替换成新值。
 
-```nix
-./hosts/nixos
-```
+#### 账户与密码
 
-### 2. CPU 与显卡
+<code>modules/core.nix</code> 设置了 <code>users.mutableUsers = false</code>，root 与普通用户共用变量 <code>loginPasswordHash</code>。仓库当前保存的是弱密码 <code>q</code> 对应的哈希，只能视为占位符。安装前生成新哈希并替换它：
 
-默认硬件配置适用于 AMD CPU，并启用了 AMD 微码更新、AMDGPU 早期 KMS，以及由 `hardware.graphics` 提供的 Mesa OpenGL/Vulkan 驱动：
+~~~bash
+nix shell nixpkgs#mkpasswd -c mkpasswd -m sha-512
+~~~
 
-```nix
-boot.kernelModules = [ "kvm-amd" ];
-hardware.cpu.amd.updateMicrocode = lib.mkDefault true;
-hardware.graphics.enable = true;
-hardware.graphics.enable32Bit = true;
-```
+如需为 root 和普通用户使用不同密码，应拆分为两个哈希变量。OpenSSH 当前已启用而防火墙关闭，也应在部署前按目标网络调整 <code>services.openssh</code>、认证方式和 <code>networking.firewall</code>。
 
-如果改用 Intel CPU，需将 KVM 模块和微码选项改为 Intel 对应配置。NVIDIA 显卡通常还需要额外的专有驱动配置；本仓库默认面向 AMD 显卡。
+#### CPU、显卡与笔记本面板
 
-### 3. 调整 Swap 大小
+<code>hosts/nixos/hardware-configuration.nix</code> 假定 AMD CPU 与 AMDGPU：启用了 <code>kvm-amd</code>、AMD 微码、AMDGPU initrd KMS 以及 32 位图形支持。Intel、NVIDIA 或不同硬件必须据实调整。
 
-默认 Swap 分区与本机 64 GiB 内存等大，并作为休眠恢复设备。可在 `hosts/nixos/disk-config.nix` 中修改：
+<code>laptop</code> 分支额外加载 Lenovo IdeaPad Pro 5 14APH8 的校正 EDID。只有对应的 2880×1800 面板需要这组设置；其他设备应移除 EDID 固件构建、<code>drm.edid_firmware</code> 内核参数和相关固件路径。
 
-```nix
-size = "64G";
-```
+#### Windows ESP
 
-若机器内存容量不同，请将 Swap 的 `size` 改为不小于实际内存的值。休眠 Swap 未启用随机加密，因为随机密钥会在重启后丢失，导致无法恢复休眠镜像。
+rEFInd 通过 Windows ESP 的 GPT PARTUUID 定位 Windows Boot Manager。用以下命令确认实际值，再修改 <code>hosts/nixos/hardware-configuration.nix</code> 中的 <code>windowsEfiPartuuid</code>：
 
-### 4. 确认 Windows ESP
+~~~bash
+lsblk -o PATH,SIZE,FSTYPE,LABEL,PARTUUID,PARTLABEL,MOUNTPOINTS
+~~~
 
-rEFInd 的 Windows 条目使用 ESP 的 GPT 分区 UUID，当前配置位于 `hosts/nixos/default.nix`：
+这里需要的是分区的 PARTUUID，不是文件系统 UUID。安装前还应备份 BitLocker 恢复密钥和重要数据；双启动设备建议在 Windows 中关闭“快速启动”，并在分区或修改启动密钥前暂停 BitLocker。
 
-```nix
-windowsEfiPartuuid = "991a77db-c316-4f75-b9df-bc05e179a798";
-```
+### 部署前必须检查
 
-如果 Windows ESP 发生变化，使用 `lsblk -o PATH,FSTYPE,PARTUUID,PARTLABEL` 找到包含 Windows Boot Manager 的 FAT 分区，并同步修改这个值。
+不要在未检查下列项目时直接部署：
 
-## 全新安装
+1. 已替换默认密码哈希，并审阅主机名、用户名、Git 身份和 sops 接收者。
+2. OpenSSH 已启用，而防火墙被关闭；目标网络和 SSH 认证策略必须可接受。
+3. <code>master</code> 的 Disko 设备不再是 <code>/dev/disk/by-id/CHANGE_ME</code>，且确认目标磁盘允许被完全清除。
+4. <code>laptop</code> 的磁盘标签和 Btrfs 子卷都已存在；此分支不会创建它们。
+5. Windows ESP PARTUUID 与当前机器一致，Windows ESP 没有被误选为 Disko 目标。
+6. 仅在匹配的 Lenovo 面板上启用 <code>laptop</code> EDID 覆盖。
+7. 自定义启动安装钩子会更新 ESP 中的 Lanzaboote 和 rEFInd 文件，并在允许写入 EFI 变量时把 rEFInd 放到 UEFI BootOrder 首位。
+8. 已准备可启动安装介质、完整备份，以及必要时的固件/BitLocker 恢复手段。
 
-以下步骤以官方 NixOS Minimal ISO、UEFI 启动和有线网络为例。
+### 选择与验证分支
 
-### 1. 启动安装介质并联网
+~~~bash
+git clone https://github.com/luobolong/nixos-config.git
+cd nixos-config
 
-连接 Wi-Fi 时可使用：
+# 选择一种部署目标
+git switch master
+# 或
+git switch laptop
 
-```bash
+nix flake check
+nix build .#nixosConfigurations.nixos.config.system.build.toplevel --no-link
+~~~
+
+如果修改了 <code>hostname</code>，把上面和后续命令中的 <code>nixos</code> 替换为新的 Flake 输出名。Flake 只会读取 Git 已跟踪或已加入索引的新文件；新增本地配置文件后，应明确执行 <code>git add 文件路径</code> 再验证。
+
+### 安装步骤
+
+以下流程假定安装介质以 UEFI 模式启动。先连接网络并确认当前环境：
+
+~~~bash
 sudo systemctl start NetworkManager
 nmtui
-```
+test -d /sys/firmware/efi && echo UEFI || echo "不是 UEFI 模式"
+~~~
 
-确认当前是 UEFI 模式：
+#### master：使用 Disko 安装到新磁盘
 
-```bash
-test -d /sys/firmware/efi && echo UEFI || echo "不是 UEFI，请重新启动安装介质"
-```
+> **警告：** 此流程会销毁 <code>hosts/nixos/disk-config.nix</code> 指向的整块磁盘。它不适用于在同一磁盘上保留现有 Windows 分区。当前 <code>master</code> 假定 Windows ESP 位于另一块不会被 Disko 操作的磁盘。
 
-### 2. 下载配置
+1. 查看稳定设备路径，按容量、型号和序列号反复确认目标磁盘：
 
-把地址替换成你上传后的 GitHub 仓库：
+   ~~~bash
+   ls -l /dev/disk/by-id/
+   lsblk -o PATH,SIZE,MODEL,SERIAL,FSTYPE,LABEL,PARTUUID,MOUNTPOINTS
+   ~~~
 
-```bash
-git clone https://github.com/YOUR_NAME/YOUR_REPO.git
-cd YOUR_REPO
-```
+2. 把 <code>hosts/nixos/disk-config.nix</code> 中的 <code>/dev/disk/by-id/CHANGE_ME</code> 改成确认过的完整 by-id 路径。默认布局是 2 GiB ESP、64 GiB swap，以及使用其余空间的 Btrfs 分区。
 
-如果还没有上传，可以在安装环境中先创建并编辑这套文件；执行 Flake 命令前，记得运行 `git add .`，因为 Nix Flake 不会读取 Git 仓库中未跟踪的文件。
+3. 再次检查配置，然后执行 Disko 的销毁、格式化与挂载模式：
 
-### 3. 找到稳定的磁盘路径
+   ~~~bash
+   nix flake check
+   sudo nix --experimental-features "nix-command flakes" run github:nix-community/disko/latest -- \
+     --mode destroy,format,mount ./hosts/nixos/disk-config.nix
+   findmnt -R /mnt
+   ~~~
 
-```bash
-ls -l /dev/disk/by-id/
-lsblk -o NAME,SIZE,MODEL,SERIAL,FSTYPE,MOUNTPOINTS
-```
+4. 确认 <code>/mnt</code>、<code>/mnt/nix</code>、<code>/mnt/home</code> 和 <code>/mnt/boot</code> 均来自目标磁盘后安装：
 
-选择代表**整块磁盘**且不带 `-partN` 后缀的路径，例如：
+   ~~~bash
+   sudo nixos-install --flake .#nixos --no-root-passwd
+   sudo reboot
+   ~~~
 
-```text
-/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_XXXXXXXX
-```
+Disko 的上游 Quickstart 同样明确说明该流程会擦除磁盘，且不支持双启动布局；执行前请阅读 [Disko Quickstart](https://github.com/nix-community/disko/blob/master/docs/quickstart.md)。
 
-编辑 `hosts/nixos/disk-config.nix`，把：
+#### laptop：在 Windows 磁盘的空闲空间中手工安装
 
-```nix
-/dev/disk/by-id/CHANGE_ME
-```
+此分支不会运行 Disko。它假定 Windows 已使用 UEFI/GPT，并只在预留的未分配空间中新增以下分区：
 
-替换成刚确认的路径。再次用 `readlink -f` 检查它指向哪块磁盘：
+| 分区 | 大小 | 格式/标签 | 用途 |
+|---|---:|---|---|
+| NixOS ESP | 2 GiB | FAT32，<code>NIXBOOT</code> | <code>/boot</code> 与多个 UKI 代次 |
+| Swap | 32 GiB | swap，<code>nixos-swap</code> | swap / resume |
+| 系统分区 | 剩余空间 | Btrfs，<code>nixos</code> | root、nix、home 子卷 |
 
-```bash
-readlink -f /dev/disk/by-id/你的磁盘名称
-```
+1. 找出目标磁盘，在 Windows 已释放的空闲空间中创建三个新分区。不要格式化 Windows ESP、MSR、系统或恢复分区：
 
-### 4. 生成锁文件并检查配置
+   ~~~bash
+   ls -l /dev/disk/by-id/
+   lsblk -o PATH,SIZE,MODEL,FSTYPE,LABEL,PARTUUID,PARTLABEL,MOUNTPOINTS
+   sudo cfdisk /dev/disk/by-id/DEVICE
+   ~~~
 
-```bash
-nix --extra-experimental-features "nix-command flakes" flake lock
-nix --extra-experimental-features "nix-command flakes" flake check --no-build
-```
+2. 只格式化刚创建的三个新分区，把示例设备名替换为实际路径：
 
-提交生成的 `flake.lock`，以后每次安装都会使用相同的依赖版本。Noctalia v5 当前仍在 Beta，锁文件尤其重要。
+   ~~~bash
+   sudo mkfs.fat -F 32 -n NIXBOOT /dev/NEW_ESP
+   sudo mkswap -L nixos-swap /dev/NEW_SWAP
+   sudo mkfs.btrfs -f -L nixos /dev/NEW_BTRFS
+   ~~~
 
-### 5. 分区、格式化和挂载
+3. 创建配置需要的 Btrfs 子卷：
 
-最后一次确认磁盘路径。下一条 Disko 命令会不可恢复地清空该磁盘：
+   ~~~bash
+   sudo mount -o subvolid=5 /dev/disk/by-label/nixos /mnt
+   sudo btrfs subvolume create /mnt/@root
+   sudo btrfs subvolume create /mnt/@root/.snapshots
+   sudo btrfs subvolume create /mnt/@nix
+   sudo btrfs subvolume create /mnt/@home
+   sudo btrfs subvolume create /mnt/@home/.snapshots
+   sudo umount /mnt
+   ~~~
 
-```bash
-grep -n "device" hosts/nixos/disk-config.nix
-```
+4. 按配置挂载系统：
 
-执行 Disko：
+   ~~~bash
+   sudo mount -o subvol=@root,compress=zstd,noatime /dev/disk/by-label/nixos /mnt
+   sudo mkdir -p /mnt/nix /mnt/home /mnt/boot
+   sudo mount -o subvol=@nix,compress=zstd,noatime /dev/disk/by-label/nixos /mnt/nix
+   sudo mount -o subvol=@home,compress=zstd,noatime /dev/disk/by-label/nixos /mnt/home
+   sudo mount -o umask=0077 /dev/disk/by-label/NIXBOOT /mnt/boot
+   sudo swapon /dev/disk/by-label/nixos-swap
+   findmnt -R /mnt
+   swapon --show
+   ~~~
 
-```bash
-sudo nix --extra-experimental-features "nix-command flakes" \
-  run github:nix-community/disko/latest -- \
-  --mode destroy,format,mount \
-  --root-mountpoint /mnt \
-  ./hosts/nixos/disk-config.nix
-```
+5. 临时挂载原有 Windows ESP，确认启动文件和 PARTUUID；不要在此步骤格式化它：
 
-确认结果中 `/mnt`、`/mnt/nix`、`/mnt/home` 和 `/mnt/boot` 都已挂载：
+   ~~~bash
+   sudo mkdir -p /mnt/windows-esp
+   sudo mount /dev/WINDOWS_ESP /mnt/windows-esp
+   test -f /mnt/windows-esp/EFI/Microsoft/Boot/bootmgfw.efi
+   lsblk -no PARTUUID /dev/WINDOWS_ESP
+   sudo umount /mnt/windows-esp
+   ~~~
 
-```bash
-findmnt -R /mnt
-```
+6. 将得到的 PARTUUID 写入 <code>hosts/nixos/hardware-configuration.nix</code>，确认标签和子卷无误后安装：
 
-### 6. 安装 NixOS
+   ~~~bash
+   ls -l /dev/disk/by-label/NIXBOOT
+   ls -l /dev/disk/by-label/nixos-swap
+   ls -l /dev/disk/by-label/nixos
+   sudo btrfs subvolume list /mnt
+   sudo nixos-install --flake .#nixos --no-root-passwd
+   sudo reboot
+   ~~~
 
-默认主机名为 `nixos`：
+两种安装方式的第一次重启都应暂时保持 Secure Boot 关闭。首次启动时才会自动生成本机签名密钥，初始 ESP 内容不一定已经全部签名。
 
-```bash
-sudo nixos-install --flake .#nixos --no-root-passwd
-```
+### 应用配置
 
-如果你修改了 `hostname`，把 `#nixos` 换成新名称。
+在已经运行 NixOS 的目标机器上：
 
-配置已经声明 `ben` 和 `root` 的初始登录密码均为单字母 `q`，不需要再进入安装目标执行 `passwd`。然后重启：
+~~~bash
+sudo nixos-rebuild switch --flake .#nixos
+~~~
 
-```bash
-sudo reboot
-```
+如果只想生成下一次启动使用的系统，而不立即切换：
 
-拔掉安装 U 盘后，应先看到只包含 `systemd-boot` 和 `Windows` 的 rEFInd 菜单；选择带 NixOS 图标的 `systemd-boot` 后，再选择 NixOS 系统代次。首次登录在 tuigreet 中输入用户名 `ben`、密码 `q`，并选择 Hyprland 或 niri 会话（tuigreet 会记住上次选择）。此时先保持固件 Secure Boot 关闭，首次启动的 rEFInd 和 UKI 尚未签名。
-
-## 首次登录
-
-### Claude Code
-
-Claude Code 的 API 供应商、令牌与代理设置完全由 **CC Switch** 管理（桌面应用，用于切换 Claude Code / Codex / Gemini CLI 等 AI 编码工具的供应商）。首次使用先启动 CC Switch 添加并启用供应商，之后直接运行 `claude` 即可，无需在系统中配置任何环境变量或密钥。
-
-### UKI 与 Secure Boot
-
-Lanzaboote 会为每个 NixOS 系统代次生成 UKI。首次启动时，`generate-sb-keys.service` 会在持久化的 `/var/lib/sbctl` 中生成 Secure Boot 密钥：
-
-```bash
-systemctl status generate-sb-keys.service
-sudo sbctl status
-```
-
-确认密钥已经生成后，再重建一次，使安装器使用同一套密钥签名 rEFInd、systemd-boot 和 UKI：
-
-```bash
+~~~bash
 sudo nixos-rebuild boot --flake .#nixos
-sudo sbctl verify
-```
+~~~
 
-`sbctl verify` 会把 `/boot/EFI/nixos/kernel-*.efi` 报告为未签名，这是 Lanzaboote 的正常布局：已签名的 generation EFI 文件保存并校验该外部内核的 SHA-256，不能手动签名或删除它。rEFInd、systemd-boot 和 `/boot/EFI/Linux/nixos-generation-*.efi` 应显示为已签名。
+如果主机名已修改，请使用对应的 <code>.#新主机名</code>。每次重建都会运行自定义启动安装钩子，更新 Lanzaboote 与 rEFInd 文件。rEFInd 只显示两个手工条目：
 
-确认启动文件已经签名后，进入 UEFI 固件设置并切换到 Secure Boot Setup Mode。不要选择会同时清空 `dbx` 的“清除全部 Secure Boot 密钥”；不同主板通常可以通过删除 Platform Key（PK）进入 Setup Mode。
+- Windows Boot Manager。
+- systemd-boot；由它选择 NixOS 系统代次。
 
-回到 NixOS 后手动注册密钥，并保留 Microsoft 签名证书以兼容显卡 Option ROM 和部分固件更新：
+### Secure Boot
 
-```bash
-sudo sbctl enroll-keys --microsoft
-sudo reboot
-```
+配置启用了 Lanzaboote，并在 <code>/var/lib/sbctl</code> 自动生成签名密钥；固件密钥注册被刻意保留为手工操作。建议按以下顺序启用：
 
-最后在固件中启用 Secure Boot，并验证状态：
+1. 保持 Secure Boot 关闭，完成首次 NixOS 启动。检查自动密钥服务和 sbctl 状态：
 
-```bash
-bootctl status
-sudo sbctl status
-```
+   ~~~bash
+   systemctl status generate-sb-keys.service --no-pager
+   sudo sbctl status
+   ~~~
 
-Secure Boot 只验证启动链完整性；本配置按要求不启用磁盘加密，因此不会阻止他人从其他系统直接读取磁盘数据。不要提交 `/var/lib/sbctl` 中的私钥。
+2. 密钥生成后再次构建启动项，并检查签名：
 
-### Fcitx5 + 雾凇拼音
+   ~~~bash
+   sudo nixos-rebuild boot --flake .#nixos
+   sudo sbctl verify
+   ~~~
 
-配置已把英文键盘和 Rime 加入默认输入法组。使用 `Ctrl+Space` 切换输入法；按 `F4` 可以在 Rime 中选择雾凇拼音方案。
+   Lanzaboote 使用 <code>/boot/EFI/Linux/nixos-generation-*.efi</code> 形式的签名 UKI。<code>sbctl verify</code> 仍可能列出未签名的原始 <code>/boot/EFI/nixos/kernel-*.efi</code>；判断时应重点确认实际启动的 UKI、systemd-boot 与 rEFInd 文件。
 
-如果首次登录没有出现候选窗：
+3. 重启进入固件设置，将 Secure Boot 切换到 Setup Mode。不同固件通常通过删除 Platform Key（PK）实现；不要清除 dbx 或笼统删除全部固件密钥。保留 BitLocker 恢复密钥和固件恢复方案。
 
-```bash
-fcitx5 -r
-```
+4. 回到 Secure Boot 仍关闭但处于 Setup Mode 的 NixOS，注册本机密钥并保留 Microsoft 证书：
 
-然后打开 `fcitx5-configtool`，确认 Input Method 中存在 `Rime`。
+   ~~~bash
+   sudo sbctl enroll-keys --microsoft
+   ~~~
 
-### Zsh
+5. 再次进入固件启用 Secure Boot，启动 NixOS 后验证：
 
-Zsh 采用 [radleylewis/zsh](https://github.com/radleylewis/zsh) 的精简方案，并由 Home Manager 声明式管理插件及依赖。配置包含 Starship、zoxide、fzf、eza、bat、fast-syntax-highlighting、autosuggestions、history substring search 和 vi mode。
+   ~~~bash
+   bootctl status
+   sudo sbctl status
+   ~~~
 
-常用快捷键：`Ctrl+R` 搜索历史，`Ctrl+T` 搜索包含隐藏文件的文件，`Ctrl+F` 搜索普通文件，`Ctrl+Left/Right` 按单词移动，`Up/Down` 按子串搜索历史，`Ctrl+\` 切换自动建议。
+保留 Microsoft 证书有助于 Windows Boot Manager 和部分硬件 Option ROM 继续启动。不要提交或备份到公共位置的 <code>/var/lib/sbctl</code> 私钥。Secure Boot 只验证启动链，不等同于磁盘加密；当前磁盘配置没有启用全盘加密。更多背景见 [Lanzaboote 安装指南](https://github.com/nix-community/lanzaboote/blob/master/docs/getting-started/prepare-your-system.md)。
 
-### AstroNvim
+### 首次登录检查
 
-首次运行会下载 AstroNvim 插件：
+首次进入图形会话后建议逐项确认：
 
-```bash
-nvim
-```
+- 在 tuigreet 中分别启动一次 Hyprland 和 niri，确认登录、锁屏、退出及重登正常。
+- 在对应会话运行 <code>hyprctl monitors</code> 或 <code>niri msg outputs</code>；<code>laptop</code> 还应确认内屏存在 2880×1800@120 Hz 模式。
+- 使用 <code>journalctl -b -k | grep -Ei 'edid|displayid|amdgpu'</code> 检查 EDID 与 AMDGPU 日志。
+- 用 <code>Ctrl + Space</code> 切换 Fcitx5/Rime，并用 <code>F4</code> 选择雾凇拼音方案；候选窗异常时可运行 <code>fcitx5 -r</code> 和 <code>fcitx5-configtool</code>。
+- 检查 <code>systemctl --user --failed</code> 和 <code>systemctl --user status noctalia</code>，确认 Noctalia、Linux QQ 剪贴板同步等用户服务没有失败。
+- 首次使用 Claude Code、Codex 或 Gemini CLI 前，在 CC Switch 中添加并启用对应的 API 供应商；配置本身不保存这些服务的令牌。
+- 首次运行 <code>nvim</code>，让 AstroNvim 完成插件初始化。
+- 再次确认 <code>sudo sbctl status</code>、Windows 启动项、音频、蓝牙、挂起与恢复。
 
-插件、状态和缓存保存在用户主目录中。AstroNvim 模板本身由 Flake 输入管理。
+### 日常维护
 
-### Noctalia
+~~~bash
+# 格式化 Nix 文件
+nix fmt
 
-Noctalia 作为用户服务随桌面（Hyprland 或 niri）启动。它的图形设置保存在 `~/.config/noctalia`。检查服务：
+# 完整 Flake 检查
+nix flake check
 
-```bash
-systemctl --user status noctalia
-```
+# 只验证 Home Manager 生成
+nix build .#nixosConfigurations.nixos.config.home-manager.users.ben.home.activationPackage --no-link
 
-## 日常维护
-
-应用当前配置：
-
-```bash
-sudo nixos-rebuild switch --flake .#nixos
-```
-
-更新所有 Flake 输入并应用：
-
-```bash
+# 更新锁文件；提交前应审阅 flake.lock
 nix flake update
-nix flake check --no-build
-sudo nixos-rebuild switch --flake .#nixos
-```
 
-检查每周自动清理计划：
+# 查看新旧系统闭包差异
+nix build .#nixosConfigurations.nixos.config.system.build.toplevel
+nvd diff /run/current-system result
+~~~
 
-```bash
-systemctl list-timers | grep nix-gc
-```
+系统每周清理超过 7 天的旧 Nix store 代次并执行 store 优化。Snapper 为 <code>/</code> 和 <code>/home</code> 每小时创建时间线快照，保留 24 个小时、7 个日、4 个周和 6 个月快照。若修改了用户名或主机名，请同步替换上述属性路径。
 
-手动清理 7 天前的代次：
+### 数据与备份
 
-```bash
-sudo nix-collect-garbage --delete-older-than 7d
-nix-collect-garbage --delete-older-than 7d
-```
+root 与 Home 使用独立的持久化 Btrfs 子卷，<code>XDG_PROJECTS_DIR</code> 指向 <code>~/Workspace</code>。可用以下命令检查空间和快照：
 
-查看 Btrfs 文件系统用量：
-
-```bash
+~~~bash
 sudo btrfs filesystem usage /
-```
-
-查看根目录和 Home 的 Snapper 快照及定时任务：
-
-```bash
 snapper -c root list
 snapper -c home list
 systemctl list-timers 'snapper-*'
-```
+~~~
 
-## 数据保存
+Snapper 快照便于本机回滚，但不能替代异机备份。至少应单独备份用户数据、未提交的本地配置、<code>/var/lib/sbctl</code> Secure Boot 密钥，以及用于解密 sops secret 的主机 SSH Ed25519 私钥；这些私钥都不得进入公开仓库。
 
-根目录和 Home 使用独立的持久化 Btrfs 子卷，系统状态、用户文件、应用配置和缓存都会正常跨重启保留。`XDG_PROJECTS_DIR` 指向 `~/Workspace`；需要释放空间时可按需清理 `~/.cache`。
+### 桌面与用户环境
 
-## Hyprland 会话快捷键
+| 类别 | 配置 |
+|---|---|
+| 会话 | tuigreet 可选择 Hyprland 或 niri |
+| Shell | Zsh vi mode、共享历史、fzf、zoxide、eza、bat、lf |
+| 提示符 | Starship，显示系统、目录、Git 状态和语言版本 |
+| 终端 | Kitty，JetBrains Mono Nerd Font，Catppuccin Mocha，90% 透明度 |
+| 文件管理器 | Dolphin + Kvantum，紧凑工具栏和右侧信息面板 |
+| 启动器/栏/通知 | Noctalia；禁用 Mako 及旧式网络/蓝牙托盘自启动 |
+| 输入法 | Fcitx5 + Rime Ice，横向候选框，每页 7 个候选词 |
+| 主题 | Catppuccin Mocha Mauve、Papirus Dark、Adwaita 32 px 光标 |
+| 编辑器 | AstroNvim 模板、绝对行号；VS Code 与 JetBrains IDE |
+| 默认程序 | Kitty 终端、Dolphin 目录、Firefox 网页、VS Code 文本、Okular PDF、Gwenview 图片、mpv 音视频、Ark 压缩包 |
+| 音频 | PipeWire 的 ALSA、32 位 ALSA 与 PulseAudio 兼容层 |
+| Wayland | GTK portal、wl-clipboard、Satty、grim/slurp、nwg-displays |
+| 网络代理 | Clash Verge 使用 service mode 与 TUN mode，默认不自动启动 |
 
-以下快捷键适用于 Hyprland 会话。niri 会话的键位见后文，两者尽量保持一致。
+常用桌面应用包括 Firefox、Spotify、QQ、LocalSend、OBS Studio、Mission Center、Pavucontrol、AudioMonitor、ChatGPT、Okular、Gwenview、Ark、VS Code、IntelliJ IDEA、DataGrip 和 GoLand。
+
+开发与维护工具包括 GCC、CMake、Make、pkg-config、Node.js、Python、OpenJDK 25、Lua language server、nil、nixfmt、ShellCheck、Codex、Claude Code、DeepSeek Harness、sops、nh、nvd 和 nix-output-monitor。
+
+系统字体覆盖 Inter、Source Serif、Noto CJK/Emoji、Sarasa Gothic、Cousine Nerd Font 和 JetBrains Mono Nerd Font。
+
+### Hyprland 快捷键
+
+#### 窗口、焦点与应用
 
 | 快捷键 | 动作 |
 |---|---|
-| `Super + Q` / `Alt + F4` | 关闭当前窗口 |
-| `Super + Alt + F4` | 强制结束当前窗口进程 |
-| `Super + W` | 切换当前窗口浮动状态 |
-| `Super + G` | 切换窗口分组 |
-| `Super + L` | 使用 Hyprlock 锁定屏幕 |
-| `Shift + F11` / `Super + D` | 切换全屏 |
-| `Super + Shift + W` | 切换窗口置顶；平铺窗口会先转为浮动 |
-| `Super + J` | 切换 Dwindle 分割方向 |
-| `Super + Ctrl + H` / `Super + Ctrl + L` | 向后 / 向前切换活动分组 |
-| `Super + Alt + Z` | 切换 2 倍屏幕放大；放大画面跟随鼠标移动，鼠标始终位于画面中心 |
-| `Super + Alt + 滚轮上 / 下` | 以 0.25 倍为一级放大 / 缩小屏幕，范围为 1–10 倍；滚轮不会传递给当前应用 |
-| `Super + 方向键` | 向对应方向切换焦点 |
-| `Alt + Tab` | 打开 Noctalia 窗口总览；连续按键切换选择，松开 `Alt` 确认 |
-| `Super + Shift + 方向键` | 按 50 像素调整当前窗口大小 |
-| `Super + Ctrl + Shift + 方向键` | 向对应方向移动当前窗口 |
-| `Super + 鼠标左键` | 拖动窗口 |
-| `Super + 鼠标右键` | 调整窗口大小 |
-| `Super + Z` / `Super + X` | 按住并移动鼠标以拖动 / 调整窗口大小 |
+| <code>Super + Q</code> / <code>Alt + F4</code> | 关闭活动窗口 |
+| <code>Super + Alt + F4</code> | 强制终止活动窗口 |
+| <code>Super + W</code> | 切换浮动 |
+| <code>Super + Shift + W</code> | 设为浮动并切换置顶 |
+| <code>Super + G</code> | 切换窗口组 |
+| <code>Super + Ctrl + H/L</code> | 切换组内上一个/下一个窗口 |
+| <code>Super + J</code> | 切换 Dwindle 分割方向 |
+| <code>Super + D</code> / <code>Shift + F11</code> | 切换全屏 |
+| <code>Super + M</code> | 切换最大化 |
+| <code>Super + 方向键</code> | 按方向移动焦点 |
+| <code>Super + Ctrl + Shift + 方向键</code> | 按方向移动窗口 |
+| <code>Super + Shift + 方向键</code> | 以 50 px 步长缩放窗口 |
+| <code>Super + 鼠标左键</code> / <code>Super + Z</code> | 拖动窗口 |
+| <code>Super + 鼠标右键</code> / <code>Super + X</code> | 调整窗口大小 |
+| <code>Alt + Tab</code> | 打开 Noctalia 窗口切换器 |
+| <code>Super + L</code> | 使用 Hyprlock 锁屏 |
+| <code>Super + Alt + Z</code> | 在 1× 与 2× 指针居中缩放之间切换 |
+| <code>Super + Alt + 滚轮</code> | 以 0.25× 步长调整屏幕缩放 |
+| <code>Super + T/E/C/B/F</code> | 打开 Kitty / Dolphin / VS Code / Firefox |
+| <code>Ctrl + Shift + Escape</code> | 打开 Mission Center |
+| <code>Super + A/V</code> | 打开 Noctalia 启动器 / 剪贴板 |
+| <code>Super + /</code> | 打开可搜索的 Hyprland 命令面板 |
 
-### 触控板手势
+#### 工作区与手势
 
-| 手势 | 动作 |
+| 快捷键或手势 | 动作 |
 |---|---|
-| 三指左右滑动 | 1:1 跟手切换相邻工作区 |
-| 四指滑动 | 拖拽浮动窗口或重排平铺窗口 |
-| 四指拖拽期间按 `Super + Shift + 数字键` | 将窗口拖到对应工作区并跟随 |
-| 四指捏合 | 取消活动窗口最大化 |
-| 四指张开 | 切换活动窗口最大化状态 |
+| <code>Super + 1..9/0</code> | 切换到工作区 1..9/10 |
+| <code>Super + Shift + 1..9/0</code> | 把窗口移到工作区并跟随 |
+| <code>Super + Ctrl + Down</code> | 切换到空工作区 |
+| <code>Super + Ctrl + Left/Right</code> | 切换到前一个/后一个相对工作区 |
+| <code>Super + Alt + Ctrl + Left/Right</code> | 把窗口移到相对工作区并跟随 |
+| <code>Super + 外接鼠标滚轮</code> | 在已有工作区之间切换；触控板不触发 |
+| <code>Super + S</code> | 切换特殊工作区 S |
+| <code>Super + Shift + S</code> | 把窗口移到 S 并跟随 |
+| <code>Super + Alt + S</code> | 把窗口静默移到 S |
+| 三指水平滑动 | 一次切换一个工作区 |
+| 四指滑动 | 拖动活动窗口 |
+| 四指捏合 / 张开 | 取消最大化 / 切换最大化 |
 
-### 启动应用
+#### 截图
 
 | 快捷键 | 动作 |
 |---|---|
-| `Super + T` | 打开 Kitty |
-| `Super + E` | 打开文件管理器 |
-| `Super + C` | 打开 VS Code |
-| `Super + B` | 打开 Firefox |
-| `Ctrl + Shift + Escape` | 打开 Mission Center；终端中也可运行 `btop` |
-| `Super + A` | 打开 Noctalia 应用启动器 |
-| `Super + V` | 打开 Noctalia 剪贴板 |
-| `Super + /` | 显示快捷键说明 |
+| <code>Super + Shift + P</code> | 取色并复制 |
+| <code>Super + P</code> | 选区截图 |
+| <code>Super + Ctrl + P</code> | 冻结画面后选区截图 |
+| <code>Super + Alt + P</code> | 当前输出截图 |
+| <code>Print</code> | 全部输出截图 |
 
-### 工作区与暂存区
+截图保存到 XDG 图片目录的 <code>Screenshots</code> 子目录，并在 Satty 中打开。
 
-| 快捷键 | 动作 |
-|---|---|
-| `Super + 1..9` / `Super + 0` | 切换到工作区 1..9 / 10 |
-| `Super + Shift + 1..9` / `Super + Shift + 0` | 移动窗口到工作区 1..9 / 10 |
-| `Super + Ctrl + Down` | 切换到空工作区 |
-| `Super + 鼠标滚轮下` / `Super + 鼠标滚轮上` | 下一个 / 上一个已存在工作区 |
-| `Super + Ctrl + Right` / `Super + Ctrl + Left` | 下一个 / 上一个相对工作区 |
-| `Super + Alt + Ctrl + Right` / `Super + Alt + Ctrl + Left` | 移动窗口到下一个 / 上一个相对工作区 |
-| `Super + Shift + S` / `Super + Shift + M` | 移动窗口到暂存区 S / M 并跟随 |
-| `Super + Alt + S` / `Super + Alt + M` | 静默移动窗口到暂存区 S / M |
-| `Super + S` / `Super + M` | 显示或隐藏暂存区 S / M |
+音量增加、降低、静音和亮度键在锁屏时仍可用；音量与亮度按 5% 调整，并支持按住重复。
 
-### 屏幕捕获
+### niri 快捷键
+
+#### 窗口、方向操作与显示器
 
 | 快捷键 | 动作 |
 |---|---|
-| `Super + Shift + P` | 选取颜色并复制到剪贴板 |
-| `Super + P` | 截取屏幕区域并用 Satty 标注 |
-| `Super + Ctrl + P` | 冻结画面后截取区域并用 Satty 标注 |
-| `Super + Alt + P` | 截取当前显示器并用 Satty 标注 |
-| `Print` | 截取所有显示器并用 Satty 标注 |
+| <code>Super + Q</code> / <code>Alt + F4</code> | 关闭窗口 |
+| <code>Super + W</code> | 切换浮动 |
+| <code>Super + Shift + V</code> | 在浮动层和平铺层之间切换焦点 |
+| <code>Super + Shift + F</code> / <code>Super + F11</code> | 切换全屏 |
+| <code>Super + F</code> | 最大化列 |
+| <code>Super + M</code> | 将窗口最大化到可用边缘 |
+| <code>Super + Backslash</code> | 切换列标签显示 |
+| <code>Super + Alt + L</code> | 使用 Noctalia 锁屏 |
+| <code>Alt + Tab</code> | niri 原生最近窗口切换 |
+| <code>Super + Tab</code> | 返回上一个工作区 |
+| <code>Super + Escape</code> | 切换快捷键抑制 |
+| <code>Super + Shift + E</code> | 退出 niri |
+| <code>Super + 方向键</code> | 浮动窗口移动 50 px；平铺窗口按方向切换焦点 |
+| <code>Super + H/J/K/L</code> | 按方向切换焦点 |
+| <code>Super + Ctrl + 方向键</code> / <code>Super + Ctrl + H/J/K/L</code> | 左右移动列或上下移动列内窗口 |
+| <code>Super + Shift + 方向键</code> | 浮动窗口缩放 50 px；平铺窗口按方向切换显示器 |
+| <code>Super + Shift + H/J/K/L</code> | 按方向切换显示器 |
+| <code>Super + Ctrl + Shift + 方向键</code> / <code>H/J/K/L</code> | 把列移到对应显示器 |
 
-截图完成后会打开 Satty 进行标注。在 Satty 中复制结果到剪贴板，或保存到 XDG 图片目录下的 `Screenshots` 子目录。
+智能方向脚本会先读取焦点窗口类型。对浮动窗口执行移动或缩放时，它使用同一次查询捕获的窗口 ID，避免焦点在 IPC 请求之间变化时误操作其他窗口。
 
-## niri 会话快捷键
-
-niri 是滚动平铺合成器，键位在 `home/niri.kdl` 中定义。列（column）是横向滚动布局的基本单位，列内窗口纵向排列；工作区保持动态模型，并可通过数字索引快速切换。
-
-### 窗口与会话
-
-| 快捷键 | 动作 |
-|---|---|
-| `Super + Q` / `Alt + F4` | 关闭当前窗口 |
-| `Super + W` | 切换当前窗口浮动 |
-| `Super + Shift + V` | 在浮动层和平铺层之间切换焦点 |
-| `Super + Shift + F` | 切换全屏 |
-| `Super + F` / `Super + M` | 最大化列 / 将窗口最大化到屏幕边缘 |
-| `Super + Alt + L` | 使用 Noctalia 锁定屏幕 |
-| `Alt + Tab` | 打开 niri 原生最近窗口切换器；可在其中按 `A` / `W` / `O` 切换全部、当前工作区或当前显示器范围 |
-| `Super + Tab` | 在当前工作区和上一个工作区之间切换 |
-| `Super + \` | 切换当前列的标签视图 |
-| `Super + O` | 切换概览模式 |
-| `Super + Escape` | 解除或恢复应用程序的快捷键抑制 |
-| `Super + Shift + E` | 退出 niri（会显示确认对话框） |
-| `Super + Shift + /` | 显示快捷键速查 |
-
-### 焦点、移动与调整
+#### 动态工作区与滚动布局
 
 | 快捷键 | 动作 |
 |---|---|
-| `Super + Left/Right` 或 `Super + H/L` | 聚焦左 / 右列 |
-| `Super + Up/Down` 或 `Super + K/J` | 聚焦列内上 / 下窗口 |
-| `Super + Ctrl + Left/Right` 或 `Super + Ctrl + H/L` | 左 / 右移动当前列 |
-| `Super + Ctrl + Up/Down` 或 `Super + Ctrl + K/J` | 在列内上 / 下移动当前窗口 |
-| `Super + Shift + 方向键` 或 `Super + Shift + H/J/K/L` | 聚焦对应方向的显示器 |
-| `Super + Ctrl + Shift + 方向键` 或 `Super + Ctrl + Shift + H/J/K/L` | 把当前列移到对应方向的显示器 |
-| `Super + Home/End` | 聚焦工作区的第一列 / 最后一列 |
-| `Super + Ctrl + Home/End` | 把当前列移到工作区最前 / 最后 |
-| `Super + G` / `Super + Ctrl + G` | 居中当前列 / 居中所有完整可见列 |
-| `Super + Ctrl + F` | 将当前列扩展到剩余可用宽度 |
-| `Super + R` / `Super + Shift + R` | 正向 / 反向循环预设列宽 |
-| `Super + Ctrl + R` | 将当前窗口高度重置为自动 |
-| `Super + -/=` | 按 10% 缩小 / 放大列宽 |
-| `Super + Shift + -/=` | 按 10% 缩小 / 放大窗口高度 |
-| `Super + [` / `Super + ]` | 向左 / 向右并入或弹出当前窗口 |
-| `Super + ,` / `Super + .` | 把右侧窗口并入当前列 / 从当前列弹出底部窗口 |
+| <code>Super + 1..9/0</code> | 聚焦动态索引 1..9/10 |
+| <code>Super + Shift + 1..9/0</code> | 把当前列移到对应索引 |
+| <code>Super + PageDown/PageUp</code> / <code>Super + U/I</code> | 聚焦下一个/上一个工作区 |
+| <code>Super + Ctrl + PageDown/PageUp</code> / <code>Super + Ctrl + U/I</code> | 把列移到相邻工作区 |
+| <code>Super + Shift + PageDown/PageUp</code> / <code>Super + Shift + U/I</code> | 重排当前工作区 |
+| <code>Super + 滚轮</code> | 切换工作区 |
+| <code>Super + Ctrl + 滚轮</code> | 把列移到相邻工作区 |
+| <code>Super + O</code> | 切换概览 |
+| <code>Super + R</code> / <code>Super + Shift + R</code> | 正向/反向循环预设列宽 |
+| <code>Super + Ctrl + R</code> | 重置窗口高度 |
+| <code>Super + -/=</code> | 以 10% 调整列宽 |
+| <code>Super + Shift + -/=</code> | 以 10% 调整窗口高度 |
+| <code>Super + [/]</code> | 向左/右并入或弹出窗口 |
+| <code>Super + ,/.</code> | 并入右侧窗口 / 弹出列底部窗口 |
+| <code>Super + Home/End</code> | 聚焦第一列/最后一列 |
+| <code>Super + Ctrl + Home/End</code> | 把列移到最前/最后 |
+| <code>Super + G</code> / <code>Super + Ctrl + G</code> | 居中当前列 / 居中完整可见列 |
+| <code>Super + Ctrl + F</code> | 把列扩展到剩余宽度 |
+| <code>Super + Shift + /</code> | 显示 niri 快捷键覆盖层 |
 
-### 启动应用
+应用启动和截图快捷键与 Hyprland 基本一致：<code>Super + T/E/C/B</code>、<code>Super + A/V</code>、<code>Ctrl + Shift + Escape</code> 以及同一组 <code>P</code>/<code>Print</code> 截图键。niri 另外配置了麦克风静音、Playerctl 播放控制和锁屏状态下可用的媒体/亮度键。
 
-| 快捷键 | 动作 |
-|---|---|
-| `Super + T` | 打开 Kitty |
-| `Super + E` | 打开 Dolphin |
-| `Super + C` | 打开 VS Code |
-| `Super + B` | 打开 Firefox |
-| `Ctrl + Shift + Escape` | 打开 Mission Center |
-| `Super + A` | 打开 Noctalia 应用启动器 |
-| `Super + V` | 打开 Noctalia 剪贴板 |
+### 运行时生成的配置
 
-### 媒体与亮度
+- Noctalia 写入 <code>~/.config/niri/noctalia.kdl</code>。
+- nwg-displays 写入 <code>~/.config/niri/monitor.kdl</code>，以及 Hyprland 的 monitor/workspace Lua 模块。
+- Home Manager 首次激活时会创建 niri 的两个可写 include 文件，但主 <code>config.kdl</code> 仍由声明式配置管理。
+- Rime Ice 以可写副本同步到用户数据目录，以便 Fcitx5 生成编译产物。
+- Linux QQ 剪贴板同步作为图形会话内的 systemd user service 运行。
+- sops-nix 运行时使用主机 SSH Ed25519 密钥作为 Age 密钥来源；<code>.sops.yaml</code> 为 <code>secrets/*.yaml</code> 声明 GPG 与 Age 接收者，但仓库当前没有具体 secret 文件。
+- <code>/var/lib/sbctl</code> 保存本机 Secure Boot 私钥，必须纳入安全离线备份，但不能提交到仓库。
 
-| 快捷键 | 动作 |
-|---|---|
-| 音量增加 / 降低 / 静音键 | 以 5% 调整默认输出音量或切换静音；最大音量限制为 100% |
-| 麦克风静音键 | 切换默认输入设备静音 |
-| 播放 / 暂停 / 停止 / 上一首 / 下一首键 | 通过 Playerctl 控制当前 MPRIS 播放器 |
-| 亮度增加 / 降低键 | 以 5% 调整背光亮度 |
+### 许可证
 
-### 动态工作区
-
-| 快捷键 | 动作 |
-|---|---|
-| `Super + 1..9` / `Super + 0` | 切换到动态索引 1..9 / 10；超出当前数量时进入末尾空工作区 |
-| `Super + Shift + 1..9` / `Super + Shift + 0` | 把当前列移到动态索引 1..9 / 10 并跟随 |
-| `Super + PageDown/PageUp` 或 `Super + U/I` | 切换到下 / 上一个工作区 |
-| `Super + Ctrl + PageDown/PageUp` 或 `Super + Ctrl + U/I` | 把当前列移到下 / 上一个工作区并跟随 |
-| `Super + Shift + PageDown/PageUp` 或 `Super + Shift + U/I` | 向下 / 向上重排当前工作区 |
-| `Super + 鼠标滚轮下 / 上` | 切换到下 / 上一个工作区 |
-| `Super + Ctrl + 鼠标滚轮下 / 上` | 把当前列移到下 / 上一个工作区并跟随 |
-
-每个显示器拥有独立的动态工作区列表，末尾始终保留一个空工作区。使用 `Super + O` 打开概览，可以直接观察和拖动各工作区及窗口。
-
-### 鼠标与触控板
-
-| 操作 | 动作 |
-|---|---|
-| `Super + 鼠标左键拖动` | 移动窗口；拖动时点按右键可在浮动和平铺之间切换目标 |
-| `Super + 鼠标右键拖动` | 调整窗口大小 |
-| 触控板三指左右滑动 | 横向滚动当前工作区的列 |
-| 触控板三指上下滑动 | 切换动态工作区 |
-| 触控板四指上下滑动 | 打开或关闭概览 |
-
-### 屏幕捕获
-
-| 快捷键 | 动作 |
-|---|---|
-| `Super + Shift + P` | 选取颜色并复制到剪贴板 |
-| `Super + P` | 交互式区域截图 |
-| `Super + Ctrl + P` | 冻结画面后进行交互式区域截图 |
-| `Super + Alt + P` | 截取当前显示器 |
-| `Print` | 截取所有显示器 |
-
-Hyprland 与 niri 共用 `hypr-screenshot` 脚本，截图后都会打开 Satty 进行标注、复制或保存。系统不会自动锁屏或关闭显示器，需要时使用对应会话的手动锁屏快捷键。
-
-## 注意事项
-
-- 配置面向 `x86_64-linux` 和 UEFI 设备。
-- `ben` 和 `root` 当前都使用极弱密码 `q`。配置只保存密码哈希，并以 `users.mutableUsers = false` 强制同步声明式账户密码；正式使用前应通过 `mkpasswd` 生成新哈希并替换 `modules/core.nix` 中的 `loginPasswordHash`。
-- 不要把代理订阅、密码、SSH 私钥或其他密钥提交到 GitHub。
-- `flake.lock` 应当提交；`result` 等本地构建结果已由 `.gitignore` 排除。
-- Flake 更新可能包含破坏性变化。先执行 `nix flake check --no-build`，再切换系统，并保留可启动的旧代次。
-
-## 许可证
-
-本仓库配置使用 MIT License。各软件仍遵循各自许可证。
-
-## 上游项目
-
-- [NixOS / nixpkgs](https://github.com/NixOS/nixpkgs)
-- [Home Manager](https://github.com/nix-community/home-manager)
-- [Catppuccin for Fuzzel](https://github.com/catppuccin/fuzzel)
-- [Disko](https://github.com/nix-community/disko)
-- [Lanzaboote](https://github.com/nix-community/lanzaboote)
-- [Noctalia v5](https://github.com/noctalia-dev/noctalia)
-- [rime-ice](https://github.com/iDvel/rime-ice)
-- [AstroNvim Template](https://github.com/AstroNvim/template)
+MIT

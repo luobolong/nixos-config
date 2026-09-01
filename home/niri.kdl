@@ -122,11 +122,12 @@ binds {
 
     // ============================================================
     // Focus movement (arrows and Vim-style home-row keys)
+    // Arrow keys intelligently move floating windows or focus tiled windows
     // ============================================================
-    Mod+Left    { focus-column-left; }
-    Mod+Right   { focus-column-right; }
-    Mod+Up      { focus-window-up; }
-    Mod+Down    { focus-window-down; }
+    Mod+Left    { spawn "niri-smart-direction" "move" "left"; }
+    Mod+Right   { spawn "niri-smart-direction" "move" "right"; }
+    Mod+Up      { spawn "niri-smart-direction" "move" "up"; }
+    Mod+Down    { spawn "niri-smart-direction" "move" "down"; }
     Mod+H       { focus-column-left; }
     Mod+L       { focus-column-right; }
     Mod+K       { focus-window-up; }
@@ -145,12 +146,13 @@ binds {
     Mod+Ctrl+J     { move-window-down; }
 
     // ============================================================
-    // Focus monitors and move the focused column between monitors
+    // Resize floating windows, focus monitors, and move columns between monitors
+    // Shift+arrow keys intelligently resize floating windows or focus monitors for tiled windows
     // ============================================================
-    Mod+Shift+Left  { focus-monitor-left; }
-    Mod+Shift+Right { focus-monitor-right; }
-    Mod+Shift+Up    { focus-monitor-up; }
-    Mod+Shift+Down  { focus-monitor-down; }
+    Mod+Shift+Left  { spawn "niri-smart-direction" "resize" "left"; }
+    Mod+Shift+Right { spawn "niri-smart-direction" "resize" "right"; }
+    Mod+Shift+Up    { spawn "niri-smart-direction" "resize" "up"; }
+    Mod+Shift+Down  { spawn "niri-smart-direction" "resize" "down"; }
     Mod+Shift+H     { focus-monitor-left; }
     Mod+Shift+L     { focus-monitor-right; }
     Mod+Shift+K     { focus-monitor-up; }
