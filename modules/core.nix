@@ -11,13 +11,6 @@ let
   # hash as soon as possible after installation.
   loginPasswordHash = "$6$R1okLc57kK.c4j7/$t7Vr4cPUATqr1LthGUK8rX1MePp8yKUPltzSzLNbWT7OaN153SYID5hrvb3hse.Mgh6g54v1PFYheRHPx/l8W1";
 
-  # btrfs-assistant 2.2 retries the libbtrfsutil iterator after an error. An
-  # unprivileged tree search therefore turns EPERM into a segmentation fault.
-  btrfsAssistant = pkgs.btrfs-assistant.overrideAttrs (previousAttrs: {
-    patches = (previousAttrs.patches or [ ]) ++ [
-      ./patches/btrfs-assistant-stop-on-iterator-error.patch
-    ];
-  });
 in
 {
   networking = {
@@ -132,7 +125,7 @@ in
     git
     curl
     wget
-    btrfsAssistant
+    btrfs-assistant
     btrfs-progs
     sbctl
     vim
