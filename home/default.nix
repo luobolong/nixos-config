@@ -42,6 +42,10 @@ let
       min-height: 350px;
     }
   '';
+  rimeDefaultCustom = pkgs.writeText "rime-default-custom.yaml" ''
+    patch:
+      menu/page_size: 7
+  '';
   dolphin = pkgs.symlinkJoin {
     name = "dolphin-kvantum";
     paths = [ pkgs.kdePackages.dolphin ];
@@ -177,6 +181,14 @@ let
       unfreeze
       satty --filename "$raw_file" --output-filename "$file"
     '';
+  };
+  niriSmartDirection = pkgs.writeShellApplication {
+    name = "niri-smart-direction";
+    runtimeInputs = with pkgs; [
+      jq
+      niri
+    ];
+    text = builtins.readFile ./niri-smart-direction.sh;
   };
   commandPalette = pkgs.writeShellApplication {
     name = "hypr-command-palette";
@@ -372,6 +384,9 @@ in
       linuxqqClipsync
       cc-switch
       dolphin
+      kdePackages.okular
+      kdePackages.gwenview
+      kdePackages.ark
       kdePackages.baloo-widgets
       kdePackages.ffmpegthumbs
       kdePackages.kio-extras
@@ -392,6 +407,7 @@ in
       slurp
       screenshot
       commandPalette
+      niriSmartDirection
       brightnessctl
       playerctl
       mpv
@@ -548,6 +564,25 @@ in
       enable = true;
       defaultApplications = {
         "inode/directory" = [ "org.kde.dolphin.desktop" ];
+        "application/pdf" = [ "okularApplication_pdf.desktop" ];
+        "application/epub+zip" = [ "okularApplication_epub.desktop" ];
+        "image/jpeg" = [ "org.kde.gwenview.desktop" ];
+        "image/png" = [ "org.kde.gwenview.desktop" ];
+        "image/gif" = [ "org.kde.gwenview.desktop" ];
+        "image/webp" = [ "org.kde.gwenview.desktop" ];
+        "image/svg+xml" = [ "org.kde.gwenview.desktop" ];
+        "text/plain" = [ "code.desktop" ];
+        "audio/mpeg" = [ "mpv.desktop" ];
+        "audio/flac" = [ "mpv.desktop" ];
+        "audio/ogg" = [ "mpv.desktop" ];
+        "audio/x-wav" = [ "mpv.desktop" ];
+        "video/mp4" = [ "mpv.desktop" ];
+        "video/x-matroska" = [ "mpv.desktop" ];
+        "video/webm" = [ "mpv.desktop" ];
+        "application/zip" = [ "org.kde.ark.desktop" ];
+        "application/x-7z-compressed" = [ "org.kde.ark.desktop" ];
+        "application/vnd.rar" = [ "org.kde.ark.desktop" ];
+        "application/x-tar" = [ "org.kde.ark.desktop" ];
         "text/html" = [ "firefox.desktop" ];
         "application/xhtml+xml" = [ "firefox.desktop" ];
         "x-scheme-handler/http" = [ "firefox.desktop" ];
@@ -697,6 +732,7 @@ in
   home.activation.installRimeIce = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     $DRY_RUN_CMD mkdir -p ${config.home.homeDirectory}/.local/share/fcitx5/rime
     $DRY_RUN_CMD ${pkgs.rsync}/bin/rsync -rL --chmod=u+w ${inputs.rime-ice}/ ${config.home.homeDirectory}/.local/share/fcitx5/rime/
+    $DRY_RUN_CMD install -m 0644 ${rimeDefaultCustom} ${config.home.homeDirectory}/.local/share/fcitx5/rime/default.custom.yaml
   '';
 
   # Keep niri's runtime-generated includes writable and available on first login.
