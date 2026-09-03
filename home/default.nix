@@ -800,8 +800,8 @@ in
   programs.noctalia = {
     enable = true;
     systemd.enable = true;
-    # NyxNiri-inspired transparent, capsule-style bar. Keep this scoped to
-    # bar defaults so settings changed in Noctalia's UI remain independent.
+    # Keep the bar and capsule fills transparent while leaving their outline and
+    # hover feedback visible. Floating Noctalia panels use opaque card surfaces.
     settings.bar = {
       order = [ "default" ];
       default = {
@@ -810,12 +810,13 @@ in
         capsule = true;
         capsule_border = "outline";
         capsule_foreground = "#FFFFFF";
-        capsule_opacity = 0.79;
+        capsule_opacity = 0.0;
         capsule_padding = 10.0;
         capsule_radius = 80;
         capsule_thickness = 1.0;
         color = "#FFFFFF";
         enabled = true;
+        hover_highlight = true;
         panel_overlap = 12;
         font_family = "JetBrainsMono Nerd Font";
         margin_ends = 14;
