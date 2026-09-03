@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 {
   programs.hyprland = {
     enable = true;
@@ -58,6 +58,20 @@
         catppuccin-fcitx5
       ];
     };
+  };
+
+  # Niri/Hyprland sessions do not consistently launch XDG autostart entries.
+  # Start Fcitx explicitly as a user service after the graphical session exists.
+  systemd.user.services.fcitx5 = {
+    description = "Fcitx 5 input method";
+    after = [ "graphical-session.target" ];
+    partOf = [ "graphical-session.target" ];
+    serviceConfig = {
+      ExecStart = "${config.i18n.inputMethod.package}/bin/fcitx5";
+      Restart = "on-failure";
+      RestartSec = "2s";
+    };
+    wantedBy = [ "graphical-session.target" ];
   };
 
   fonts = {
