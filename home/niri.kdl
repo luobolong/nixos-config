@@ -61,6 +61,16 @@ blur {
     saturation 1.0
 }
 
+// Noctalia requests compositor blur for its layer surfaces even when the bar
+// background is fully transparent. Disable it only for the bar; application
+// blur and Noctalia panels remain unchanged.
+layer-rule {
+    match namespace="^noctalia-bar-.+$"
+    background-effect {
+        blur false
+    }
+}
+
 // Catppuccin glass effect, corresponding to window_rule in hyprland.lua.
 window-rule {
     match app-id=r#"^(kitty|org\.kde\.dolphin)$"#

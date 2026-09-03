@@ -90,6 +90,18 @@ hl.config({
   },
 })
 
+-- Noctalia publishes an ext-background-effect blur region for its bar. A
+-- window_rule cannot match that layer-shell surface, so scope the layer rule
+-- to Noctalia's bar namespace. `ignore_alpha = 1.0` also suppresses the
+-- protocol blur over transparent and translucent bar pixels.
+hl.layer_rule({
+  name = "noctalia-bar-transparent",
+  match = { namespace = "^noctalia-bar-.+$" },
+  blur = false,
+  blur_popups = false,
+  ignore_alpha = 1.0,
+})
+
 -- Let maximized windows reach the working-area edges while keeping panels
 -- visible. The regular 5/10 gaps return automatically after unmaximizing.
 hl.workspace_rule({
@@ -140,6 +152,7 @@ hl.window_rule({
   name = "catppuccin-glass-apps",
   match = { class = "^(kitty|org[.]kde[.]dolphin)$" },
   opacity = "0.90 override 0.78 override 1.0 override",
+  no_blur = false,
 })
 
 -- Keep the system monitor as a centered utility window.
