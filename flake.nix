@@ -15,24 +15,14 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    sops-nix = {
-      url = "github:Mic92/sops-nix";
+    nixos-wsl = {
+      url = "github:nix-community/NixOS-WSL";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
     catppuccin-fuzzel = {
       url = "github:catppuccin/fuzzel";
       flake = false;
-    };
-
-    disko = {
-      url = "github:nix-community/disko";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    lanzaboote = {
-      url = "github:nix-community/lanzaboote/v1.1.0";
-      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     # The cachix branch always points at the latest revision built by Noctalia's
@@ -67,15 +57,13 @@
       self,
       nixpkgs,
       home-manager,
-      disko,
-      lanzaboote,
+      nixos-wsl,
       noctalia,
-      sops-nix,
       ...
     }:
     let
       system = "x86_64-linux";
-      hostname = "nixos";
+      hostname = "wsl";
       username = "ben";
     in
     {
@@ -83,16 +71,13 @@
         inherit system;
         specialArgs = { inherit inputs hostname username; };
         modules = [
-          disko.nixosModules.disko
-          lanzaboote.nixosModules.lanzaboote
-          sops-nix.nixosModules.sops
+          nixos-wsl.nixosModules.default
           home-manager.nixosModules.home-manager
-          noctalia.nixosModules.default
-          ./hosts/nixos
+          ./hosts/wsl
         ];
       };
 
-      checks.${system}.nixos = self.nixosConfigurations.${hostname}.config.system.build.toplevel;
+      checks.${system}.wsl = self.nixosConfigurations.${hostname}.config.system.build.toplevel;
 
       formatter.${system} = nixpkgs.legacyPackages.${system}.nixfmt;
     };

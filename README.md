@@ -15,42 +15,39 @@
 | 项目 | 当前值 |
 |---|---|
 | 架构 | <code>x86_64-linux</code> |
-| Flake 输出 | <code>nixosConfigurations.nixos</code> |
-| 主机名 | <code>nixos</code> |
+| Flake 输出 | <code>nixosConfigurations.wsl</code> |
+| 主机名 | <code>wsl</code> |
 | 用户名 | <code>ben</code> |
 | Nixpkgs | <code>nixos-unstable</code> |
 | NixOS / Home Manager state version | <code>25.11</code> |
 | 时区 | <code>Asia/Taipei</code> |
-| 桌面会话 | Hyprland 与 niri |
-| 登录管理器 | greetd + tuigreet |
-| 系统盘 | Btrfs，启用 zstd 压缩与 Snapper |
-| 启动链 | rEFInd → systemd-boot / Lanzaboote → UKI |
+| 图形环境 | WSLg（Wayland/X11 应用） |
+| 登录入口 | Windows Terminal / WSLg |
+| 系统盘 | WSL 管理的虚拟 ext4 文件系统 |
+| 启动方式 | NixOS-WSL 模块（不管理 EFI） |
 
 主要能力：
 
-- 使用 Flake 统一组合 NixOS、Home Manager、Lanzaboote、sops-nix 与 Noctalia。
-- 同时提供 Hyprland 动态平铺和 niri 滚动平铺会话。
-- 由 Noctalia 提供状态栏、启动器、剪贴板、通知、壁纸和会话界面。
+- 使用 Flake 统一组合 NixOS-WSL、Home Manager 和共享的桌面配置。
+- 通过 WSLg 运行 Linux 图形应用；Hyprland、niri 和 Noctalia 配置保留但不会自动启动嵌套会话。
 - 使用 Fcitx5 + Rime Ice，提供中英文输入。
-- 使用 PipeWire、NetworkManager、BlueZ/Blueman、UDisks2 与桌面门户。
-- 使用 Btrfs 子卷、每小时 Snapper 快照、周期清理和 TRIM。
+- 网络、内核、磁盘和启动由 WSL/Windows 管理。
 - 打包 ChatGPT Linux 客户端、DeepSeek Harness、Linux QQ 剪贴板同步和 AudioMonitor。
 - 为 Wayland、Electron、Qt/KDE 和 GTK 应用统一 Catppuccin Mocha 风格。
 
 ### 分支模型
 
-<code>master</code> 是带 Disko 的 AMD x86-64 基线配置；<code>laptop</code> 是当前 Lenovo 笔记本的设备专用配置。<code>master</code> 是 <code>laptop</code> 的祖先，通用改动应保持同步，设备差异保留在下表所列文件中。
+<code>master</code> 是带 Disko 的 AMD x86-64 基线配置；<code>laptop</code> 是当前 Lenovo 笔记本的设备专用配置；<code>wsl</code> 是基于 NixOS-WSL 的 WSL2 配置。<code>master</code> 是所有变体的共同基础，设备差异保留在各自主机目录和模块中。
 
-| 范围 | <code>master</code> | <code>laptop</code> |
-|---|---|---|
-| 用途 | 新磁盘部署基线 | 已安装的 Lenovo IdeaPad Pro 5 14APH8 |
-| 磁盘管理 | 引入 Disko，并将其加入 Flake、系统模块和维护工具 | 不引入 Disko，只声明现有文件系统 |
-| 磁盘布局 | 将 <code>/dev/disk/by-id/CHANGE_ME</code> 重新分区为 2 GiB ESP、64 GiB swap 和 Btrfs 系统分区 | 依赖已有 2 GiB <code>NIXBOOT</code>、32 GiB <code>nixos-swap</code> 与 <code>nixos</code> 标签；不会创建分区 |
-| Btrfs 子卷 | Disko 创建 <code>@root</code>、<code>@nix</code>、<code>@home</code> 及快照子卷 | 挂载已有 <code>@root</code>、<code>@nix</code>、<code>@home</code> |
-| Windows 双启动 | Windows ESP 使用 PARTUUID <code>991a77db-c316-4f75-b9df-bc05e179a798</code>，并应位于不会被 Disko 清除的另一块磁盘上 | 同一 SSD 上的 Windows ESP 使用 <code>084dbc6c-e077-48f9-b6d5-ccd76d8f1d42</code> |
-| 内置屏幕 | 无 EDID 覆盖 | 在 initrd 中加载校正 EDID，修复 2880×1800 面板的 120 Hz 模式 |
-| Noctalia 默认栏 | 包含媒体与 mpvpaper，并为 <code>DP-2</code> 提供单独布局 | 默认栏显示网络、蓝牙和电池，不设置 <code>DP-2</code> 覆盖 |
-| Flake 锁文件 | 包含 Disko 输入闭包 | 移除 Disko 输入闭包 |
+| 范围 | <code>master</code> | <code>laptop</code> | <code>wsl</code> |
+|---|---|---|---|
+| 用途 | 新磁盘部署基线 | 已安装的 Lenovo IdeaPad Pro 5 14APH8 | WSL2 开发环境 |
+| 磁盘管理 | 引入 Disko，并将其加入 Flake、系统模块和维护工具 | 不引入 Disko，只声明现有文件系统 | 由 WSL 管理虚拟磁盘，不声明分区或挂载 |
+| 启动方式 | UEFI、rEFInd、Lanzaboote | UEFI、rEFInd、Lanzaboote | 使用 NixOS-WSL 模块，不管理 EFI/引导器 |
+| 桌面会话 | greetd + Hyprland/niri | greetd + Hyprland/niri | 使用 WSLg，默认不启动嵌套 compositor |
+| 硬件服务 | AMDGPU、蓝牙、PipeWire、UDisks2 | AMDGPU、蓝牙、PipeWire、UDisks2 | 不启用实体硬件服务；保留 WSLg 应用支持 |
+| 快照 | Btrfs 子卷与 Snapper | 挂载已有 Btrfs 子卷，可使用 Snapper | 不启用 Snapper；按 WSL 导出/备份机制管理 |
+| Windows 双启动 | Windows ESP 使用 PARTUUID <code>991a77db-c316-4f75-b9df-bc05e179a798</code> | 同一 SSD 上的 Windows ESP 使用 <code>084dbc6c-e077-48f9-b6d5-ccd76d8f1d42</code> | 不适用；WSL 由 Windows 启动 |
 
 可用以下命令核对两个已提交分支的实际差异：
 
@@ -58,6 +55,18 @@
 git diff --stat master...laptop
 git diff master...laptop -- flake.nix home/default.nix hosts/nixos modules/core.nix
 ~~~
+
+### WSL2 使用
+
+<code>wsl</code> 分支使用 <code>nixosConfigurations.wsl</code> 输出。它复用通用 Home Manager 配置和开发工具，但不引入实体机的 Disko、EFI/Secure Boot、rEFInd、greetd、蓝牙、Btrfs 或 Snapper 设置。下方实体机安装章节仅适用于 <code>master</code>/<code>laptop</code>；WSL2 安装 NixOS-WSL 后，在仓库目录执行：
+
+~~~bash
+git switch wsl
+nix flake lock
+sudo nixos-rebuild switch --flake .#wsl
+~~~
+
+首次使用时，按 NixOS-WSL 的说明导入发行版；登录用户为 <code>ben</code>。WSLg 会提供 Windows 侧的 Wayland/X11 桥接，Linux GUI 应用可以直接从 WSL 中启动。该配置不会在 WSL 内启动 Hyprland、niri 或 Noctalia 会话。
 
 ### 仓库结构
 
@@ -71,6 +80,8 @@ git diff master...laptop -- flake.nix home/default.nix hosts/nixos modules/core.
 │   ├── disk-config.nix               # 分支相关的磁盘布局或挂载
 │   ├── hardware-configuration.nix    # AMD 硬件、ESP 和笔记本 EDID
 │   └── lenovo-14aph8-edid.hex        # laptop 分支的校正 EDID
+├── hosts/wsl/
+│   └── default.nix                   # NixOS-WSL 主机入口
 ├── modules/
 │   ├── core.nix                      # 用户、Nix、内核、SSH 和系统工具
 │   ├── desktop.nix                   # Wayland 会话、音频、蓝牙、输入法和字体
@@ -78,6 +89,7 @@ git diff master...laptop -- flake.nix home/default.nix hosts/nixos modules/core.
 │   ├── snapper.nix                   # root/home 快照策略
 │   ├── clash-verge.nix               # Clash Verge service/TUN 配置
 │   ├── secrets.nix                   # sops-nix Age 密钥来源
+│   ├── wsl.nix                        # WSL2 系统基础配置
 │   ├── fonts.conf                    # Fontconfig 字体优先级
 │   └── patches/                      # 本地软件修补
 ├── home/
@@ -160,14 +172,18 @@ cd nixos-config
 git switch master
 # 或
 git switch laptop
+# 或
+git switch wsl
 
 nix flake check
-nix build .#nixosConfigurations.nixos.config.system.build.toplevel --no-link
+nix build .#nixosConfigurations.wsl.config.system.build.toplevel --no-link
 ~~~
 
 如果修改了 <code>hostname</code>，把上面和后续命令中的 <code>nixos</code> 替换为新的 Flake 输出名。Flake 只会读取 Git 已跟踪或已加入索引的新文件；新增本地配置文件后，应明确执行 <code>git add 文件路径</code> 再验证。
 
 ### 安装步骤
+
+以下实体机安装和维护命令只适用于 <code>master</code>/<code>laptop</code>；<code>wsl</code> 请使用上面的 WSL2 章节。
 
 以下流程假定安装介质以 UEFI 模式启动。先连接网络并确认当前环境：
 

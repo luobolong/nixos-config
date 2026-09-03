@@ -15,42 +15,39 @@ This repository is a complete personal machine configuration, not a hardware-neu
 | Item | Current value |
 |---|---|
 | Architecture | <code>x86_64-linux</code> |
-| Flake output | <code>nixosConfigurations.nixos</code> |
-| Host name | <code>nixos</code> |
+| Flake output | <code>nixosConfigurations.wsl</code> |
+| Host name | <code>wsl</code> |
 | User | <code>ben</code> |
 | Nixpkgs | <code>nixos-unstable</code> |
 | NixOS / Home Manager state version | <code>25.11</code> |
 | Time zone | <code>Asia/Taipei</code> |
-| Desktop sessions | Hyprland and niri |
-| Login manager | greetd + tuigreet |
-| System filesystem | Btrfs with zstd compression and Snapper |
-| Boot chain | rEFInd → systemd-boot / Lanzaboote → UKI |
+| Graphics | WSLg (Wayland/X11 applications) |
+| Login entry | Windows Terminal / WSLg |
+| System filesystem | WSL-managed virtual ext4 filesystem |
+| Boot | NixOS-WSL module (no EFI management) |
 
 Highlights:
 
-- A single Flake composes NixOS, Home Manager, Lanzaboote, sops-nix, and Noctalia.
-- Both a dynamic-tiling Hyprland session and a scrollable-tiling niri session are available.
-- Noctalia provides the bar, launcher, clipboard, notifications, wallpaper, and session UI.
+- A single Flake composes NixOS-WSL, Home Manager, and shared desktop configuration.
+- WSLg runs Linux GUI applications; Hyprland, niri, and Noctalia configuration is retained but no nested session starts automatically.
 - Fcitx5 with Rime Ice provides Chinese and English input.
-- PipeWire, NetworkManager, BlueZ/Blueman, UDisks2, and desktop portals are configured.
-- Btrfs subvolumes, hourly Snapper snapshots, scheduled cleanup, and TRIM are enabled.
+- Networking, kernel, storage, and boot are managed by WSL/Windows.
 - Local packages cover the ChatGPT Linux app, DeepSeek Harness, Linux QQ clipboard synchronization, and AudioMonitor.
 - Wayland, Electron, Qt/KDE, and GTK applications share a Catppuccin Mocha-oriented desktop.
 
 ### Branch model
 
-<code>master</code> is the Disko-based AMD x86-64 baseline. <code>laptop</code> is the device-specific configuration for the current Lenovo laptop. <code>master</code> is an ancestor of <code>laptop</code>; shared changes are intended to remain synchronized while the following host-specific differences stay separate.
+<code>master</code> is the Disko-based AMD x86-64 baseline. <code>laptop</code> is the device-specific configuration for the current Lenovo laptop. <code>wsl</code> is the NixOS-WSL configuration for WSL2. <code>master</code> is the common base for all variants; host-specific differences stay in their respective host directories and modules.
 
-| Scope | <code>master</code> | <code>laptop</code> |
-|---|---|---|
-| Intended target | Fresh-disk deployment baseline | Installed Lenovo IdeaPad Pro 5 14APH8 |
-| Disk management | Imports Disko through the Flake, system modules, and maintenance packages | Does not import Disko; only mounts existing filesystems |
-| Disk layout | Repartitions <code>/dev/disk/by-id/CHANGE_ME</code> into a 2 GiB ESP, 64 GiB swap, and a Btrfs system partition | Expects existing 2 GiB <code>NIXBOOT</code>, 32 GiB <code>nixos-swap</code>, and <code>nixos</code> labels and does not create partitions |
-| Btrfs subvolumes | Disko creates <code>@root</code>, <code>@nix</code>, <code>@home</code>, and snapshot subvolumes | Mounts existing <code>@root</code>, <code>@nix</code>, and <code>@home</code> subvolumes |
-| Windows dual boot | Uses Windows ESP PARTUUID <code>991a77db-c316-4f75-b9df-bc05e179a798</code>; the ESP should be on another disk that Disko will not erase | Uses <code>084dbc6c-e077-48f9-b6d5-ccd76d8f1d42</code> for the Windows ESP on the same SSD |
-| Internal panel | No EDID override | Loads a corrected EDID in the initrd for the 2880×1800 panel 120 Hz mode |
-| Default Noctalia bar | Includes media and mpvpaper plus a dedicated <code>DP-2</code> layout | Shows network, Bluetooth, and battery widgets without a <code>DP-2</code> override |
-| Flake lock file | Contains the Disko input closure | Omits the Disko input closure |
+| Scope | <code>master</code> | <code>laptop</code> | <code>wsl</code> |
+|---|---|---|---|
+| Intended target | Fresh-disk deployment baseline | Installed Lenovo IdeaPad Pro 5 14APH8 | WSL2 development environment |
+| Disk management | Imports Disko through the Flake, system modules, and maintenance packages | Does not import Disko; only mounts existing filesystems | WSL manages the virtual disk; no partitions or mounts are declared |
+| Boot | UEFI, rEFInd, and Lanzaboote | UEFI, rEFInd, and Lanzaboote | NixOS-WSL module; no EFI or bootloader management |
+| Desktop session | greetd + Hyprland/niri | greetd + Hyprland/niri | WSLg; no nested compositor is started by default |
+| Hardware services | AMDGPU, Bluetooth, PipeWire, and UDisks2 | AMDGPU, Bluetooth, PipeWire, and UDisks2 | No physical hardware services; WSLg application support remains available |
+| Snapshots | Btrfs subvolumes and Snapper | Existing Btrfs subvolumes and Snapper | No Snapper; use WSL export/backup mechanisms |
+| Windows dual boot | Uses Windows ESP PARTUUID <code>991a77db-c316-4f75-b9df-bc05e179a798</code>; the ESP should be on another disk that Disko will not erase | Uses <code>084dbc6c-e077-48f9-b6d5-ccd76d8f1d42</code> for the Windows ESP on the same SSD | Not applicable; Windows starts WSL |
 
 Inspect the exact committed branch delta with:
 
@@ -58,6 +55,18 @@ Inspect the exact committed branch delta with:
 git diff --stat master...laptop
 git diff master...laptop -- flake.nix home/default.nix hosts/nixos modules/core.nix
 ~~~
+
+### WSL2 usage
+
+The <code>wsl</code> branch uses the <code>nixosConfigurations.wsl</code> output. It reuses the shared Home Manager configuration and development tools, while leaving out Disko, EFI/Secure Boot, rEFInd, greetd, Bluetooth, Btrfs, and Snapper. The physical-machine installation sections below apply only to <code>master</code>/<code>laptop</code>. After installing NixOS-WSL, run from the repository:
+
+~~~bash
+git switch wsl
+nix flake lock
+sudo nixos-rebuild switch --flake .#wsl
+~~~
+
+Import the distribution according to the NixOS-WSL instructions; the login user is <code>ben</code>. WSLg provides the Windows-side Wayland/X11 bridge, so Linux GUI applications can be launched from WSL. This configuration does not start Hyprland, niri, or a Noctalia session inside WSL.
 
 ### Repository layout
 
@@ -71,6 +80,8 @@ git diff master...laptop -- flake.nix home/default.nix hosts/nixos modules/core.
 │   ├── disk-config.nix               # Branch-specific provisioning or mounts
 │   ├── hardware-configuration.nix    # AMD hardware, ESP, and laptop EDID
 │   └── lenovo-14aph8-edid.hex        # Corrected EDID on the laptop branch
+├── hosts/wsl/
+│   └── default.nix                   # NixOS-WSL host entry
 ├── modules/
 │   ├── core.nix                      # Users, Nix, kernel, SSH, system tools
 │   ├── desktop.nix                   # Wayland sessions, audio, Bluetooth, IME, fonts
@@ -78,6 +89,7 @@ git diff master...laptop -- flake.nix home/default.nix hosts/nixos modules/core.
 │   ├── snapper.nix                   # Root and home snapshot policy
 │   ├── clash-verge.nix               # Clash Verge service and TUN settings
 │   ├── secrets.nix                   # sops-nix Age key source
+│   ├── wsl.nix                        # WSL2 system base configuration
 │   ├── fonts.conf                    # Fontconfig font priorities
 │   └── patches/                      # Local package fixes
 ├── home/
@@ -160,14 +172,18 @@ cd nixos-config
 git switch master
 # or
 git switch laptop
+# or
+git switch wsl
 
 nix flake check
-nix build .#nixosConfigurations.nixos.config.system.build.toplevel --no-link
+nix build .#nixosConfigurations.wsl.config.system.build.toplevel --no-link
 ~~~
 
 If <code>hostname</code> was changed, replace <code>nixos</code> in this and later commands with the new Flake output name. Flakes only see files tracked by Git or added to its index. After creating a local configuration file, explicitly run <code>git add FILE_PATH</code> before validation.
 
 ### Installation
+
+The physical-machine installation and maintenance commands below apply only to <code>master</code>/<code>laptop</code>; use the WSL2 section above for <code>wsl</code>.
 
 The following procedures assume that the installer was booted in UEFI mode. Connect to the network and confirm the environment first:
 
