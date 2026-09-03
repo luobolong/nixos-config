@@ -9,6 +9,11 @@
 let
   chatgpt = pkgs.callPackage ../packages/chatgpt.nix { };
   deepseekHarness = pkgs.callPackage ../packages/deepseek-harness.nix { };
+  claudeCode =
+    (import inputs.nixpkgs-claude {
+      system = pkgs.stdenv.hostPlatform.system;
+      config.allowUnfree = true;
+    }).claude-code;
   audiomonitor =
     inputs.audiomonitor.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs
       (oldAttrs: {
@@ -461,7 +466,7 @@ in
       nixfmt
       codex
       chatgpt
-      claude-code
+      claudeCode
       deepseekHarness
       sops
     ];
