@@ -1,0 +1,7 @@
+* text=auto
+
+# Nix embeds these files into Linux derivations; keep their line endings stable.
+*.nix text eol=lf
+*.sh text eol=lf
+*.lua text eol=lf
+*.kdl text eol=lf
