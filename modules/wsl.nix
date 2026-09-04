@@ -92,7 +92,9 @@ in
     enable = true;
     type = "fcitx5";
     fcitx5 = {
-      waylandFrontend = true;
+      # WSLg rejects zwp_input_method_v1 clients. Use the GTK/Qt input method
+      # modules instead of Fcitx's Wayland input-method frontend.
+      waylandFrontend = false;
       addons = with pkgs; [
         fcitx5-rime
         fcitx5-gtk
@@ -107,8 +109,8 @@ in
   systemd.user.services.fcitx5 = {
     description = "Fcitx 5 input method";
     serviceConfig = {
-      ExecStart = "${config.i18n.inputMethod.package}/bin/fcitx5";
-      Restart = "on-failure";
+      ExecStart = "${config.i18n.inputMethod.package}/bin/fcitx5 --disable=waylandim --keep";
+      Restart = "always";
       RestartSec = "2s";
     };
     wantedBy = [ "default.target" ];
