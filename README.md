@@ -77,12 +77,12 @@ nix shell nixpkgs#mkpasswd -c mkpasswd -m sha-512
 ## WSLg 与显示
 
 - WSLg 提供 Wayland/X11 连接，Linux 图形应用可直接从终端启动。
-- WSL 配置不会自动启动 Hyprland、niri、Noctalia 或图形用户服务。
+- WSL 配置不会自动启动 Hyprland、niri 或图形用户服务；Noctalia 只随手动启动的 compositor 会话启动。
 - Hyprland 的通用显示器回退缩放为 <code>1</code>。
 - niri 不声明固定输出名称、分辨率、位置或缩放，由 WSLg 决定显示输出。
 - niri 的 <code>noctalia.kdl</code> 可写 include 会在 Home Manager 激活时创建。
-- 运行 <code>niri-nested</code> 可打开 niri 嵌套窗口；嵌套模式下 <code>Mod</code> 对应 <code>Alt</code>。
-- 运行 <code>hyprland-nested</code> 可打开 Hyprland 嵌套窗口；启动器会关闭 systemd 图形会话集成并允许无 KMS 的 WSLg 后端。
+- 运行 <code>niri-nested</code> 可打开带 Noctalia 的 niri 嵌套窗口；嵌套模式下 <code>Mod</code> 对应 <code>Alt</code>。
+- 运行 <code>hyprland-nested</code> 可打开带 Noctalia 的 Hyprland 嵌套窗口；启动器会关闭 systemd 图形会话集成并允许无 KMS 的 WSLg 后端。
 
 ## 目录结构
 

@@ -45,7 +45,9 @@ in
     systemd.enable = lib.mkForce false;
   };
 
-  programs.noctalia.enable = lib.mkForce false;
+  # Install Noctalia and generate its configuration, but let each compositor
+  # start it with the nested Wayland display in its environment.
+  programs.noctalia.enable = lib.mkForce true;
   programs.noctalia.systemd.enable = lib.mkForce false;
   services.hyprpolkitagent.enable = lib.mkForce false;
 

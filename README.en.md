@@ -77,12 +77,12 @@ Also review the Git name, email, signing key, and other personal values in <code
 ## WSLg and displays
 
 - WSLg provides the Wayland and X11 connections, so Linux GUI applications can start directly from a terminal.
-- The WSL overrides do not automatically start Hyprland, niri, Noctalia, or graphical user services.
+- The WSL overrides do not automatically start Hyprland, niri, or graphical user services; Noctalia starts only with a manually launched compositor session.
 - Hyprland uses a generic fallback display scale of <code>1</code>.
 - niri does not declare fixed output names, modes, positions, or scales; WSLg determines the display output.
 - Home Manager creates niri's writable <code>noctalia.kdl</code> include during activation.
-- Run <code>niri-nested</code> to open a nested niri window; <code>Mod</code> maps to <code>Alt</code> in nested mode.
-- Run <code>hyprland-nested</code> to open a nested Hyprland window; the launcher disables systemd graphical-session integration and permits the KMS-less WSLg backend.
+- Run <code>niri-nested</code> to open a nested niri window with Noctalia; <code>Mod</code> maps to <code>Alt</code> in nested mode.
+- Run <code>hyprland-nested</code> to open a nested Hyprland window with Noctalia; the launcher disables systemd graphical-session integration and permits the KMS-less WSLg backend.
 
 ## Repository layout
 

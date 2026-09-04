@@ -9,6 +9,12 @@ pcall(function()
   require("noctalia").apply_theme()
 end)
 
+-- Launch Noctalia after Hyprland creates its nested Wayland display. Starting
+-- it from the outer WSL shell would attach the bar to WSLg instead.
+hl.on("hyprland.start", function()
+  hl.exec_cmd("noctalia")
+end)
+
 hl.monitor({
   output = "",
   mode = "preferred",

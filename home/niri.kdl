@@ -1,6 +1,9 @@
 // Noctalia writes colors to this writable include while the main config remains managed.
 include "noctalia.kdl"
 
+// Start the shell inside niri so it connects to niri rather than the outer WSLg display.
+spawn-at-startup "noctalia"
+
 input {
     keyboard {
         xkb {
