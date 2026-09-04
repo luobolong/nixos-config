@@ -13,40 +13,21 @@ let
     '';
   };
 
-  hyprlandNested = pkgs.writeShellApplication {
-    name = "hyprland-nested";
-    runtimeInputs = [ pkgs.hyprland ];
-    text = ''
-      if [[ -z "''${WAYLAND_DISPLAY:-}" ]]; then
-        echo "hyprland-nested requires a running WSLg Wayland session." >&2
-        exit 1
-      fi
-
-      export HYPRLAND_NO_SD_TARGET=1
-      export AQ_NO_KMS_REQUIREMENT=1
-      exec Hyprland
-    '';
-  };
 in
 {
   imports = [ ./default.nix ];
 
-  # Install explicit launchers for optional nested sessions. Neither compositor
-  # is started automatically, so ordinary WSLg application windows still work.
+  # Niri is started explicitly as a nested session, so ordinary WSLg
+  # application windows continue to work when it is not running.
   home.packages = [
     pkgs.niri
     niriNested
-    hyprlandNested
   ];
 
-  wayland.windowManager.hyprland = {
-    enable = lib.mkForce true;
-    package = lib.mkForce pkgs.hyprland;
-    systemd.enable = lib.mkForce false;
-  };
+  wayland.windowManager.hyprland.enable = lib.mkForce false;
 
-  # Install Noctalia and generate its configuration, but let each compositor
-  # start it with the nested Wayland display in its environment.
+  # Install Noctalia and generate its configuration, but let Niri start it with
+  # the nested Wayland display in its environment.
   programs.noctalia.enable = lib.mkForce true;
   programs.noctalia.systemd.enable = lib.mkForce false;
   services.hyprpolkitagent.enable = lib.mkForce false;

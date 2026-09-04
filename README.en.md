@@ -25,7 +25,7 @@ Highlights:
 - Wayland, X11, GTK, Qt/KDE, and Electron application support through WSLg.
 - Fcitx5 with Rime Ice for Chinese input.
 - Catppuccin, Papirus, Inter, Noto CJK/Emoji, and Nerd Fonts.
-- Hyprland and niri are available as manual nested sessions, but WSL does not start either of them automatically.
+- niri is available as a manual nested session, but WSL does not start it automatically.
 
 ## Apply the configuration
 
@@ -77,12 +77,10 @@ Also review the Git name, email, signing key, and other personal values in <code
 ## WSLg and displays
 
 - WSLg provides the Wayland and X11 connections, so Linux GUI applications can start directly from a terminal.
-- The WSL overrides do not automatically start Hyprland, niri, or graphical user services; Noctalia starts only with a manually launched compositor session.
-- Hyprland uses a generic fallback display scale of <code>1</code>.
+- The WSL overrides do not automatically start niri or graphical user services; Noctalia starts only with a manually launched compositor session.
 - niri does not declare fixed output names, modes, positions, or scales; WSLg determines the display output.
 - Home Manager creates niri's writable <code>noctalia.kdl</code> include during activation.
 - Run <code>niri-nested</code> to open a nested niri window with Noctalia; <code>Mod</code> maps to <code>Alt</code> in nested mode.
-- Run <code>hyprland-nested</code> to open a nested Hyprland window with Noctalia; the launcher disables systemd graphical-session integration and permits the KMS-less WSLg backend.
 
 ## Repository layout
 

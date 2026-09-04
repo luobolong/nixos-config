@@ -53,7 +53,8 @@ layout {
     }
 }
 
-// Match Hyprland's four-pass background blur while keeping colors neutral.
+// Configure blur for layer surfaces such as Noctalia panels that explicitly
+// request a background effect. Application windows do not request blur.
 blur {
     passes 4
     offset 3
@@ -71,15 +72,10 @@ layer-rule {
     }
 }
 
-// Catppuccin glass effect, corresponding to window_rule in hyprland.lua.
+// Keep a small amount of transparency without blurring application windows.
 window-rule {
     match app-id=r#"^(kitty|org\.kde\.dolphin)$"#
     opacity 0.90
-    background-effect {
-        // Reuse the blurred wallpaper for better performance and stability.
-        xray true
-        blur true
-    }
 }
 
 prefer-no-csd

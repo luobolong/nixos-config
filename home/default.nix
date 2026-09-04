@@ -4,6 +4,7 @@
   lib,
   pkgs,
   username,
+  wsl ? false,
   ...
 }:
 let
@@ -343,91 +344,93 @@ in
       gtk.enable = true;
       x11.enable = true;
     };
-    packages = with pkgs; [
-      # Desktop applications
-      vscode
-      spotify
-      cc-switch
-      dolphin
-      kdePackages.okular
-      kdePackages.gwenview
-      kdePackages.ark
-      kdePackages.baloo-widgets
-      kdePackages.ffmpegthumbs
-      kdePackages.kio-extras
-      catppuccinKde
-      firefox
-      localsend
-      mission-center
-      obs-studio
-      pavucontrol
-      audiomonitor
+    packages =
+      with pkgs;
+      [
+        # Desktop applications
+        vscode
+        spotify
+        cc-switch
+        dolphin
+        kdePackages.okular
+        kdePackages.gwenview
+        kdePackages.ark
+        kdePackages.baloo-widgets
+        kdePackages.ffmpegthumbs
+        kdePackages.kio-extras
+        catppuccinKde
+        firefox
+        localsend
+        mission-center
+        obs-studio
+        pavucontrol
+        audiomonitor
 
-      # Hyprland and Wayland desktop tools
-      fuzzel
-      wl-clipboard
-      hyprpicker
-      grimblast
-      grim
-      slurp
-      screenshot
-      commandPalette
-      niriSmartDirection
-      brightnessctl
-      playerctl
-      mpv
-      mpvpaper
-      networkmanagerapplet
-      xwayland-satellite
-      xlsclients
+        # Wayland desktop tools
+        fuzzel
+        wl-clipboard
+        hyprpicker
+        grimblast
+        grim
+        slurp
+        screenshot
+        niriSmartDirection
+        brightnessctl
+        playerctl
+        mpv
+        mpvpaper
+        networkmanagerapplet
+        xwayland-satellite
+        xlsclients
 
-      # Terminal and file search tools
-      fastfetch
-      btop
-      ripgrep
-      fd
-      file
-      tree
-      which
-      lsof
+        # Terminal and file search tools
+        fastfetch
+        btop
+        ripgrep
+        fd
+        file
+        tree
+        which
+        lsof
 
-      # Data processing, transfer, and archive tools
-      jq
-      yq-go
-      rsync
-      zip
-      unzip
-      p7zip
+        # Data processing, transfer, and archive tools
+        jq
+        yq-go
+        rsync
+        zip
+        unzip
+        p7zip
 
-      # Hardware, storage, and network diagnostics
-      pciutils
-      usbutils
-      smartmontools
-      nvme-cli
-      lm_sensors
-      dnsutils
+        # Hardware, storage, and network diagnostics
+        pciutils
+        usbutils
+        smartmontools
+        nvme-cli
+        lm_sensors
+        dnsutils
 
-      # Routine NixOS maintenance tools
-      nh
-      nix-output-monitor
-      nvd
+        # Routine NixOS maintenance tools
+        nh
+        nix-output-monitor
+        nvd
 
-      # Development, build, and language tools
-      cmake
-      pkg-config
-      shellcheck
-      gcc
-      gnumake
-      nodejs
-      python3
-      lua-language-server
-      nil
-      nixfmt
-      codex
-      chatgpt
-      deepseekHarness
-      sops
-    ];
+        # Development, build, and language tools
+        cmake
+        pkg-config
+        shellcheck
+        gcc
+        gnumake
+        nodejs
+        python3
+        lua-language-server
+        nil
+        nixfmt
+        codex
+        chatgpt
+        deepseekHarness
+        sops
+      ]
+      ++ lib.optionals (!wsl) [ commandPalette ];
     preferXdgDirectories = true;
   };
 
@@ -518,10 +521,10 @@ in
     terminal-exec = {
       enable = true;
       settings = {
-        Hyprland = [ "kitty.desktop" ];
         niri = [ "kitty.desktop" ];
         default = [ "kitty.desktop" ];
-      };
+      }
+      // lib.optionalAttrs (!wsl) { Hyprland = [ "kitty.desktop" ]; };
     };
     mimeApps = {
       enable = true;
@@ -735,7 +738,7 @@ in
     Theme=catppuccin-mocha-sapphire
   '';
 
-  wayland.windowManager.hyprland = {
+  wayland.windowManager.hyprland = lib.mkIf (!wsl) {
     enable = true;
     package = null;
     portalPackage = null;
@@ -814,12 +817,12 @@ in
         "helix"
         "labwc"
         "niri"
-        "hyprland"
         "mango"
         "scroll"
         "sway"
         "wezterm"
-      ];
+      ]
+      ++ lib.optional (!wsl) "hyprland";
     };
   };
 
