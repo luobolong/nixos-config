@@ -1,6 +1,10 @@
 * text=auto
 
 # Nix embeds these files into Linux derivations; keep their line endings stable.
+.gitattributes text eol=lf
+.gitignore text eol=lf
+LICENSE text eol=lf
+*.md text eol=lf
 *.nix text eol=lf
 *.sh text eol=lf
 *.lua text eol=lf
@@ -8,3 +12,4 @@
 *.json text eol=lf
 *.yaml text eol=lf
 *.toml text eol=lf
+*.conf text eol=lf

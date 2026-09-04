@@ -11,7 +11,7 @@
 | Flake 输出 | <code>nixosConfigurations.wsl</code> |
 | 架构 | <code>x86_64-linux</code> |
 | 主机名 | <code>wsl</code> |
-| 用户名 | <code>ben</code> |
+| 用户名 | <code>nixos</code> |
 | Nixpkgs | <code>nixos-unstable</code> |
 | state version | <code>25.11</code> |
 | 图形支持 | WSLg |
@@ -60,7 +60,7 @@ Git tree dirty 警告只表示仓库存在未提交修改，不会单独导致�
 let
   system = "x86_64-linux";
   hostname = "wsl";
-  username = "ben";
+  username = "nixos";
 in
 ~~~
 

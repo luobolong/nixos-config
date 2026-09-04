@@ -11,7 +11,7 @@ Personal NixOS and Home Manager configuration for WSL2.
 | Flake output | <code>nixosConfigurations.wsl</code> |
 | Architecture | <code>x86_64-linux</code> |
 | Host name | <code>wsl</code> |
-| User name | <code>ben</code> |
+| User name | <code>nixos</code> |
 | Nixpkgs | <code>nixos-unstable</code> |
 | State version | <code>25.11</code> |
 | Graphics | WSLg |
@@ -60,7 +60,7 @@ The host and user names are defined in <code>flake.nix</code>:
 let
   system = "x86_64-linux";
   hostname = "wsl";
-  username = "ben";
+  username = "nixos";
 in
 ~~~
 

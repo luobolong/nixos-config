@@ -5,8 +5,8 @@
   ...
 }:
 let
-  # The declarative login password for both ben and root is q. Replace this
-  # hash as soon as possible after installation.
+  # The declarative login password for both the normal user and root is q.
+  # Replace this hash as soon as possible after installation.
   loginPasswordHash = "$6$R1okLc57kK.c4j7/$t7Vr4cPUATqr1LthGUK8rX1MePp8yKUPltzSzLNbWT7OaN153SYID5hrvb3hse.Mgh6g54v1PFYheRHPx/l8W1";
 
 in

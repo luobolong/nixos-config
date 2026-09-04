@@ -59,7 +59,7 @@
     let
       system = "x86_64-linux";
       hostname = "wsl";
-      username = "ben";
+      username = "nixos";
     in
     {
       nixosConfigurations.${hostname} = nixpkgs.lib.nixosSystem {
