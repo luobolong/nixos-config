@@ -1,4 +1,5 @@
 {
+  config,
   pkgs,
   hostname,
   username,
@@ -85,6 +86,32 @@ in
     enable = true;
     config.common.default = "*";
     extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+  };
+
+  i18n.inputMethod = {
+    enable = true;
+    type = "fcitx5";
+    fcitx5 = {
+      waylandFrontend = true;
+      addons = with pkgs; [
+        fcitx5-rime
+        fcitx5-gtk
+        qt6Packages.fcitx5-configtool
+        catppuccin-fcitx5
+      ];
+    };
+  };
+
+  # WSLg does not start graphical-session.target for ordinary application
+  # windows, so launch Fcitx with the regular user session instead.
+  systemd.user.services.fcitx5 = {
+    description = "Fcitx 5 input method";
+    serviceConfig = {
+      ExecStart = "${config.i18n.inputMethod.package}/bin/fcitx5";
+      Restart = "on-failure";
+      RestartSec = "2s";
+    };
+    wantedBy = [ "default.target" ];
   };
 
   fonts = {
