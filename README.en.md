@@ -106,7 +106,7 @@ Also review the Git name, email, signing key, and other personal values in <code
 
 Desktop applications include Firefox, Spotify, LocalSend, OBS Studio, Mission Center, Pavucontrol, AudioMonitor, ChatGPT, Dolphin, Okular, Gwenview, Ark, mpv, and VS Code.
 
-Development tools include GCC, CMake, Make, pkg-config, Node.js, Python, OpenJDK, Lua language server, nil, nixfmt, ShellCheck, Codex, Claude Code, DeepSeek Harness, sops, nh, nvd, and nix-output-monitor.
+Development tools include GCC, CMake, Make, pkg-config, Node.js, Python, OpenJDK, Lua language server, nil, nixfmt, ShellCheck, Codex, DeepSeek Harness, sops, nh, nvd, and nix-output-monitor.
 
 Default applications:
 

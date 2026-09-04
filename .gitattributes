@@ -5,3 +5,6 @@
 *.sh text eol=lf
 *.lua text eol=lf
 *.kdl text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf

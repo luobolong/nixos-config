@@ -10,10 +10,6 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
-    # Claude Code uses nixpkgs' package definition. Keep this input separate so
-    # it can follow unstable independently from the system nixpkgs lock.
-    nixpkgs-claude.url = "github:NixOS/nixpkgs/nixos-unstable";
-
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";

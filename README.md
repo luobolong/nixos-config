@@ -106,7 +106,7 @@ nix shell nixpkgs#mkpasswd -c mkpasswd -m sha-512
 
 桌面应用包括 Firefox、Spotify、LocalSend、OBS Studio、Mission Center、Pavucontrol、AudioMonitor、ChatGPT、Dolphin、Okular、Gwenview、Ark、mpv 和 VS Code。
 
-开发工具包括 GCC、CMake、Make、pkg-config、Node.js、Python、OpenJDK、Lua language server、nil、nixfmt、ShellCheck、Codex、Claude Code、DeepSeek Harness、sops、nh、nvd 和 nix-output-monitor。
+开发工具包括 GCC、CMake、Make、pkg-config、Node.js、Python、OpenJDK、Lua language server、nil、nixfmt、ShellCheck、Codex、DeepSeek Harness、sops、nh、nvd 和 nix-output-monitor。
 
 默认程序：
 
