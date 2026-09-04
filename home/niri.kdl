@@ -1,8 +1,5 @@
-// Runtime-generated settings stay writable while the main config remains managed by Home Manager.
-// Noctalia writes colors to noctalia.kdl; nwg-displays writes outputs to monitor.kdl.
-// default.nix pre-creates both files so these includes also work on the first login.
+// Noctalia writes colors to this writable include while the main config remains managed.
 include "noctalia.kdl"
-include "monitor.kdl"
 
 input {
     keyboard {
@@ -80,12 +77,6 @@ window-rule {
         xray true
         blur true
     }
-}
-
-// QQ uses one app-id for both windows; the title keeps the main window tiled.
-window-rule {
-    match app-id="^QQ$" title="^图片查看器$"
-    open-floating true
 }
 
 prefer-no-csd

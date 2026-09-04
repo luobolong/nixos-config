@@ -1,6 +1,4 @@
 {
-  config,
-  lib,
   pkgs,
   hostname,
   username,
@@ -85,39 +83,6 @@ in
 
   nixpkgs.config.allowUnfree = true;
 
-  boot = {
-    # Follow the latest Linux kernel series provided by nixos-unstable.
-    kernelPackages = pkgs.linuxPackages_latest;
-
-    loader = {
-      # Lanzaboote takes over systemd-boot and generates a UKI for each system
-      # generation.
-      systemd-boot = {
-        enable = lib.mkForce false;
-        configurationLimit = 10;
-      };
-      efi.canTouchEfiVariables = true;
-      # rEFInd handles the first-stage selection; keep only a short delay here
-      # for choosing a NixOS system generation.
-      timeout = 2;
-    };
-
-    lanzaboote = {
-      enable = true;
-      pkiBundle = "/var/lib/sbctl";
-      configurationLimit = 10;
-
-      # Generate keys on the first boot. Rebuild NixOS again afterward to sign
-      # the UKIs.
-      # Keep firmware key enrollment manual to avoid automatically modifying
-      # UEFI keys on unknown motherboards.
-      autoGenerateKeys.enable = true;
-      autoEnrollKeys.enable = false;
-    };
-
-    tmp.cleanOnBoot = true;
-  };
-
   services.fstrim.enable = true;
   services.openssh.enable = true;
 
@@ -127,8 +92,6 @@ in
     wget
     btrfs-assistant
     btrfs-progs
-    disko
-    sbctl
     vim
   ];
   environment.pathsToLink = [ "/share/zsh" ];

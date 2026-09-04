@@ -13,13 +13,8 @@ hl.monitor({
   output = "",
   mode = "preferred",
   position = "auto",
-  scale = 2,
+  scale = 1,
 })
-
--- nwg-displays writes these files after the first successful Apply. Keep the
--- fallback monitor above so Hyprland can still start before they exist.
-pcall(require, "monitors")
-pcall(require, "workspaces")
 
 hl.config({
   input = {
@@ -161,14 +156,6 @@ hl.window_rule({
   match = { class = "^io[.]missioncenter[.]MissionCenter$" },
   float = true,
   center = true,
-})
-
--- QQ reuses the same class for its main window and image viewer, so also
--- match the viewer's title to keep only that utility window floating.
-hl.window_rule({
-  name = "qq-image-viewer-float",
-  match = { class = "^QQ$", title = "^图片查看器$" },
-  float = true,
 })
 
 -- Recent Firefox versions initially expose the Bitwarden pop-out as a generic

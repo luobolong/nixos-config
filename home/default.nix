@@ -81,36 +81,6 @@ let
         --add-flags "--wayland-text-input-version=3"
     '';
   };
-  qqWayland = pkgs.qq.override {
-    commandLineArgs = lib.concatStringsSep " " [
-      "--ozone-platform=wayland"
-      "--enable-wayland-ime"
-      "--wayland-text-input-version=3"
-    ];
-  };
-  linuxqqClipsync = pkgs.rustPlatform.buildRustPackage {
-    pname = "linuxqq-clipsync";
-    version = "0.1.0";
-    src = inputs.linuxqq-clipsync;
-    cargoLock.lockFile = "${inputs.linuxqq-clipsync}/Cargo.lock";
-    nativeBuildInputs = [ pkgs.makeWrapper ];
-    postInstall = ''
-      wrapProgram "$out/bin/linuxqq-clipsync" \
-        --prefix PATH : "${
-          lib.makeBinPath [
-            pkgs.clipnotify
-            pkgs.wl-clipboard
-            pkgs.xclip
-          ]
-        }"
-    '';
-    meta = {
-      description = "Synchronize the X11 and Wayland clipboards for Linux QQ";
-      homepage = "https://github.com/SHORiN-KiWATA/linuxqq-clipsync";
-      license = lib.licenses.mit;
-      mainProgram = "linuxqq-clipsync";
-    };
-  };
   screenshot = pkgs.writeShellApplication {
     name = "hypr-screenshot";
     runtimeInputs = with pkgs; [
@@ -381,12 +351,7 @@ in
     packages = with pkgs; [
       # Desktop applications
       vscode
-      jetbrains.idea
-      jetbrains.datagrip
-      jetbrains.goland
       spotify
-      qqWayland
-      linuxqqClipsync
       cc-switch
       dolphin
       kdePackages.okular
@@ -418,7 +383,6 @@ in
       mpv
       mpvpaper
       networkmanagerapplet
-      nwg-displays
       xwayland-satellite
       xlsclients
 
@@ -740,15 +704,11 @@ in
     $DRY_RUN_CMD install -m 0644 ${rimeDefaultCustom} ${config.home.homeDirectory}/.local/share/fcitx5/rime/default.custom.yaml
   '';
 
-  # Keep niri's runtime-generated includes writable and available on first login.
-  # The noctalia.kdl file also signals to Noctalia that config.kdl already includes it.
-  home.activation.ensureNiriRuntimeIncludes = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+  # The writable include also signals to Noctalia that config.kdl already includes it.
+  home.activation.ensureNiriRuntimeInclude = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     $DRY_RUN_CMD mkdir -p ${config.xdg.configHome}/niri
     if [[ ! -f ${config.xdg.configHome}/niri/noctalia.kdl ]]; then
       $DRY_RUN_CMD touch ${config.xdg.configHome}/niri/noctalia.kdl
-    fi
-    if [[ ! -f ${config.xdg.configHome}/niri/monitor.kdl ]]; then
-      $DRY_RUN_CMD touch ${config.xdg.configHome}/niri/monitor.kdl
     fi
   '';
 
@@ -894,20 +854,6 @@ in
     pinentry.package = pkgs.pinentry-qt;
   };
   services.ssh-agent.enable = true;
-
-  systemd.user.services.linuxqq-clipsync = {
-    Unit = {
-      Description = "Synchronize X11 and Wayland clipboards for Linux QQ";
-      After = [ "graphical-session.target" ];
-      PartOf = [ "graphical-session.target" ];
-    };
-    Service = {
-      ExecStart = lib.getExe linuxqqClipsync;
-      Restart = "on-failure";
-      RestartSec = 3;
-    };
-    Install.WantedBy = [ "graphical-session.target" ];
-  };
 
   home.sessionVariables = {
     NIXOS_OZONE_WL = "1";

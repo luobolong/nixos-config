@@ -8,8 +8,8 @@ let
   loginPasswordHash = "$6$R1okLc57kK.c4j7/$t7Vr4cPUATqr1LthGUK8rX1MePp8yKUPltzSzLNbWT7OaN153SYID5hrvb3hse.Mgh6g54v1PFYheRHPx/l8W1";
 in
 {
-  # WSL supplies the kernel, initrd, EFI and virtual network. Keep the NixOS
-  # userspace declarative without trying to manage hardware owned by Windows.
+  # Windows supplies the kernel and virtual hardware. Keep the NixOS userspace
+  # declarative without trying to manage resources owned by Windows.
   networking = {
     hostName = hostname;
     networkmanager.enable = false;
@@ -39,7 +39,12 @@ in
         isNormalUser = true;
         description = username;
         hashedPassword = loginPasswordHash;
-        extraGroups = [ "wheel" "video" "audio" "input" ];
+        extraGroups = [
+          "wheel"
+          "video"
+          "audio"
+          "input"
+        ];
         shell = pkgs.zsh;
       };
     };
@@ -51,7 +56,10 @@ in
 
   nix = {
     settings = {
-      experimental-features = [ "nix-command" "flakes" ];
+      experimental-features = [
+        "nix-command"
+        "flakes"
+      ];
       extra-substituters = [ "https://noctalia.cachix.org" ];
       extra-trusted-public-keys = [
         "noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4="
@@ -75,6 +83,7 @@ in
   services.dbus.enable = true;
   xdg.portal = {
     enable = true;
+    config.common.default = "*";
     extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
   };
 
@@ -97,7 +106,6 @@ in
     curl
     wget
     vim
-    wslu
   ];
   environment.pathsToLink = [ "/share/zsh" ];
 

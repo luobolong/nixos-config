@@ -8,5 +8,4 @@
   programs.noctalia.enable = lib.mkForce false;
   programs.noctalia.systemd.enable = lib.mkForce false;
   services.hyprpolkitagent.enable = lib.mkForce false;
-  systemd.user.services.linuxqq-clipsync.Install.WantedBy = lib.mkForce [ ];
 }
