@@ -358,7 +358,7 @@ sudo nixos-rebuild boot --flake .#nixos
 
 首次进入图形会话后建议逐项确认：
 
-- 在 tuigreet 中分别启动一次 Hyprland 和 niri，确认登录、锁屏、退出及重登正常。
+- 在 Noctalia Greeter 中分别启动一次 Hyprland 和 niri，确认登录、锁屏、退出及重登正常。
 - 在对应会话运行 <code>hyprctl monitors</code> 或 <code>niri msg outputs</code>；<code>laptop</code> 还应确认内屏存在 2880×1800@120 Hz 模式。
 - 使用 <code>journalctl -b -k | grep -Ei 'edid|displayid|amdgpu'</code> 检查 EDID 与 AMDGPU 日志。
 - 用 <code>Ctrl + Space</code> 切换 Fcitx5/Rime，并用 <code>F4</code> 选择雾凇拼音方案；候选窗异常时可运行 <code>fcitx5 -r</code> 和 <code>fcitx5-configtool</code>。
@@ -406,7 +406,7 @@ Snapper 快照便于本机回滚，但不能替代异机备份。至少应单独
 
 | 类别 | 配置 |
 |---|---|
-| 会话 | tuigreet 可选择 Hyprland 或 niri |
+| 会话 | Noctalia Greeter 可选择 Hyprland 或 niri |
 | Shell | Zsh vi mode、共享历史、fzf、zoxide、eza、bat、lf |
 | 提示符 | Starship，显示系统、目录、Git 状态和语言版本 |
 | 终端 | Kitty，JetBrains Mono Nerd Font，Catppuccin Mocha，90% 透明度 |

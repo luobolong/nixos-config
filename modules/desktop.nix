@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 {
   programs.hyprland = {
     enable = true;
@@ -18,13 +18,7 @@
     recommendedServices.enable = true;
   };
 
-  services.greetd = {
-    enable = true;
-    settings.default_session = {
-      command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --remember-session --sessions /run/current-system/sw/share/wayland-sessions";
-      user = "greeter";
-    };
-  };
+  services.displayManager.noctalia-greeter.enable = true;
 
   xdg.portal = {
     enable = true;
@@ -58,6 +52,20 @@
         catppuccin-fcitx5
       ];
     };
+  };
+
+  # Niri/Hyprland sessions do not consistently launch XDG autostart entries.
+  # Start Fcitx explicitly as a user service after the graphical session exists.
+  systemd.user.services.fcitx5 = {
+    description = "Fcitx 5 input method";
+    after = [ "graphical-session.target" ];
+    partOf = [ "graphical-session.target" ];
+    serviceConfig = {
+      ExecStart = "${config.i18n.inputMethod.package}/bin/fcitx5";
+      Restart = "on-failure";
+      RestartSec = "2s";
+    };
+    wantedBy = [ "graphical-session.target" ];
   };
 
   fonts = {

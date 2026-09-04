@@ -358,7 +358,7 @@ Retaining Microsoft certificates helps Windows Boot Manager and some hardware op
 
 After entering the graphical session for the first time:
 
-- Start both Hyprland and niri once from tuigreet and verify login, locking, logout, and login again.
+- Start both Hyprland and niri once from Noctalia Greeter and verify login, locking, logout, and login again.
 - Run <code>hyprctl monitors</code> or <code>niri msg outputs</code> in the corresponding session. On <code>laptop</code>, confirm that the internal display offers 2880×1800 at 120 Hz.
 - Inspect EDID and AMDGPU messages with <code>journalctl -b -k | grep -Ei 'edid|displayid|amdgpu'</code>.
 - Toggle Fcitx5/Rime with <code>Ctrl + Space</code> and select the Rime Ice schema with <code>F4</code>. If the candidate window fails, run <code>fcitx5 -r</code> and <code>fcitx5-configtool</code>.
@@ -406,7 +406,7 @@ Snapper snapshots are useful for local rollback, but they are not an off-machine
 
 | Area | Configuration |
 |---|---|
-| Sessions | tuigreet offers Hyprland and niri |
+| Sessions | Noctalia Greeter offers Hyprland and niri |
 | Shell | Zsh vi mode, shared history, fzf, zoxide, eza, bat, lf |
 | Prompt | Starship with OS, directory, Git state, and language versions |
 | Terminal | Kitty, JetBrains Mono Nerd Font, Catppuccin Mocha, 90% opacity |
