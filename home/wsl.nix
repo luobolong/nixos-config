@@ -1,10 +1,50 @@
-{ lib, ... }:
+{ lib, pkgs, ... }:
+let
+  niriNested = pkgs.writeShellApplication {
+    name = "niri-nested";
+    runtimeInputs = [ pkgs.niri ];
+    text = ''
+      if [[ -z "''${WAYLAND_DISPLAY:-}" ]]; then
+        echo "niri-nested requires a running WSLg Wayland session." >&2
+        exit 1
+      fi
+
+      exec niri
+    '';
+  };
+
+  hyprlandNested = pkgs.writeShellApplication {
+    name = "hyprland-nested";
+    runtimeInputs = [ pkgs.hyprland ];
+    text = ''
+      if [[ -z "''${WAYLAND_DISPLAY:-}" ]]; then
+        echo "hyprland-nested requires a running WSLg Wayland session." >&2
+        exit 1
+      fi
+
+      export HYPRLAND_NO_SD_TARGET=1
+      export AQ_NO_KMS_REQUIREMENT=1
+      exec Hyprland
+    '';
+  };
+in
 {
   imports = [ ./default.nix ];
 
-  # WSLg already provides the compositor and login/session boundary. Keep the
-  # application configuration available, but do not start a nested desktop.
-  wayland.windowManager.hyprland.enable = lib.mkForce false;
+  # Install explicit launchers for optional nested sessions. Neither compositor
+  # is started automatically, so ordinary WSLg application windows still work.
+  home.packages = [
+    pkgs.niri
+    niriNested
+    hyprlandNested
+  ];
+
+  wayland.windowManager.hyprland = {
+    enable = lib.mkForce true;
+    package = lib.mkForce pkgs.hyprland;
+    systemd.enable = lib.mkForce false;
+  };
+
   programs.noctalia.enable = lib.mkForce false;
   programs.noctalia.systemd.enable = lib.mkForce false;
   services.hyprpolkitagent.enable = lib.mkForce false;
