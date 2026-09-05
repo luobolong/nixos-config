@@ -246,10 +246,10 @@ binds {
     // Screen capture (shared with Hyprland; Satty opens after capture)
     // ============================================================
     Mod+Shift+P repeat=false { spawn "hyprpicker" "-a"; }
-    Mod+P repeat=false      { spawn "hypr-screenshot" "area"; }
-    Mod+Ctrl+P repeat=false { spawn "hypr-screenshot" "area" "true"; }
-    Mod+Alt+P repeat=false  { spawn "hypr-screenshot" "output"; }
-    Print repeat=false      { spawn "hypr-screenshot" "screen"; }
+    Mod+P repeat=false      { spawn "screenshot" "area"; }
+    Mod+Ctrl+P repeat=false { spawn "screenshot" "area" "true"; }
+    Mod+Alt+P repeat=false  { spawn "screenshot" "output"; }
+    Print repeat=false      { spawn "screenshot" "screen"; }
 
     // ============================================================
     // Media and brightness (volume/brightness intentionally repeat on hold)

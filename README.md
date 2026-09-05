@@ -79,18 +79,22 @@ git diff master...laptop -- flake.nix home/default.nix hosts/nixos modules/core.
 │   ├── clash-verge.nix               # Clash Verge service/TUN 配置
 │   ├── secrets.nix                   # sops-nix Age 密钥来源
 │   ├── fonts.conf                    # Fontconfig 字体优先级
-│   └── patches/                      # 本地软件修补
+│   ├── patches/                      # 本地软件修补
+│   └── scripts/                      # rEFInd 与 Lanzaboote 安装脚本
 ├── home/
 │   ├── default.nix                   # Home Manager、应用、主题和用户服务
 │   ├── hyprland.lua                  # Hyprland Lua 配置
 │   ├── niri.kdl                      # niri 配置
-│   ├── niri-smart-direction.sh       # niri 浮动窗口智能方向操作
+│   ├── scripts/                      # 截图、命令面板、niri 与 Zsh/Lua 脚本
 │   └── zsh.nix                       # Zsh、Starship、fzf 和终端工具
 └── packages/
     ├── chatgpt.nix                   # ChatGPT 官方 Linux 二进制封装
     ├── deepseek-harness.nix          # DeepSeek Harness NPM 构建
-    └── deepseek-harness/package-lock.json
+    ├── deepseek-harness/package-lock.json
+    └── scripts/                      # 软件包构建与安装检查脚本
 ~~~
+
+少于 10 行的脚本内嵌在对应配置或调用脚本中；其余脚本保存在各目录的 <code>scripts/</code> 下。
 
 ### 安装前修改
 
@@ -469,7 +473,11 @@ Snapper 快照便于本机回滚，但不能替代异机备份。至少应单独
 | <code>Super + Alt + P</code> | 当前输出截图 |
 | <code>Print</code> | 全部输出截图 |
 
-截图保存到 XDG 图片目录的 <code>Screenshots</code> 子目录，并在 Satty 中打开。
+Hyprland 和 niri 共用 <code>screenshot</code> 脚本，按当前会话自动选择截图后端。截图流程参考 [HyDE](https://github.com/HyDE-Project/HyDE/blob/master/Configs/.local/lib/hyde/screenshot.sh)：先复制原图到剪贴板，再打开 Satty 标注。Hyprland 选区时也可以单击窗口完成截图。
+
+在 Satty 中，<code>Enter</code> / <code>Ctrl + C</code> 复制编辑结果并退出，<code>Ctrl + S</code> 保存到 XDG 图片目录的 <code>Screenshots</code> 子目录并退出，保存后显示通知。仅复制不会自动写入文件；直接关闭编辑器时，剪贴板仍保留原图。
+
+脚本兼容 HyDE 的 <code>s</code>（选区）、<code>sf</code>（冻结选区）、<code>m</code>（当前输出）、<code>p</code>（全部输出）模式，例如 <code>screenshot sf</code>。追加 <code>--no-annotate</code> 可直接复制并保存，追加 <code>--no-notify</code> 可关闭通知；原有参数及快捷键继续可用。
 
 音量增加、降低、静音和亮度键在锁屏时仍可用；音量与亮度按 5% 调整，并支持按住重复。
 

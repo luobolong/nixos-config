@@ -123,52 +123,18 @@ in
 
         # zsh-vi-mode resets bindings while it initializes, so register them
         # through its hook before Home Manager sources the plugin.
-        (lib.mkOrder 850 ''
-          export _FZF_PREVIEW_CMD='${fzfPreviewCommand}'
+        (lib.mkOrder 850 (
+          lib.replaceStrings
+            [
+              "@fzfPreviewCommand@"
+            ]
+            [
+              fzfPreviewCommand
+            ]
+            (builtins.readFile ./scripts/zsh/keybindings.zsh)
+        ))
 
-          _fzf_file_no_hidden() {
-            local cmd result
-            cmd="''${FZF_DEFAULT_COMMAND/--hidden /}"
-            result=$(eval "''${cmd:-find . -type f}" | fzf --preview "$_FZF_PREVIEW_CMD") \
-              && LBUFFER+="$result"
-            zle reset-prompt
-          }
-          zle -N _fzf_file_no_hidden
-
-          ZVM_INSERT_MODE_CURSOR=$ZVM_CURSOR_BEAM
-          ZVM_NORMAL_MODE_CURSOR=$ZVM_CURSOR_BLOCK
-          ZVM_VISUAL_MODE_CURSOR=$ZVM_CURSOR_BLOCK
-          ZVM_VI_HIGHLIGHT_BACKGROUND=none
-          ZVM_VI_HIGHLIGHT_FOREGROUND=none
-          ZVM_VI_HIGHLIGHT_EXTRASTYLE=none
-
-          zvm_after_init() {
-            bindkey '^[[1;5C' forward-word
-            bindkey '^[[1;5D' backward-word
-            # zsh-vi-mode assigns Ctrl+R to its own history widget.
-            bindkey '^R' fzf-history-widget
-            bindkey '^F' _fzf_file_no_hidden
-            bindkey '^\' autosuggest-toggle
-            bindkey '^[[A' history-substring-search-up
-            bindkey '^[[B' history-substring-search-down
-          }
-        '')
-
-        (lib.mkOrder 950 ''
-          export VIRTUAL_ENV_DISABLE_PROMPT=1
-          FUNCNEST=100
-
-          lf() {
-            local tmp dir
-            tmp=$(mktemp) || return
-            command lf -last-dir-path="$tmp" "$@"
-            if [[ -f "$tmp" ]]; then
-              dir=$(command cat "$tmp")
-              command rm -f "$tmp"
-              [[ -d "$dir" && "$dir" != "$PWD" ]] && cd "$dir"
-            fi
-          }
-        '')
+        (lib.mkOrder 950 (builtins.readFile ./scripts/zsh/interactive.zsh))
       ];
     };
 

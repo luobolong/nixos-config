@@ -43,105 +43,44 @@ buildNpmPackage (finalAttrs: {
   dontNpmBuild = true;
   dontPatchShebangs = true;
 
-  postInstall = ''
-    app="$out/lib/node_modules/@deepseek-ai/dsh"
-    rm -rf \
-      "$app/node_modules/node-pty/deps" \
-      "$app/node_modules/node-pty/node-addon-api" \
-      "$app/node_modules/node-pty/prebuilds" \
-      "$app/node_modules/node-pty/scripts" \
-      "$app/node_modules/node-pty/src" \
-      "$app/node_modules/node-pty/third_party" \
-      "$app/node_modules/katex/src"
-
-    find "$app/node_modules/node-pty/build" -type f \
-      ! -path '*/Release/pty.node' -delete
-    find "$app/node_modules/node-pty/build" -depth -type d -empty -delete
-    while IFS= read -r file; do
-      substituteInPlace "$file" \
-        --replace-warn ${lib.getExe nodejs_24} ${lib.getExe runtimeNode}
-    done < <(find "$app" -type f -exec grep -IlF ${lib.getExe nodejs_24} {} +)
-
-    rm "$out/bin/dsh"
-    makeBinaryWrapper ${lib.getExe runtimeNode} "$out/bin/dsh" \
-      --add-flags "--expose-internals" \
-      --add-flags "$app/lib/bin.js" \
-      --prefix PATH : ${lib.makeBinPath [ runtimePnpm ]}
-  '';
+  postInstall = (
+    lib.replaceStrings
+      [
+        "@buildNode@"
+        "@runtimeNode@"
+        "@pnpmPath@"
+      ]
+      [
+        (lib.getExe nodejs_24)
+        (lib.getExe runtimeNode)
+        (lib.makeBinPath [ runtimePnpm ])
+      ]
+      (builtins.readFile ./scripts/deepseek-harness/post-install.sh)
+  );
 
   doInstallCheck = true;
   nativeInstallCheckInputs = [ versionCheckHook ];
 
   versionCheckProgramArg = "--version";
 
-  postInstallCheck = ''
-    app="$out/lib/node_modules/@deepseek-ai/dsh"
-
-    "$out/bin/dsh" --help > /dev/null
-    DSH_HOME="$(mktemp -d)" \
-      "$out/bin/dsh" --profile headless --dump-default-config > /dev/null
-    DSH_HOME="$(mktemp -d)" \
-      "$out/bin/dsh" plugin --profile install-check --version \
-      | grep -Fx ${lib.escapeShellArg runtimePnpm.version}
-    webLog="$(mktemp)"
-    DSH_HOME="$(mktemp -d)" \
-      "$out/bin/dsh" web --host 127.0.0.1 --port 0 > "$webLog" 2>&1 &
-    webPid=$!
-
-    cleanupWeb() {
-      kill "$webPid" 2> /dev/null || true
-      wait "$webPid" 2> /dev/null || true
-    }
-
-    trap cleanupWeb EXIT
-    for _ in {1..100}; do
-      if ! kill -0 "$webPid" 2> /dev/null; then
-        cat "$webLog" >&2
-        exit 1
-      fi
-      webUrl="$(sed -n 's/^dsh web: //p' "$webLog")"
-      if [ -n "$webUrl" ]; then
-        break
-      fi
-      sleep 0.1
-    done
-    test -n "''${webUrl:-}"
-    WEB_URL="$webUrl" ${lib.getExe runtimeNode} <<'NODE'
-    const response = await fetch(process.env.WEB_URL);
-    if (!response.ok || !(await response.text()).includes("<html")) process.exit(1);
-    NODE
-    cleanupWeb
-    trap - EXIT
-
-    APP="$app" ${lib.getExe runtimeNode} <<'NODE'
-    const path = require("node:path");
-    const pty = require(path.join(process.env.APP, "node_modules/node-pty"));
-    require(path.join(process.env.APP, "node_modules/koffi"));
-    require(path.join(process.env.APP, "node_modules/node-addon-require-builtin"));
-    require(path.join(process.env.APP, "node_modules/sharp"));
-    const child = pty.spawn("${stdenv.shell}", ["-c", "printf pty-ok"], {
-      cols: 80,
-      rows: 24,
-    });
-    let output = "";
-    child.onData((data) => output += data);
-    child.onExit(({ exitCode }) => {
-      if (exitCode !== 0 || !output.includes("pty-ok")) process.exit(1);
-    });
-    NODE
-
-    landlock="$app/node_modules/@deepseek-ai/${landlockPackage}/bin/landlock-run"
-    test -x "$landlock"
-    "$landlock" --probe | grep -Eq '^landlock: (fully|partially) enforced$'
-    if find "$app" -xtype l -print -quit | grep -q .; then
-      find "$app" -xtype l -print >&2
-      exit 1
-    fi
-
-    if grep -RIlE '/build/(source|tmp\.|\.home)' "$out"; then
-      exit 1
-    fi
-  '';
+  postInstallCheck = (
+    lib.replaceStrings
+      [
+        "@pnpmVersion@"
+        "@runtimeNode@"
+        "@shell@"
+        "@landlockPackage@"
+        "@nativeCheck@"
+      ]
+      [
+        (lib.escapeShellArg runtimePnpm.version)
+        (lib.getExe runtimeNode)
+        stdenv.shell
+        landlockPackage
+        "${./scripts/deepseek-harness/check-native.cjs}"
+      ]
+      (builtins.readFile ./scripts/deepseek-harness/post-install-check.sh)
+  );
 
   meta = {
     description = "Open-source agent harness developed by DeepSeek AI";

@@ -79,18 +79,22 @@ git diff master...laptop -- flake.nix home/default.nix hosts/nixos modules/core.
 │   ├── clash-verge.nix               # Clash Verge service and TUN settings
 │   ├── secrets.nix                   # sops-nix Age key source
 │   ├── fonts.conf                    # Fontconfig font priorities
-│   └── patches/                      # Local package fixes
+│   ├── patches/                      # Local package fixes
+│   └── scripts/                      # rEFInd and Lanzaboote installers
 ├── home/
 │   ├── default.nix                   # Home Manager, applications, theming, services
 │   ├── hyprland.lua                  # Hyprland Lua configuration
 │   ├── niri.kdl                      # niri configuration
-│   ├── niri-smart-direction.sh       # Smart directional actions for niri
+│   ├── scripts/                      # Capture, palette, niri and Zsh/Lua scripts
 │   └── zsh.nix                       # Zsh, Starship, fzf, terminal tools
 └── packages/
     ├── chatgpt.nix                   # Official ChatGPT Linux binary wrapper
     ├── deepseek-harness.nix          # DeepSeek Harness NPM build
-    └── deepseek-harness/package-lock.json
+    ├── deepseek-harness/package-lock.json
+    └── scripts/                      # Package build and install checks
 ~~~
+
+Scripts shorter than 10 lines stay inline in their configuration or calling script; longer scripts live in each directory’s <code>scripts/</code> folder.
 
 ### Pre-install customization
 
@@ -469,7 +473,11 @@ Installed font families cover Inter, Source Serif, Noto CJK/Emoji, Sarasa Gothic
 | <code>Super + Alt + P</code> | Capture the focused output |
 | <code>Print</code> | Capture all outputs |
 
-Screenshots are stored in the <code>Screenshots</code> directory under the XDG pictures directory and opened in Satty.
+Hyprland and niri share the <code>screenshot</code> script, which selects the capture backend for the current session. The capture workflow follows [HyDE](https://github.com/HyDE-Project/HyDE/blob/master/Configs/.local/lib/hyde/screenshot.sh): copy the original image to the clipboard, then open Satty for annotation. In Hyprland, clicking a window during area selection also captures that window.
+
+In Satty, <code>Enter</code> / <code>Ctrl + C</code> copies the edited image and exits; <code>Ctrl + S</code> saves it to <code>Screenshots</code> under the XDG pictures directory and exits, followed by a save notification. Copying alone does not write a file. Closing the editor without copying leaves the original image in the clipboard.
+
+The script also accepts HyDE's <code>s</code> (area), <code>sf</code> (frozen area), <code>m</code> (focused output), and <code>p</code> (all outputs) modes, for example <code>screenshot sf</code>. Add <code>--no-annotate</code> to copy and save directly, or <code>--no-notify</code> to disable notifications. Existing arguments and bindings remain available.
 
 Volume up, volume down, mute, and brightness keys remain available while locked. Volume and brightness change in 5% steps and repeat while held.
 
