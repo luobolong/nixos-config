@@ -244,6 +244,7 @@ in
       # Terminal and file search tools
       fastfetch
       btop
+      inputs.bili-danmaku-tui.packages.${pkgs.stdenv.hostPlatform.system}.default
       ripgrep
       fd
       file

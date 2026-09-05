@@ -37,6 +37,26 @@
         "type": "github"
       }
     },
+    "bili-danmaku-tui": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1786529246,
+        "narHash": "sha256-CpF6maL2hIZpgBWLAqJGYqTkyRPk+3NdyS+Fz+Zz6nY=",
+        "owner": "Youthdreamer",
+        "repo": "bili-danmaku-tui",
+        "rev": "1863555b9cf36d60d0151c3fc417d1f2ddbeabf6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Youthdreamer",
+        "repo": "bili-danmaku-tui",
+        "type": "github"
+      }
+    },
     "catppuccin-fuzzel": {
       "flake": false,
       "locked": {
@@ -293,6 +313,7 @@
       "inputs": {
         "astronvim": "astronvim",
         "audiomonitor": "audiomonitor",
+        "bili-danmaku-tui": "bili-danmaku-tui",
         "catppuccin-fuzzel": "catppuccin-fuzzel",
         "disko": "disko",
         "home-manager": "home-manager",

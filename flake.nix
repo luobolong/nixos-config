@@ -64,6 +64,11 @@
       url = "github:luobolong/audiomonitor/7e2ff2fc38c12ce4f94e67dc11fc56a9f3454db6";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    bili-danmaku-tui = {
+      url = "github:Youthdreamer/bili-danmaku-tui";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
