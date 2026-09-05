@@ -9,6 +9,26 @@
 let
   chatgpt = pkgs.callPackage ../packages/chatgpt.nix { };
   deepseekHarness = pkgs.callPackage ../packages/deepseek-harness.nix { };
+  codexUpdater = pkgs.writeShellApplication {
+    name = "codex-update";
+    runtimeInputs = with pkgs; [
+      coreutils
+      curl
+      findutils
+      gawk
+      gnugrep
+      gnused
+      gnutar
+      util-linux
+    ];
+    text = ''
+      export CODEX_INSTALL_DIR="$HOME/.local/bin"
+      export CODEX_NON_INTERACTIVE=1
+      export PATH="$CODEX_INSTALL_DIR:$PATH"
+
+      curl -fsSL https://chatgpt.com/codex/install.sh | ${pkgs.runtimeShell}
+    '';
+  };
   claudeCode =
     (import inputs.nixpkgs-claude {
       system = pkgs.stdenv.hostPlatform.system;
@@ -466,7 +486,10 @@ in
       lua-language-server
       nil
       nixfmt
+      # Keep nixpkgs' Codex as an offline fallback until the standalone updater
+      # has installed the latest release into ~/.local/bin.
       codex
+      codexUpdater
       chatgpt
       claudeCode
       deepseekHarness
@@ -742,6 +765,14 @@ in
     $DRY_RUN_CMD install -m 0644 ${rimeDefaultCustom} ${config.home.homeDirectory}/.local/share/fcitx5/rime/default.custom.yaml
   '';
 
+  # Codex releases faster than nixpkgs. Refresh the standalone installation
+  # whenever Home Manager applies a new generation.
+  home.activation.updateCodex = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    if ! $DRY_RUN_CMD ${lib.getExe codexUpdater}; then
+      echo "warning: unable to update Codex CLI; keeping the installed fallback" >&2
+    fi
+  '';
+
   # Keep niri's runtime-generated includes writable and available on first login.
   # The noctalia.kdl file also signals to Noctalia that config.kdl already includes it.
   home.activation.ensureNiriRuntimeIncludes = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -911,6 +942,7 @@ in
     Install.WantedBy = [ "graphical-session.target" ];
   };
 
+  home.sessionPath = [ "$HOME/.local/bin" ];
   home.sessionVariables = {
     NIXOS_OZONE_WL = "1";
     ELECTRON_OZONE_PLATFORM_HINT = "auto";

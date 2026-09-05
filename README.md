@@ -366,6 +366,9 @@ nix build .#nixosConfigurations.nixos.config.home-manager.users.ben.home.activat
 # 更新锁文件；提交前应审阅 flake.lock
 nix flake update
 
+# 立即将 Codex CLI 更新至 OpenAI 最新稳定版；应用配置时也会自动更新
+codex-update
+
 # 查看新旧系统闭包差异
 nix build .#nixosConfigurations.nixos.config.system.build.toplevel
 nvd diff /run/current-system result

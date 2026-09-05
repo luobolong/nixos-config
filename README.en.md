@@ -366,6 +366,9 @@ nix build .#nixosConfigurations.nixos.config.home-manager.users.ben.home.activat
 # Update inputs; review flake.lock before committing
 nix flake update
 
+# Update Codex CLI to OpenAI's latest stable release now; applying the configuration also updates it
+codex-update
+
 # Compare system closures
 nix build .#nixosConfigurations.nixos.config.system.build.toplevel
 nvd diff /run/current-system result
