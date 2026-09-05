@@ -21,7 +21,7 @@ diff --git a/main.c b/main.c
  #define BORDER_COLOR 0x000000FF
  #define SELECTION_COLOR 0x00000000
  #define FONT_FAMILY "sans-serif"
-+#define DRAG_THRESHOLD 5
++#define DRAG_THRESHOLD 20
  
  static void noop() {
  	// This space intentionally left blank
