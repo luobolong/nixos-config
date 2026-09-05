@@ -379,7 +379,10 @@ in
     vimAlias = true;
     withPython3 = false;
     withRuby = false;
-    extraPackages = with pkgs; [ tree-sitter ];
+    extraPackages = with pkgs; [
+      tree-sitter
+      glow
+    ];
   };
 
   xdg = {

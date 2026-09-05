@@ -14,6 +14,9 @@ stdenv.mkDerivation {
   version = "2.1.3";
   inherit src;
 
+  # This package installs an OBS plugin library, not a standalone Qt app.
+  dontWrapQtApps = true;
+
   nativeBuildInputs = [
     cmake
     pkg-config
