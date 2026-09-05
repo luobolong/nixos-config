@@ -387,6 +387,8 @@ in
       spotify
       qqWayland
       linuxqqClipsync
+      discord
+      telegram-desktop
       cc-switch
       dolphin
       kdePackages.okular
