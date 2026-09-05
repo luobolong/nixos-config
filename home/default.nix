@@ -521,17 +521,19 @@ in
   xdg.configFile."satty/config.toml".text = ''
     [general]
     fullscreen = false
-    early-exit = ["all"]
+    early-exit = ["save", "save-as"]
     corner-roundness = 12
     initial-tool = "brush"
     annotation-size-factor = 1
     copy-command = "wl-copy --type image/png"
-    actions-on-enter = ["save-to-clipboard"]
+    actions-on-enter = ["save-to-clipboard", "exit"]
     actions-on-escape = ["exit"]
     save-after-copy = false
 
     [font]
-    family = "Noto Sans CJK SC"
+    # Satty 0.22 misreads Fontconfig's named-instance index for variable Noto CJK.
+    # Use the installed static Sarasa face so Chinese glyphs load correctly.
+    family = "Sarasa Gothic SC"
     style = "Regular"
 
     [color-palette]
