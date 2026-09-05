@@ -800,8 +800,8 @@ in
   programs.noctalia = {
     enable = true;
     systemd.enable = true;
-    # Keep the bar and capsule fills transparent while leaving their outline and
-    # hover feedback visible. Floating Noctalia panels use opaque card surfaces.
+    # Keep the bar transparent while giving capsules a subtle fill; their
+    # outline and hover feedback remain visible.
     settings.bar = {
       order = [ "default" ];
       default = {
@@ -810,7 +810,7 @@ in
         capsule = true;
         capsule_border = "outline";
         capsule_foreground = "#FFFFFF";
-        capsule_opacity = 0.0;
+        capsule_opacity = 0.3;
         capsule_padding = 10.0;
         capsule_radius = 80;
         capsule_thickness = 1.0;
