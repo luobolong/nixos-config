@@ -131,17 +131,21 @@ let
       mainProgram = "linuxqq-clipsync";
     };
   };
+  screenshotSlurp = pkgs.slurp.overrideAttrs (oldAttrs: {
+    patches = (oldAttrs.patches or [ ]) ++ [ ../packages/patches/slurp-drag-threshold.patch ];
+  });
+  screenshotGrimblast = pkgs.grimblast.override { slurp = screenshotSlurp; };
   screenshot = pkgs.writeShellApplication {
     name = "screenshot";
     runtimeInputs = with pkgs; [
       coreutils
       grim
-      grimblast
+      screenshotGrimblast
       jq
       libnotify
       niri
       satty
-      slurp
+      screenshotSlurp
       wayfreeze
       wl-clipboard
       xdg-user-dirs
@@ -222,9 +226,9 @@ in
       fuzzel
       wl-clipboard
       hyprpicker
-      grimblast
+      screenshotGrimblast
       grim
-      slurp
+      screenshotSlurp
       screenshot
       commandPalette
       niriSmartDirection
@@ -529,11 +533,6 @@ in
     [font]
     family = "Noto Sans CJK SC"
     style = "Regular"
-
-    fallback = [
-        "Noto Sans",
-        "Noto Color Emoji",
-    ]
 
     [color-palette]
     palette = [

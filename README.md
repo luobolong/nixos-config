@@ -473,7 +473,7 @@ Snapper 快照便于本机回滚，但不能替代异机备份。至少应单独
 | <code>Super + Alt + P</code> | 当前输出截图 |
 | <code>Print</code> | 全部输出截图 |
 
-Hyprland 和 niri 共用 <code>screenshot</code> 脚本，按当前会话自动选择截图后端。截图流程参考 [HyDE](https://github.com/HyDE-Project/HyDE/blob/master/Configs/.local/lib/hyde/screenshot.sh)：先复制原图到剪贴板，再打开 Satty 标注。Hyprland 选区时也可以单击窗口完成截图。
+Hyprland 和 niri 共用 <code>screenshot</code> 脚本，按当前会话自动选择截图后端。截图流程参考 [HyDE](https://github.com/HyDE-Project/HyDE/blob/master/Configs/.local/lib/hyde/screenshot.sh)：先复制原图到剪贴板，再打开 Satty 标注。Hyprland 选区时也可以单击窗口完成截图；点击时任一方向移动不超过 5 个逻辑像素仍保留窗口选择，超过后才开始框选。
 
 在 Satty 中，<code>Enter</code> / <code>Ctrl + C</code> 复制编辑结果并退出，<code>Ctrl + S</code> 保存到 XDG 图片目录的 <code>Screenshots</code> 子目录并退出，保存后显示通知。仅复制不会自动写入文件；直接关闭编辑器时，剪贴板仍保留原图。
 

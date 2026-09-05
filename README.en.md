@@ -473,7 +473,7 @@ Installed font families cover Inter, Source Serif, Noto CJK/Emoji, Sarasa Gothic
 | <code>Super + Alt + P</code> | Capture the focused output |
 | <code>Print</code> | Capture all outputs |
 
-Hyprland and niri share the <code>screenshot</code> script, which selects the capture backend for the current session. The capture workflow follows [HyDE](https://github.com/HyDE-Project/HyDE/blob/master/Configs/.local/lib/hyde/screenshot.sh): copy the original image to the clipboard, then open Satty for annotation. In Hyprland, clicking a window during area selection also captures that window.
+Hyprland and niri share the <code>screenshot</code> script, which selects the capture backend for the current session. The capture workflow follows [HyDE](https://github.com/HyDE-Project/HyDE/blob/master/Configs/.local/lib/hyde/screenshot.sh): copy the original image to the clipboard, then open Satty for annotation. In Hyprland, clicking a window during area selection also captures that window; pointer movement of up to 5 logical pixels along either axis preserves the window selection, and exceeding that threshold starts a region selection.
 
 In Satty, <code>Enter</code> / <code>Ctrl + C</code> copies the edited image and exits; <code>Ctrl + S</code> saves it to <code>Screenshots</code> under the XDG pictures directory and exits, followed by a save notification. Copying alone does not write a file. Closing the editor without copying leaves the original image in the clipboard.
 

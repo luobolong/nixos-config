@@ -1,0 +1,50 @@
+Keep a predefined window selection when the pointer moves by at most five
+logical pixels along either axis while clicking. Once the threshold is crossed,
+keep dragging even if the pointer moves back towards the initial position.
+Free selections without a predefined box and touch input keep their behavior.
+
+diff --git a/include/slurp.h b/include/slurp.h
+--- a/include/slurp.h
++++ b/include/slurp.h
+@@ -25,6 +25,7 @@ struct slurp_selection {
+ 	int32_t anchor_x, anchor_y;
+ 	struct slurp_box selection;
+ 	bool has_selection;
++	bool pending_click;
+ };
+ 
+ struct slurp_state {
+diff --git a/main.c b/main.c
+--- a/main.c
++++ b/main.c
+@@ -18,6 +18,7 @@
+ #define BORDER_COLOR 0x000000FF
+ #define SELECTION_COLOR 0x00000000
+ #define FONT_FAMILY "sans-serif"
++#define DRAG_THRESHOLD 5
+ 
+ static void noop() {
+ 	// This space intentionally left blank
+@@ -111,6 +112,13 @@ static void handle_active_selection_motion(struct slurp_seat *seat, struct slurp_se
+ 	int32_t anchor_y = current_selection->anchor_y;
+ 	int32_t dist_x = current_selection->x - anchor_x;
+ 	int32_t dist_y = current_selection->y - anchor_y;
++	if (current_selection->pending_click) {
++		if (abs(dist_x) <= DRAG_THRESHOLD && abs(dist_y) <= DRAG_THRESHOLD) {
++			return;
++		}
++		// A started drag stays a drag, including when moving back to the anchor.
++		current_selection->pending_click = false;
++	}
+ 
+ 	current_selection->has_selection = true;
+ 	// selection includes the seat and anchor positions
+@@ -223,6 +231,8 @@ static void handle_selection_start(struct slurp_seat *seat,
+ 	} else {
+ 		current_selection->anchor_x = current_selection->x;
+ 		current_selection->anchor_y = current_selection->y;
++		current_selection->pending_click =
++			current_selection == &seat->pointer_selection && current_selection->has_selection;
+ 	}
+ }
+ 
