@@ -380,6 +380,7 @@ in
     withPython3 = false;
     withRuby = false;
     extraPackages = with pkgs; [
+      nodejs
       tree-sitter
       glow
     ];
@@ -453,6 +454,9 @@ in
   };
   xdg.configFile."nvim/lua/plugins/absolute-line-numbers.lua".text = (
     builtins.readFile ./scripts/absolute-line-numbers.lua
+  );
+  xdg.configFile."nvim/lua/plugins/markdown-preview.lua".text = (
+    builtins.readFile ./scripts/markdown-preview.lua
   );
 
   xdg.configFile."kdeglobals".text = ''
