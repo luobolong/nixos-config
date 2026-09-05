@@ -9,6 +9,9 @@
 let
   chatgpt = pkgs.callPackage ../packages/chatgpt.nix { };
   deepseekHarness = pkgs.callPackage ../packages/deepseek-harness.nix { };
+  obsBilibiliStream = pkgs.callPackage ../packages/obs-bilibili-stream.nix {
+    src = inputs.obs-bilibili-stream;
+  };
   codexUpdater = pkgs.writeShellApplication {
     name = "codex-update";
     runtimeInputs = with pkgs; [
@@ -219,6 +222,7 @@ in
       localsend
       mission-center
       obs-studio
+      obsBilibiliStream
       pavucontrol
       audiomonitor
 
@@ -657,6 +661,7 @@ in
         center = [ "clock" ];
         end = [
           "media"
+          "lyrics"
           "tray"
           "wallpaper"
           "mpvpaper"
@@ -682,8 +687,12 @@ in
         thickness = 26;
       };
     };
-    settings.plugins.enabled = [ "noctalia/mpvpaper" ];
+    settings.plugins.enabled = [
+      "noctalia/mpvpaper"
+      "h465855hgg/lyrics"
+    ];
     settings.widget.mpvpaper.type = "noctalia/mpvpaper:mpvpaper";
+    settings.widget.lyrics.type = "h465855hgg/lyrics:lyrics";
     # Keep Kitty, Starship, and KDE/Qt out of dynamic templates so their fixed
     # configurations are not overwritten on palette changes.
     settings.theme.templates = {

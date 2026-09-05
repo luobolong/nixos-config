@@ -69,6 +69,11 @@
       url = "github:Youthdreamer/bili-danmaku-tui";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    obs-bilibili-stream = {
+      url = "https://github.com/Zarosmm/obs-bilibili-stream/archive/refs/tags/2.1.3.tar.gz";
+      flake = false;
+    };
   };
 
   outputs =
