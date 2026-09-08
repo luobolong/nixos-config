@@ -45,101 +45,30 @@ let
       pkgs.sbsigntool
       pkgs.util-linux
     ];
-    text = ''
-      esp=${lib.escapeShellArg efi.efiSysMountPoint}
-      refind_dir="$esp/EFI/refind"
-      private_key=${lib.escapeShellArg (toString lanzaboote.privateKeyFile)}
-      public_key=${lib.escapeShellArg (toString lanzaboote.publicKeyFile)}
-
-      work_dir="$(mktemp -d /run/refind-install.XXXXXX)"
-      cleanup() {
-        rm -rf -- "$work_dir"
-      }
-      trap cleanup EXIT
-
-      install -d -m 0700 "$refind_dir/icons"
-
-      if [[ -r "$private_key" && -r "$public_key" ]]; then
-        sbsign \
-          --key "$private_key" \
-          --cert "$public_key" \
-          --output "$work_dir/refind_x64.efi" \
-          ${pkgs.refind}/share/refind/refind_x64.efi
-      else
-        echo "Secure Boot keys are not available yet; installing rEFInd unsigned for the initial boot." >&2
-        install -m 0644 ${pkgs.refind}/share/refind/refind_x64.efi "$work_dir/refind_x64.efi"
-      fi
-
-      install -m 0644 "$work_dir/refind_x64.efi" "$refind_dir/refind_x64.efi.tmp"
-      mv -f "$refind_dir/refind_x64.efi.tmp" "$refind_dir/refind_x64.efi"
-
-      install -m 0644 ${refindConfig} "$refind_dir/refind.conf.tmp"
-      mv -f "$refind_dir/refind.conf.tmp" "$refind_dir/refind.conf"
-
-      # rEFInd loads volume badges and second-row tool icons from this directory.
-      # Install the complete set so missing resources do not become striped boxes.
-      cp --recursive --no-preserve=mode,ownership \
-        ${pkgs.refind}/share/refind/icons/. \
-        "$refind_dir/icons/"
-
-      install -m 0644 \
-        ${pkgs.nixos-icons}/share/icons/hicolor/128x128/apps/nix-snowflake.png \
-        "$refind_dir/icons/os_nixos.png.tmp"
-      mv -f "$refind_dir/icons/os_nixos.png.tmp" "$refind_dir/icons/os_nixos.png"
-
-      ${lib.optionalString efi.canTouchEfiVariables ''
-        export LC_ALL=C
-
-        esp_source="$(findmnt -nro SOURCE --target "$esp")"
-        esp_source="$(readlink -f "$esp_source")"
-        esp_parent="$(lsblk -ndo PKNAME "$esp_source" | tr -d '[:space:]')"
-        esp_partition="$(lsblk -ndo PARTN "$esp_source" | tr -d '[:space:]')"
-
-        if [[ -z "$esp_parent" || -z "$esp_partition" ]]; then
-          echo "Could not determine the disk and partition number for $esp_source." >&2
-          exit 1
-        fi
-
-        efi_state="$(efibootmgr)"
-        refind_id="$(printf '%s\n' "$efi_state" | sed -nE 's/^Boot([0-9A-Fa-f]{4})\*?[[:space:]]+rEFInd([[:space:]].*)?$/\1/p' | sed -n '1p')"
-
-        if [[ -z "$refind_id" ]]; then
-          efibootmgr \
-            --create \
-            --disk "/dev/$esp_parent" \
-            --part "$esp_partition" \
-            --loader '\EFI\refind\refind_x64.efi' \
-            --label rEFInd
-          efi_state="$(efibootmgr)"
-          refind_id="$(printf '%s\n' "$efi_state" | sed -nE 's/^Boot([0-9A-Fa-f]{4})\*?[[:space:]]+rEFInd([[:space:]].*)?$/\1/p' | sed -n '1p')"
-        fi
-
-        if [[ -z "$refind_id" ]]; then
-          echo "rEFInd was installed, but its UEFI boot entry could not be found." >&2
-          exit 1
-        fi
-
-        refind_id="''${refind_id^^}"
-        boot_order="$(printf '%s\n' "$efi_state" | sed -nE 's/^BootOrder:[[:space:]]*//p')"
-
-        if [[ -n "$boot_order" ]]; then
-          new_order="$refind_id"
-          IFS=',' read -r -a boot_ids <<< "$boot_order"
-          for boot_id in "''${boot_ids[@]}"; do
-            boot_id="''${boot_id^^}"
-            if [[ "$boot_id" != "$refind_id" ]]; then
-              new_order+=",$boot_id"
-            fi
-          done
-
-          if [[ "$new_order" != "$boot_order" ]]; then
-            efibootmgr --bootorder "$new_order"
-          fi
-        fi
-      ''}
-
-      sync -f "$esp"
-    '';
+    text = (
+      lib.replaceStrings
+        [
+          "@esp@"
+          "@privateKey@"
+          "@publicKey@"
+          "@refind@"
+          "@refindConfig@"
+          "@nixosIcons@"
+          "@updateBootEntry@"
+        ]
+        [
+          (lib.escapeShellArg efi.efiSysMountPoint)
+          (lib.escapeShellArg (toString lanzaboote.privateKeyFile))
+          (lib.escapeShellArg (toString lanzaboote.publicKeyFile))
+          "${pkgs.refind}"
+          "${refindConfig}"
+          "${pkgs.nixos-icons}"
+          (lib.optionalString efi.canTouchEfiVariables (
+            builtins.readFile ./scripts/update-refind-boot-entry.sh
+          ))
+        ]
+        (builtins.readFile ./scripts/install-refind-chainloader.sh)
+    );
   };
 
   efiSysMountPoints = [ efi.efiSysMountPoint ] ++ lanzaboote.extraEfiSysMountPoints;

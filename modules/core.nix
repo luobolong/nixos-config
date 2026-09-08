@@ -122,6 +122,7 @@ in
   services.openssh.enable = true;
 
   environment.systemPackages = with pkgs; [
+    bubblewrap
     git
     curl
     wget

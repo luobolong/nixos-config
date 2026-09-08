@@ -37,6 +37,26 @@
         "type": "github"
       }
     },
+    "bili-danmaku-tui": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1786529246,
+        "narHash": "sha256-CpF6maL2hIZpgBWLAqJGYqTkyRPk+3NdyS+Fz+Zz6nY=",
+        "owner": "Youthdreamer",
+        "repo": "bili-danmaku-tui",
+        "rev": "1863555b9cf36d60d0151c3fc417d1f2ddbeabf6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Youthdreamer",
+        "repo": "bili-danmaku-tui",
+        "type": "github"
+      }
+    },
     "catppuccin-fuzzel": {
       "flake": false,
       "locked": {
@@ -113,11 +133,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1788487777,
-        "narHash": "sha256-Ro/e1N4ZR8/XaFF+sF9SgfPK79HM5YNEppzFj8p+0Ak=",
+        "lastModified": 1788620682,
+        "narHash": "sha256-qdXXcNrxlA35KvMH8yxlQen3pyJnV7yMDbv1QOOIOBQ=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "693e8ce0fb240a73c116a03cfd7b19269c87af88",
+        "rev": "8381f3481e4424ea0b53c9e7469c14da799d5822",
         "type": "github"
       },
       "original": {
@@ -216,11 +236,11 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1788578959,
-        "narHash": "sha256-evdJosqM76WXsnFoEWRB+lvrv194ZAXA9TOCbuBu6DE=",
+        "lastModified": 1788631730,
+        "narHash": "sha256-A5v10t1IfxsnPHOi4RTVjL3s8oKUixSKQO79Nk7cFr4=",
         "owner": "noctalia-dev",
         "repo": "noctalia",
-        "rev": "24dfc26d2fd668112f5be5344dc9171bd042fd95",
+        "rev": "f90a587fccc7f1cda59d0d3c7721b6d66780de3b",
         "type": "github"
       },
       "original": {
@@ -228,6 +248,19 @@
         "ref": "cachix",
         "repo": "noctalia",
         "type": "github"
+      }
+    },
+    "obs-bilibili-stream": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1786224982,
+        "narHash": "sha256-4juGWFozEdc7s9lFl3E+kilV7d8dpqHFfJ1vwonsgWU=",
+        "type": "tarball",
+        "url": "https://github.com/Zarosmm/obs-bilibili-stream/archive/refs/tags/2.1.3.tar.gz"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://github.com/Zarosmm/obs-bilibili-stream/archive/refs/tags/2.1.3.tar.gz"
       }
     },
     "pre-commit": {
@@ -273,6 +306,7 @@
       "inputs": {
         "astronvim": "astronvim",
         "audiomonitor": "audiomonitor",
+        "bili-danmaku-tui": "bili-danmaku-tui",
         "catppuccin-fuzzel": "catppuccin-fuzzel",
         "home-manager": "home-manager",
         "lanzaboote": "lanzaboote",
@@ -280,6 +314,7 @@
         "nixpkgs": "nixpkgs",
         "nixpkgs-claude": "nixpkgs-claude",
         "noctalia": "noctalia",
+        "obs-bilibili-stream": "obs-bilibili-stream",
         "rime-ice": "rime-ice",
         "sops-nix": "sops-nix"
       }

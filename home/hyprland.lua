@@ -25,7 +25,7 @@ hl.config({
   input = {
     kb_layout = "us",
     follow_mouse = 1,
-    sensitivity = -0.3,
+    sensitivity = -0.5,
     accel_profile = "flat",
     touchpad = {
       disable_while_typing = true,
@@ -347,12 +347,12 @@ end
 
 bindSpecialWorkspace("S", "S")
 
--- Screen capture.
+-- Screen capture (shared with niri).
 hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd("hyprpicker -a"))
-hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("hypr-screenshot area"))
-hl.bind(mainMod .. " + CTRL + P", hl.dsp.exec_cmd("hypr-screenshot area true"))
-hl.bind(mainMod .. " + ALT + P", hl.dsp.exec_cmd("hypr-screenshot output"))
-hl.bind("Print", hl.dsp.exec_cmd("hypr-screenshot screen"))
+hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("screenshot area"))
+hl.bind(mainMod .. " + CTRL + P", hl.dsp.exec_cmd("screenshot area true"))
+hl.bind(mainMod .. " + ALT + P", hl.dsp.exec_cmd("screenshot output"))
+hl.bind("Print", hl.dsp.exec_cmd("screenshot screen"))
 
 -- Volume and brightness keys remain available while locked and support
 -- press-and-hold repeating.
