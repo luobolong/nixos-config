@@ -22,37 +22,39 @@
           };
         };
 
-        swap = {
-          # Match this host's 64 GiB of RAM to reserve enough space for the
-          # hibernation image.
-          size = "64G";
-          content = {
-            type = "swap";
-            # Disko configures this partition as boot.resumeDevice.
-            # Hibernation cannot use randomEncryption because its key changes
-            # on every boot.
-            resumeDevice = true;
-          };
-        };
-
         system = {
           size = "100%";
           content = {
             type = "btrfs";
-            extraArgs = [ "-f" "-L" "nixos" ];
+            extraArgs = [
+              "-f"
+              "-L"
+              "nixos"
+            ];
             subvolumes = {
               "@root" = {
                 mountpoint = "/";
-                mountOptions = [ "compress=zstd" "noatime" ];
+                mountOptions = [
+                  "compress=zstd"
+                  "noatime"
+                ];
               };
               "@root/.snapshots" = { };
+              # Nested subvolumes are excluded from Snapper's root snapshots.
+              "@root/swap" = { };
               "@nix" = {
                 mountpoint = "/nix";
-                mountOptions = [ "compress=zstd" "noatime" ];
+                mountOptions = [
+                  "compress=zstd"
+                  "noatime"
+                ];
               };
               "@home" = {
                 mountpoint = "/home";
-                mountOptions = [ "compress=zstd" "noatime" ];
+                mountOptions = [
+                  "compress=zstd"
+                  "noatime"
+                ];
               };
               "@home/.snapshots" = { };
             };
@@ -61,4 +63,5 @@
       };
     };
   };
+
 }

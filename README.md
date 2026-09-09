@@ -45,7 +45,7 @@
 |---|---|---|
 | 用途 | 新磁盘部署基线 | 已安装的 Lenovo IdeaPad Pro 5 14APH8 |
 | 磁盘管理 | 引入 Disko，并将其加入 Flake、系统模块和维护工具 | 不引入 Disko，只声明现有文件系统 |
-| 磁盘布局 | 将 <code>/dev/disk/by-id/CHANGE_ME</code> 重新分区为 2 GiB ESP、64 GiB swap 和 Btrfs 系统分区 | 依赖已有 2 GiB <code>NIXBOOT</code>、32 GiB <code>nixos-swap</code> 与 <code>nixos</code> 标签；不会创建分区 |
+| 磁盘布局 | 将 <code>/dev/disk/by-id/CHANGE_ME</code> 重新分区为 2 GiB ESP 和 Btrfs 系统分区，并创建独立的 <code>@root/swap</code> 子卷；NixOS 自动创建 64 GiB swapfile | 依赖已有 2 GiB <code>NIXBOOT</code>、32 GiB <code>nixos-swap</code> 与 <code>nixos</code> 标签；不会创建分区 |
 | Btrfs 子卷 | Disko 创建 <code>@root</code>、<code>@nix</code>、<code>@home</code> 及快照子卷 | 挂载已有 <code>@root</code>、<code>@nix</code>、<code>@home</code> |
 | Windows 双启动 | Windows ESP 使用 PARTUUID <code>991a77db-c316-4f75-b9df-bc05e179a798</code>，并应位于不会被 Disko 清除的另一块磁盘上 | 同一 SSD 上的 Windows ESP 使用 <code>084dbc6c-e077-48f9-b6d5-ccd76d8f1d42</code> |
 | 内置屏幕 | 无 EDID 覆盖 | 在 initrd 中加载校正 EDID，修复 2880×1800 面板的 120 Hz 模式 |
@@ -192,7 +192,7 @@ test -d /sys/firmware/efi && echo UEFI || echo "不是 UEFI 模式"
    lsblk -o PATH,SIZE,MODEL,SERIAL,FSTYPE,LABEL,PARTUUID,MOUNTPOINTS
    ~~~
 
-2. 把 <code>hosts/nixos/disk-config.nix</code> 中的 <code>/dev/disk/by-id/CHANGE_ME</code> 改成确认过的完整 by-id 路径。默认布局是 2 GiB ESP、64 GiB swap，以及使用其余空间的 Btrfs 分区。
+2. 把 <code>hosts/nixos/disk-config.nix</code> 中的 <code>/dev/disk/by-id/CHANGE_ME</code> 改成确认过的完整 by-id 路径。默认布局是 2 GiB ESP，以及使用其余空间的 Btrfs 分区；独立的 <code>@root/swap</code> 子卷位于 <code>/swap</code>，NixOS 在首次启动或切换配置时自动创建 64 GiB 的 <code>/swap/swapfile</code>。
 
 3. 再次检查配置，然后执行 Disko 的销毁、格式化与挂载模式：
 
@@ -212,6 +212,10 @@ test -d /sys/firmware/efi && echo UEFI || echo "不是 UEFI 模式"
 
 Disko 的上游 Quickstart 同样明确说明该流程会擦除磁盘，且不支持双启动布局；执行前请阅读 [Disko Quickstart](https://github.com/nix-community/disko/blob/master/docs/quickstart.md)。
 
+已有安装从 swap 分区迁移时，直接运行 <code>sudo nixos-rebuild switch --flake .#nixos</code> 即可创建 swap 子卷和文件；无需重新运行 Disko，也不会删除旧分区。独立的 swap 子卷不会进入 Snapper 根快照。重启到新配置后，systemd 通过 UEFI 的 <code>HibernateLocation</code> 自动记录休眠设备和文件偏移，无需硬编码 <code>resume_offset</code>。
+
+本机的完整迁移、休眠验证、显式 offset 备用配置及回退步骤见 [swapfile 与休眠教程](docs/swapfile-hibernation.md)。教程也说明了 Secure Boot / lockdown 检查和旧分区空间的处理。
+
 #### laptop：在 Windows 磁盘的空闲空间中手工安装
 
 此分支不会运行 Disko。它假定 Windows 已使用 UEFI/GPT，并只在预留的未分配空间中新增以下分区：
@@ -219,7 +223,6 @@ Disko 的上游 Quickstart 同样明确说明该流程会擦除磁盘，且不�
 | 分区 | 大小 | 格式/标签 | 用途 |
 |---|---:|---|---|
 | NixOS ESP | 2 GiB | FAT32，<code>NIXBOOT</code> | <code>/boot</code> 与多个 UKI 代次 |
-| Swap | 32 GiB | swap，<code>nixos-swap</code> | swap / resume |
 | 系统分区 | 剩余空间 | Btrfs，<code>nixos</code> | root、nix、home 子卷 |
 
 1. 找出目标磁盘，在 Windows 已释放的空闲空间中创建三个新分区。不要格式化 Windows ESP、MSR、系统或恢复分区：
@@ -234,7 +237,6 @@ Disko 的上游 Quickstart 同样明确说明该流程会擦除磁盘，且不�
 
    ~~~bash
    sudo mkfs.fat -F 32 -n NIXBOOT /dev/NEW_ESP
-   sudo mkswap -L nixos-swap /dev/NEW_SWAP
    sudo mkfs.btrfs -f -L nixos /dev/NEW_BTRFS
    ~~~
 
@@ -258,9 +260,7 @@ Disko 的上游 Quickstart 同样明确说明该流程会擦除磁盘，且不�
    sudo mount -o subvol=@nix,compress=zstd,noatime /dev/disk/by-label/nixos /mnt/nix
    sudo mount -o subvol=@home,compress=zstd,noatime /dev/disk/by-label/nixos /mnt/home
    sudo mount -o umask=0077 /dev/disk/by-label/NIXBOOT /mnt/boot
-   sudo swapon /dev/disk/by-label/nixos-swap
    findmnt -R /mnt
-   swapon --show
    ~~~
 
 5. 临时挂载原有 Windows ESP，确认启动文件和 PARTUUID；不要在此步骤格式化它：
@@ -277,7 +277,6 @@ Disko 的上游 Quickstart 同样明确说明该流程会擦除磁盘，且不�
 
    ~~~bash
    ls -l /dev/disk/by-label/NIXBOOT
-   ls -l /dev/disk/by-label/nixos-swap
    ls -l /dev/disk/by-label/nixos
    sudo btrfs subvolume list /mnt
    sudo nixos-install --flake .#nixos --no-root-passwd
