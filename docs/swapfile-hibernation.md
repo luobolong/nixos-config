@@ -744,7 +744,7 @@ nix eval --json .#nixosConfigurations.nixos.config.swapDevices \
 sudo systemctl unmask --runtime swap-swapfile.swap
 sudo nixos-rebuild switch --flake .#nixos
 sudo systemctl start swap-swapfile.swap
-sudo systemctl start snapper-timeline.timer snapper-cleanup.timer
+# Snapper 定时任务由用户管理，迁移后保持关闭。
 
 swapon --show
 sudo btrfs inspect-internal map-swapfile -r /swap/swapfile
