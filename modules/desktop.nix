@@ -38,6 +38,8 @@
   };
   security.rtkit.enable = true;
   security.polkit.enable = true;
+  # Btrfs Assistant's launcher uses pkexec to request administrator privileges.
+  security.polkit.enablePkexecWrapper = true;
   services.udisks2.enable = true;
 
   i18n.inputMethod = {

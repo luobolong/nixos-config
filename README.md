@@ -33,7 +33,7 @@
 - 由 Noctalia 提供状态栏、启动器、剪贴板、通知、壁纸和会话界面。
 - 使用 Fcitx5 + Rime Ice，提供中英文输入。
 - 使用 PipeWire、NetworkManager、BlueZ/Blueman、UDisks2 与桌面门户。
-- 使用 Btrfs 子卷、每小时 Snapper 快照、周期清理和 TRIM。
+- 使用 Btrfs 子卷和周期 TRIM；保留 Snapper，由用户手动管理快照和清理。
 - 打包 ChatGPT Linux 客户端、DeepSeek Harness、Linux QQ 剪贴板同步和 AudioMonitor。
 - 为 Wayland、Electron、Qt/KDE 和 GTK 应用统一 Catppuccin Mocha 风格。
 
@@ -75,7 +75,7 @@ git diff master...laptop -- flake.nix home/default.nix hosts/nixos modules/core.
 │   ├── core.nix                      # 用户、Nix、内核、SSH 和系统工具
 │   ├── desktop.nix                   # Wayland 会话、音频、蓝牙、输入法和字体
 │   ├── refind.nix                    # rEFInd + Lanzaboote 安装链
-│   ├── snapper.nix                   # root/home 快照策略
+│   ├── snapper.nix                   # Snapper 工具与服务集成，策略由用户管理
 │   ├── clash-verge.nix               # Clash Verge service/TUN 配置
 │   ├── secrets.nix                   # sops-nix Age 密钥来源
 │   ├── fonts.conf                    # Fontconfig 字体优先级
@@ -377,7 +377,7 @@ nix build .#nixosConfigurations.nixos.config.system.build.toplevel
 nvd diff /run/current-system result
 ~~~
 
-系统每周清理超过 7 天的旧 Nix store 代次并执行 store 优化。Snapper 为 <code>/</code> 和 <code>/home</code> 每小时创建时间线快照，保留 24 个小时、7 个日、4 个周和 6 个月快照。若修改了用户名或主机名，请同步替换上述属性路径。
+系统每周清理超过 7 天的旧 Nix store 代次并执行 store 优化。Snapper 保留安装，快照创建、清理和保留数量由用户通过 Btrfs Assistant 或 Snapper 手动管理；系统不启用 Snapper 定时任务，也不生成或覆盖 <code>/etc/snapper</code> 和 <code>/etc/sysconfig/snapper</code>。若修改了用户名或主机名，请同步替换上述属性路径。
 
 ### 数据与备份
 
@@ -385,10 +385,13 @@ root 与 Home 使用独立的持久化 Btrfs 子卷，<code>XDG_PROJECTS_DIR</co
 
 ~~~bash
 sudo btrfs filesystem usage /
+snapper list-configs
 snapper -c root list
 snapper -c home list
 systemctl list-timers 'snapper-*'
 ~~~
+
+<code>root</code>/<code>home</code> 命令适用于已有相应配置的机器。全新安装需要自行建立 Snapper 配置；配置模板可从 <code>/run/current-system/sw/share/snapper/config-templates/default</code> 复制到 <code>/etc/snapper/config-templates/default</code> 后编辑。已有声明式配置迁移时，应先备份，并将其转为普通可写文件，保留现有快照；关闭时间线、清理、开机和备份定时器后，后续是否启用由用户决定。
 
 Snapper 快照便于本机回滚，但不能替代异机备份。至少应单独备份用户数据、未提交的本地配置、<code>/var/lib/sbctl</code> Secure Boot 密钥，以及用于解密 sops secret 的主机 SSH Ed25519 私钥；这些私钥都不得进入公开仓库。
 
