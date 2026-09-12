@@ -71,6 +71,12 @@ layer-rule {
     }
 }
 
+// Match Hyprland's 10px window rounding, including window contents.
+window-rule {
+    geometry-corner-radius 10
+    clip-to-geometry true
+}
+
 // Catppuccin glass effect, corresponding to window_rule in hyprland.lua.
 window-rule {
     match app-id=r#"^(kitty|org\.kde\.dolphin)$"#
