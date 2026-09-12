@@ -45,7 +45,7 @@ Highlights:
 |---|---|---|
 | Intended target | Fresh-disk deployment baseline | Installed Lenovo IdeaPad Pro 5 14APH8 |
 | Disk management | Imports Disko through the Flake, system modules, and maintenance packages | Does not import Disko; only mounts existing filesystems |
-| Disk layout | Repartitions <code>/dev/disk/by-id/CHANGE_ME</code> into a 2 GiB ESP, 64 GiB swap, and a Btrfs system partition | Expects existing 2 GiB <code>NIXBOOT</code>, 32 GiB <code>nixos-swap</code>, and <code>nixos</code> labels and does not create partitions |
+| Disk layout | Repartitions <code>/dev/disk/by-id/CHANGE_ME</code> into a 2 GiB ESP and a Btrfs system partition, then creates a separate <code>@root/swap</code> subvolume; NixOS automatically creates a 64 GiB swapfile | Expects existing 2 GiB <code>NIXBOOT</code>, 32 GiB <code>nixos-swap</code>, and <code>nixos</code> labels and does not create partitions |
 | Btrfs subvolumes | Disko creates <code>@root</code>, <code>@nix</code>, <code>@home</code>, and snapshot subvolumes | Mounts existing <code>@root</code>, <code>@nix</code>, and <code>@home</code> subvolumes |
 | Windows dual boot | Uses Windows ESP PARTUUID <code>991a77db-c316-4f75-b9df-bc05e179a798</code>; the ESP should be on another disk that Disko will not erase | Uses <code>084dbc6c-e077-48f9-b6d5-ccd76d8f1d42</code> for the Windows ESP on the same SSD |
 | Internal panel | No EDID override | Loads a corrected EDID in the initrd for the 2880×1800 panel 120 Hz mode |
@@ -192,7 +192,7 @@ test -d /sys/firmware/efi && echo UEFI || echo "Not booted in UEFI mode"
    lsblk -o PATH,SIZE,MODEL,SERIAL,FSTYPE,LABEL,PARTUUID,MOUNTPOINTS
    ~~~
 
-2. Replace <code>/dev/disk/by-id/CHANGE_ME</code> in <code>hosts/nixos/disk-config.nix</code> with the complete, verified by-id path. The default layout is a 2 GiB ESP, 64 GiB swap, and a Btrfs partition using the remaining space.
+2. Replace <code>/dev/disk/by-id/CHANGE_ME</code> in <code>hosts/nixos/disk-config.nix</code> with the complete, verified by-id path. The default layout is a 2 GiB ESP and a Btrfs partition using the remaining space; a separate <code>@root/swap</code> subvolume lives at <code>/swap</code>, and NixOS automatically creates the 64 GiB <code>/swap/swapfile</code> on first boot or configuration switch.
 
 3. Review the configuration again, then run Disko in destroy, format, and mount mode:
 
@@ -211,6 +211,10 @@ test -d /sys/firmware/efi && echo UEFI || echo "Not booted in UEFI mode"
    ~~~
 
 The upstream quickstart also states that this procedure wipes the disk and does not support a dual-boot layout. Read the [Disko Quickstart](https://github.com/nix-community/disko/blob/master/docs/quickstart.md) before running it.
+
+To migrate an existing installation on the <code>master</code> branch from a swap partition, run <code>sudo nixos-rebuild switch --flake .#nixos</code> to create the swap subvolume and file. This does not require rerunning Disko or deleting the old partition. The separate swap subvolume is excluded from Snapper root snapshots. After rebooting into the new configuration, systemd records the hibernation device and file offset automatically through the UEFI <code>HibernateLocation</code> variable, without a hardcoded <code>resume_offset</code>.
+
+See the [swapfile and hibernation guide (Chinese)](docs/swapfile-hibernation.md) for the <code>master</code> desktop's migration, resume verification, explicit-offset fallback, and rollback steps, including Secure Boot / lockdown checks and the old partition's disk space.
 
 #### laptop: install manually in free space beside Windows
 
