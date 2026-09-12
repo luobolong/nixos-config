@@ -75,7 +75,7 @@ git diff master...laptop -- flake.nix home/default.nix hosts/nixos modules/core.
 │   ├── core.nix                      # 用户、Nix、内核、SSH 和系统工具
 │   ├── desktop.nix                   # Wayland 会话、音频、蓝牙、输入法和字体
 │   ├── refind.nix                    # rEFInd + Lanzaboote 安装链
-│   ├── snapper.nix                   # Snapper 工具与服务集成，策略由用户管理
+│   ├── snapper.nix                   # root/home 快照配置，关闭自动创建和清理
 │   ├── clash-verge.nix               # Clash Verge service/TUN 配置
 │   ├── secrets.nix                   # sops-nix Age 密钥来源
 │   ├── fonts.conf                    # Fontconfig 字体优先级
@@ -377,7 +377,7 @@ nix build .#nixosConfigurations.nixos.config.system.build.toplevel
 nvd diff /run/current-system result
 ~~~
 
-系统每周清理超过 7 天的旧 Nix store 代次并执行 store 优化。Snapper 保留安装，快照创建、清理和保留数量由用户通过 Btrfs Assistant 或 Snapper 手动管理；系统不启用 Snapper 定时任务，也不生成或覆盖 <code>/etc/snapper</code> 和 <code>/etc/sysconfig/snapper</code>。若修改了用户名或主机名，请同步替换上述属性路径。
+系统每周清理超过 7 天的旧 Nix store 代次并执行 store 优化。Snapper 的 <code>root</code>（<code>/</code>）和 <code>home</code>（<code>/home</code>）配置在 <code>modules/snapper.nix</code> 中定义，关闭自动创建和所有自动清理算法，不设置快照保留数量策略。时间线和清理定时器不随系统启动，开机快照和自动备份任务也不启用；快照创建和删除由用户通过 Btrfs Assistant 或 Snapper 手动操作。若修改了用户名或主机名，请同步替换上述属性路径。
 
 ### 数据与备份
 
@@ -391,7 +391,7 @@ snapper -c home list
 systemctl list-timers 'snapper-*'
 ~~~
 
-<code>root</code>/<code>home</code> 命令适用于已有相应配置的机器。全新安装需要自行建立 Snapper 配置；配置模板可从 <code>/run/current-system/sw/share/snapper/config-templates/default</code> 复制到 <code>/etc/snapper/config-templates/default</code> 后编辑。已有声明式配置迁移时，应先备份，并将其转为普通可写文件，保留现有快照；关闭时间线、清理、开机和备份定时器后，后续是否启用由用户决定。
+<code>root</code>/<code>home</code> 配置及配置列表由 Nix 生成；修改配置参数应编辑 <code>modules/snapper.nix</code> 并重建系统。Btrfs Assistant 和 Snapper 可用于手动创建、查看和删除快照。
 
 Snapper 快照便于本机回滚，但不能替代异机备份。至少应单独备份用户数据、未提交的本地配置、<code>/var/lib/sbctl</code> Secure Boot 密钥，以及用于解密 sops secret 的主机 SSH Ed25519 私钥；这些私钥都不得进入公开仓库。
 
