@@ -75,7 +75,7 @@ git diff master...laptop -- flake.nix home/default.nix hosts/nixos modules/core.
 │   ├── core.nix                      # Users, Nix, kernel, SSH, system tools
 │   ├── desktop.nix                   # Wayland sessions, audio, Bluetooth, IME, fonts
 │   ├── refind.nix                    # rEFInd and Lanzaboote installer chain
-│   ├── snapper.nix                   # Snapper tools and services; users manage policies
+│   ├── snapper.nix                   # Root/home configs; automatic snapshots and cleanup disabled
 │   ├── clash-verge.nix               # Clash Verge service and TUN settings
 │   ├── secrets.nix                   # sops-nix Age key source
 │   ├── fonts.conf                    # Fontconfig font priorities
@@ -382,7 +382,7 @@ nix build .#nixosConfigurations.nixos.config.system.build.toplevel
 nvd diff /run/current-system result
 ~~~
 
-The system removes Nix store generations older than seven days and optimizes the store weekly. Snapper remains installed; users manage snapshot creation, cleanup, and retention through Btrfs Assistant or Snapper. The system does not enable Snapper timers or generate or overwrite <code>/etc/snapper</code> and <code>/etc/sysconfig/snapper</code>. Replace the host and user attribute names above after changing either value.
+The system removes Nix store generations older than seven days and optimizes the store weekly. Snapper's <code>root</code> (<code>/</code>) and <code>home</code> (<code>/home</code>) configurations are defined in <code>modules/snapper.nix</code>, with automatic snapshot creation and all automatic cleanup algorithms disabled and no snapshot retention limits configured. Timeline and cleanup timers do not start at boot; boot snapshots and automatic backup tasks are also not enabled. Users create and delete snapshots manually through Btrfs Assistant or Snapper. Replace the host and user attribute names above after changing either value.
 
 ### Data and backups
 
@@ -396,7 +396,7 @@ snapper -c home list
 systemctl list-timers 'snapper-*'
 ~~~
 
-The <code>root</code>/<code>home</code> commands require existing configurations with those names. On a fresh installation, create Snapper configurations yourself; copy the template from <code>/run/current-system/sw/share/snapper/config-templates/default</code> to <code>/etc/snapper/config-templates/default</code> and edit it first. When migrating existing declarative configurations, back them up and convert them to regular writable files, retaining existing snapshots. Disable the timeline, cleanup, boot, and backup timers; users decide whether to enable them later.
+Nix generates the <code>root</code>/<code>home</code> configurations and configuration list; edit <code>modules/snapper.nix</code> and rebuild the system to change their settings. Use Btrfs Assistant or Snapper to create, inspect, and delete snapshots manually.
 
 Snapper snapshots are useful for local rollback, but they are not an off-machine backup. Back up user data, uncommitted local configuration, the Secure Boot keys under <code>/var/lib/sbctl</code>, and the host SSH Ed25519 private key used to decrypt sops secrets. None of these private keys should enter a public repository.
 
