@@ -45,8 +45,8 @@ Highlights:
 |---|---|---|
 | Intended target | Fresh-disk deployment baseline | Installed Lenovo IdeaPad Pro 5 14APH8 |
 | Disk management | Imports Disko through the Flake, system modules, and maintenance packages | Does not import Disko; only mounts existing filesystems |
-| Disk layout | Repartitions <code>/dev/disk/by-id/CHANGE_ME</code> into a 2 GiB ESP and a Btrfs system partition, then creates a separate <code>@root/swap</code> subvolume; NixOS automatically creates a 64 GiB swapfile | Expects existing 2 GiB <code>NIXBOOT</code>, 32 GiB <code>nixos-swap</code>, and <code>nixos</code> labels and does not create partitions |
-| Btrfs subvolumes | Disko creates <code>@root</code>, <code>@nix</code>, <code>@home</code>, and snapshot subvolumes | Mounts existing <code>@root</code>, <code>@nix</code>, and <code>@home</code> subvolumes |
+| Disk layout | Repartitions <code>/dev/disk/by-id/CHANGE_ME</code> into a 2 GiB ESP and a Btrfs system partition, then creates a separate <code>@root/swap</code> subvolume; NixOS automatically creates a 64 GiB swapfile | Expects existing 2 GiB <code>NIXBOOT</code> and <code>nixos</code> labels; creates no partitions, and NixOS automatically creates a 32 GiB swapfile |
+| Btrfs subvolumes | Disko creates <code>@root</code>, <code>@nix</code>, <code>@home</code>, and snapshot subvolumes | Mounts existing <code>@root</code>, <code>@nix</code>, and <code>@home</code>; the initialization service creates a separate <code>@root/swap</code> subvolume if missing |
 | Windows dual boot | Uses Windows ESP PARTUUID <code>991a77db-c316-4f75-b9df-bc05e179a798</code>; the ESP should be on another disk that Disko will not erase | Uses <code>084dbc6c-e077-48f9-b6d5-ccd76d8f1d42</code> for the Windows ESP on the same SSD |
 | Internal panel | No EDID override | Loads a corrected EDID in the initrd for the 2880×1800 panel 120 Hz mode |
 | Default Noctalia bar | Includes media and mpvpaper plus a dedicated <code>DP-2</code> layout | Shows network, Bluetooth, and battery widgets without a <code>DP-2</code> override |
@@ -148,7 +148,7 @@ Do not deploy this repository unchanged without checking all of the following:
 1. Replace the default password hash and review the host name, user name, Git identity, and sops recipients.
 2. OpenSSH is enabled while the firewall is disabled; the network and SSH authentication policy must make this acceptable.
 3. The <code>master</code> Disko device is no longer <code>/dev/disk/by-id/CHANGE_ME</code>, and the selected disk is definitely safe to erase in full.
-4. The labels and Btrfs subvolumes expected by <code>laptop</code> already exist; that branch does not create them.
+4. The labels and root, nix, and home subvolumes expected by <code>laptop</code> already exist; the initialization service only creates the missing <code>/swap</code> subvolume and needs enough disk space for a 32 GiB swapfile.
 5. The Windows ESP PARTUUID matches the current machine, and the Windows ESP is not the Disko target.
 6. The <code>laptop</code> EDID override is only enabled on the matching Lenovo panel.
 7. The custom boot install hook updates Lanzaboote and rEFInd files on the ESP and, when EFI variable writes are allowed, puts rEFInd first in UEFI BootOrder.
@@ -223,10 +223,11 @@ This branch does not run Disko. It assumes that Windows already uses UEFI/GPT an
 | Partition | Size | Format/label | Purpose |
 |---|---:|---|---|
 | NixOS ESP | 2 GiB | FAT32, <code>NIXBOOT</code> | <code>/boot</code> and multiple UKI generations |
-| Swap | 32 GiB | swap, <code>nixos-swap</code> | Swap and resume |
 | System | Remaining space | Btrfs, <code>nixos</code> | root, nix, and home subvolumes |
 
-1. Identify the target disk and create three new partitions only in the unallocated space released by Windows. Do not format the Windows ESP, MSR, system, or recovery partitions:
+Swap and hibernation use a 32 GiB <code>/swap/swapfile</code> in a separate <code>/swap</code> subvolume. NixOS creates it on first boot or configuration switch; no dedicated swap partition is needed.
+
+1. Identify the target disk and create two new partitions only in the unallocated space released by Windows. Do not format the Windows ESP, MSR, system, or recovery partitions:
 
    ~~~bash
    ls -l /dev/disk/by-id/
@@ -234,11 +235,10 @@ This branch does not run Disko. It assumes that Windows already uses UEFI/GPT an
    sudo cfdisk /dev/disk/by-id/DEVICE
    ~~~
 
-2. Format only the three newly created partitions, replacing the sample device names with their actual paths:
+2. Format only the two newly created partitions, replacing the sample device names with their actual paths:
 
    ~~~bash
    sudo mkfs.fat -F 32 -n NIXBOOT /dev/NEW_ESP
-   sudo mkswap -L nixos-swap /dev/NEW_SWAP
    sudo mkfs.btrfs -f -L nixos /dev/NEW_BTRFS
    ~~~
 
@@ -248,6 +248,7 @@ This branch does not run Disko. It assumes that Windows already uses UEFI/GPT an
    sudo mount -o subvolid=5 /dev/disk/by-label/nixos /mnt
    sudo btrfs subvolume create /mnt/@root
    sudo btrfs subvolume create /mnt/@root/.snapshots
+   sudo btrfs subvolume create /mnt/@root/swap
    sudo btrfs subvolume create /mnt/@nix
    sudo btrfs subvolume create /mnt/@home
    sudo btrfs subvolume create /mnt/@home/.snapshots
@@ -262,9 +263,7 @@ This branch does not run Disko. It assumes that Windows already uses UEFI/GPT an
    sudo mount -o subvol=@nix,compress=zstd,noatime /dev/disk/by-label/nixos /mnt/nix
    sudo mount -o subvol=@home,compress=zstd,noatime /dev/disk/by-label/nixos /mnt/home
    sudo mount -o umask=0077 /dev/disk/by-label/NIXBOOT /mnt/boot
-   sudo swapon /dev/disk/by-label/nixos-swap
    findmnt -R /mnt
-   swapon --show
    ~~~
 
 5. Temporarily mount the existing Windows ESP and verify its boot file and PARTUUID. Do not format it:
@@ -281,12 +280,13 @@ This branch does not run Disko. It assumes that Windows already uses UEFI/GPT an
 
    ~~~bash
    ls -l /dev/disk/by-label/NIXBOOT
-   ls -l /dev/disk/by-label/nixos-swap
    ls -l /dev/disk/by-label/nixos
    sudo btrfs subvolume list /mnt
    sudo nixos-install --flake .#nixos --no-root-passwd
    sudo reboot
    ~~~
+
+For existing laptop installations, the new configuration stops managing the old swap partition. See the [laptop swapfile migration notes (Chinese)](docs/swapfile-hibernation.md#laptop-swapfile) for verification and hibernation steps. Switching configurations does not delete the old partition or expand Btrfs.
 
 Keep Secure Boot disabled for the first reboot with either installation method. Machine-specific signing keys are generated only during the first boot, so the initial ESP contents may not all be signed yet.
 

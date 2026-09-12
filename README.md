@@ -45,8 +45,8 @@
 |---|---|---|
 | 用途 | 新磁盘部署基线 | 已安装的 Lenovo IdeaPad Pro 5 14APH8 |
 | 磁盘管理 | 引入 Disko，并将其加入 Flake、系统模块和维护工具 | 不引入 Disko，只声明现有文件系统 |
-| 磁盘布局 | 将 <code>/dev/disk/by-id/CHANGE_ME</code> 重新分区为 2 GiB ESP 和 Btrfs 系统分区，并创建独立的 <code>@root/swap</code> 子卷；NixOS 自动创建 64 GiB swapfile | 依赖已有 2 GiB <code>NIXBOOT</code>、32 GiB <code>nixos-swap</code> 与 <code>nixos</code> 标签；不会创建分区 |
-| Btrfs 子卷 | Disko 创建 <code>@root</code>、<code>@nix</code>、<code>@home</code> 及快照子卷 | 挂载已有 <code>@root</code>、<code>@nix</code>、<code>@home</code> |
+| 磁盘布局 | 将 <code>/dev/disk/by-id/CHANGE_ME</code> 重新分区为 2 GiB ESP 和 Btrfs 系统分区，并创建独立的 <code>@root/swap</code> 子卷；NixOS 自动创建 64 GiB swapfile | 依赖已有 2 GiB <code>NIXBOOT</code> 与 <code>nixos</code> 标签；不创建分区，NixOS 自动创建 32 GiB swapfile |
+| Btrfs 子卷 | Disko 创建 <code>@root</code>、<code>@nix</code>、<code>@home</code> 及快照子卷 | 挂载已有 <code>@root</code>、<code>@nix</code>、<code>@home</code>，初始化服务补齐独立的 <code>@root/swap</code> 子卷 |
 | Windows 双启动 | Windows ESP 使用 PARTUUID <code>991a77db-c316-4f75-b9df-bc05e179a798</code>，并应位于不会被 Disko 清除的另一块磁盘上 | 同一 SSD 上的 Windows ESP 使用 <code>084dbc6c-e077-48f9-b6d5-ccd76d8f1d42</code> |
 | 内置屏幕 | 无 EDID 覆盖 | 在 initrd 中加载校正 EDID，修复 2880×1800 面板的 120 Hz 模式 |
 | Noctalia 默认栏 | 包含媒体与 mpvpaper，并为 <code>DP-2</code> 提供单独布局 | 默认栏显示网络、蓝牙和电池，不设置 <code>DP-2</code> 覆盖 |
@@ -148,7 +148,7 @@ lsblk -o PATH,SIZE,FSTYPE,LABEL,PARTUUID,PARTLABEL,MOUNTPOINTS
 1. 已替换默认密码哈希，并审阅主机名、用户名、Git 身份和 sops 接收者。
 2. OpenSSH 已启用，而防火墙被关闭；目标网络和 SSH 认证策略必须可接受。
 3. <code>master</code> 的 Disko 设备不再是 <code>/dev/disk/by-id/CHANGE_ME</code>，且确认目标磁盘允许被完全清除。
-4. <code>laptop</code> 的磁盘标签和 Btrfs 子卷都已存在；此分支不会创建它们。
+4. <code>laptop</code> 的磁盘标签和根、nix、home 子卷都已存在；初始化服务只补齐 <code>/swap</code> 子卷，并需要足够的磁盘空间创建 32 GiB swapfile。
 5. Windows ESP PARTUUID 与当前机器一致，Windows ESP 没有被误选为 Disko 目标。
 6. 仅在匹配的 Lenovo 面板上启用 <code>laptop</code> EDID 覆盖。
 7. 自定义启动安装钩子会更新 ESP 中的 Lanzaboote 和 rEFInd 文件，并在允许写入 EFI 变量时把 rEFInd 放到 UEFI BootOrder 首位。
@@ -223,10 +223,11 @@ Disko 的上游 Quickstart 同样明确说明该流程会擦除磁盘，且不�
 | 分区 | 大小 | 格式/标签 | 用途 |
 |---|---:|---|---|
 | NixOS ESP | 2 GiB | FAT32，<code>NIXBOOT</code> | <code>/boot</code> 与多个 UKI 代次 |
-| Swap | 32 GiB | swap，<code>nixos-swap</code> | swap / resume |
 | 系统分区 | 剩余空间 | Btrfs，<code>nixos</code> | root、nix、home 子卷 |
 
-1. 找出目标磁盘，在 Windows 已释放的空闲空间中创建三个新分区。不要格式化 Windows ESP、MSR、系统或恢复分区：
+交换与休眠使用独立 <code>/swap</code> 子卷中的 32 GiB <code>/swap/swapfile</code>，由 NixOS 在首次启动或配置切换时自动创建，无需单独的 swap 分区。
+
+1. 找出目标磁盘，在 Windows 已释放的空闲空间中创建两个新分区。不要格式化 Windows ESP、MSR、系统或恢复分区：
 
    ~~~bash
    ls -l /dev/disk/by-id/
@@ -234,11 +235,10 @@ Disko 的上游 Quickstart 同样明确说明该流程会擦除磁盘，且不�
    sudo cfdisk /dev/disk/by-id/DEVICE
    ~~~
 
-2. 只格式化刚创建的三个新分区，把示例设备名替换为实际路径：
+2. 只格式化刚创建的两个新分区，把示例设备名替换为实际路径：
 
    ~~~bash
    sudo mkfs.fat -F 32 -n NIXBOOT /dev/NEW_ESP
-   sudo mkswap -L nixos-swap /dev/NEW_SWAP
    sudo mkfs.btrfs -f -L nixos /dev/NEW_BTRFS
    ~~~
 
@@ -248,6 +248,7 @@ Disko 的上游 Quickstart 同样明确说明该流程会擦除磁盘，且不�
    sudo mount -o subvolid=5 /dev/disk/by-label/nixos /mnt
    sudo btrfs subvolume create /mnt/@root
    sudo btrfs subvolume create /mnt/@root/.snapshots
+   sudo btrfs subvolume create /mnt/@root/swap
    sudo btrfs subvolume create /mnt/@nix
    sudo btrfs subvolume create /mnt/@home
    sudo btrfs subvolume create /mnt/@home/.snapshots
@@ -262,9 +263,7 @@ Disko 的上游 Quickstart 同样明确说明该流程会擦除磁盘，且不�
    sudo mount -o subvol=@nix,compress=zstd,noatime /dev/disk/by-label/nixos /mnt/nix
    sudo mount -o subvol=@home,compress=zstd,noatime /dev/disk/by-label/nixos /mnt/home
    sudo mount -o umask=0077 /dev/disk/by-label/NIXBOOT /mnt/boot
-   sudo swapon /dev/disk/by-label/nixos-swap
    findmnt -R /mnt
-   swapon --show
    ~~~
 
 5. 临时挂载原有 Windows ESP，确认启动文件和 PARTUUID；不要在此步骤格式化它：
@@ -281,12 +280,13 @@ Disko 的上游 Quickstart 同样明确说明该流程会擦除磁盘，且不�
 
    ~~~bash
    ls -l /dev/disk/by-label/NIXBOOT
-   ls -l /dev/disk/by-label/nixos-swap
    ls -l /dev/disk/by-label/nixos
    sudo btrfs subvolume list /mnt
    sudo nixos-install --flake .#nixos --no-root-passwd
    sudo reboot
    ~~~
+
+已有笔记本安装应用新配置后，旧 swap 分区不再由配置启用。验证命令与休眠步骤见 [笔记本 swapfile 迁移说明](docs/swapfile-hibernation.md#laptop-swapfile)。配置切换不会删除磁盘上的旧分区或自动扩容 Btrfs。
 
 两种安装方式的第一次重启都应暂时保持 Secure Boot 关闭。首次启动时才会自动生成本机签名密钥，初始 ESP 内容不一定已经全部签名。
 

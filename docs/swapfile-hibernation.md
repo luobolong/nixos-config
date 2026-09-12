@@ -2,7 +2,7 @@
 
 适用仓库：`/home/ben/nixos-config`，分支：`master`，主机：台式机 `nixos`。检查日期：2026-09-09。
 
-`laptop` 分支保留 32 GiB 的 `/dev/disk/by-label/nixos-swap` 分区，未启用本文的 swapfile 配置。下文磁盘标识、UUID、容量及分区操作仅对应台式机，不适用于笔记本。
+`laptop` 分支同样使用 `/swap/swapfile`，容量为 **32 GiB**，配置中已移除旧 swap 分区。笔记本操作见[文末补充](#laptop-swapfile)。正文中的磁盘标识、UUID、64 GiB 容量及分区操作仅对应台式机，不适用于笔记本。
 
 本文按这台机器的实际配置编写。目标是使用 `/swap/swapfile` 进行交换和休眠。以下第 1 步记录迁移前的状态；后续用户已完成验证，复查也确认新配置已启动、64 GiB swapfile 已启用。回收旧分区空间可选择第 13 步的离线移动，或在满足容量等条件时采用第 14 步的在线设备迁移。
 
@@ -775,3 +775,56 @@ sudo systemctl stop btrfs-migration-inhibit.service
 | 最终 rebuild 失败 | 数据迁移结果不因此撤销；先处理配置/启动项错误，保留备份和迁移启动项。 |
 
 如果 Bash 退出或机器中途重启，先重新核验所在阶段。不要从 14.1 整章重跑：旧 swap 签名、成员数量和分区布局已经变化。备份目录中的分区表、迁移代次路径和本机命令输出用于判断下一步。
+
+<a id="laptop-swapfile"></a>
+
+**笔记本补充：32 GiB swapfile**
+
+`laptop` 分支使用 `/swap/swapfile`，`swapDevices[].size = 32 * 1024`（32768 MiB）。原 `/dev/disk/by-label/nixos-swap` 已从配置移除。根、nix、home 仍通过 `nixos` 文件系统标签挂载，NixOS ESP 仍为 `NIXBOOT`，Windows ESP 和 Lenovo EDID 配置保持原值。
+
+NixOS 在启动或切换配置时创建缺失的 `/swap` 子卷，并检查它确实是 Btrfs 子卷，再创建 swapfile。该子卷不进入 Snapper 根快照。若 `/swap` 是普通目录，按第 12 步排查；其中手工创建文件的容量在笔记本上应改为 `32G`。
+
+在笔记本上应用前，检查 Btrfs 空间足以容纳 32 GiB 文件并留出系统运行余量；原分区中的已用 swap 数据也需要迁回内存，所以先关闭高内存负载：
+
+```bash
+cd /home/ben/nixos-config
+git branch --show-current
+free -h
+df -h /
+swapon --show
+nix eval --json .#nixosConfigurations.nixos.config.swapDevices \
+  --apply 'map (s: { inherit (s) device size; })'
+```
+
+分支应为 `laptop`，求值结果应只有：
+
+```json
+[{"device":"/swap/swapfile","size":32768}]
+```
+
+应用后验证：
+
+```bash
+sudo nixos-rebuild switch --flake .#nixos
+swapon --show --output NAME,TYPE,SIZE,USED,PRIO
+systemctl is-active swap-swapfile.swap
+sudo btrfs subvolume show /swap
+sudo stat -c '%a %U:%G %s %n' /swap/swapfile
+sudo btrfs inspect-internal map-swapfile -r /swap/swapfile
+```
+
+应看到唯一启用的 swap 是约 32 GiB 的文件，单元状态为 `active`，文件长度为 `34359738368` 字节，`map-swapfile -r` 返回整数。若旧分区仍在 `swapon --show` 中，确认文件已启用且内存余量充足，再执行 `sudo swapoff /dev/disk/by-label/nixos-swap`；停用失败时先降低内存负载。
+
+笔记本使用 systemd initrd，通过 UEFI `HibernateLocation` 记录和读取休眠设备与文件偏移，无需固定的 `boot.resumeDevice` 或 `resume_offset`。保存工作并重启到新配置，检查 `/proc/cmdline` 中没有旧分区的 `resume=`，再按第 7、8 步验证休眠能力和恢复：
+
+```bash
+cat /proc/cmdline
+swapon --show
+cat /sys/power/state
+cat /sys/power/disk
+sudo systemctl hibernate
+```
+
+32 GiB 是配置容量，休眠是否成功还取决于可用 swap、内存负载及内核支持；本次仓库检查不代表已在笔记本上完成休眠恢复测试。
+
+旧 swap 分区已不再是配置依赖。`nixos-rebuild switch` 不会删除 GPT 分区或扩容 Btrfs。回收这 32 GiB 时，需要按笔记本实际的分区顺序、UUID 和数据占用重新制定操作；第 13、14 步的台式机设备路径、分区号和扇区数不能用于笔记本。
