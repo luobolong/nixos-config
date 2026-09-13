@@ -678,7 +678,7 @@ in
             "session"
           ];
         };
-        thickness = 22;
+        thickness = 24;
       };
     };
     settings.plugins.enabled = [
