@@ -373,7 +373,7 @@ nix flake update
 nix run .#update-github-releases
 sudo nixos-rebuild switch --flake .#nixos
 
-# 立即将 Codex CLI 更新至 OpenAI 最新稳定版；应用配置时也会自动更新
+# 手动将 Codex CLI 更新至 OpenAI 最新稳定版；系统重建时不再自动更新
 codex-update
 
 # 查看新旧系统闭包差异
@@ -410,7 +410,7 @@ Snapper 快照便于本机回滚，但不能替代异机备份。至少应单独
 | 提示符 | Starship，显示系统、目录、Git 状态和语言版本 |
 | 终端 | Kitty，JetBrains Mono Nerd Font，Catppuccin Mocha，90% 透明度 |
 | 文件管理器 | Dolphin + Kvantum，紧凑工具栏和右侧信息面板 |
-| 启动器/栏/通知 | Noctalia；禁用 Mako 及旧式网络/蓝牙托盘自启动 |
+| 启动器/栏/通知 | Noctalia，栏字体为 JetBrains Mono Nerd Font；禁用 Mako 及旧式网络/蓝牙托盘自启动 |
 | 输入法 | Fcitx5 + Rime Ice，横向候选框，每页 7 个候选词 |
 | 主题 | Catppuccin Mocha Mauve、Papirus Dark、Adwaita 32 px 光标 |
 | 编辑器 | AstroNvim 模板、绝对行号；VS Code 与 JetBrains IDE |
@@ -423,7 +423,7 @@ Snapper 快照便于本机回滚，但不能替代异机备份。至少应单独
 
 开发与维护工具包括 GCC、CMake、Make、pkg-config、Node.js、Python、OpenJDK 25、Lua language server、nil、nixfmt、ShellCheck、Codex、Claude Code、DeepSeek Harness、sops、nh、nvd 和 nix-output-monitor。
 
-系统字体覆盖 Inter、Source Serif、Noto CJK/Emoji、Sarasa Gothic、Cousine Nerd Font 和 JetBrains Mono Nerd Font。
+系统字体覆盖 Inter、Source Serif、Noto CJK/Emoji、Sarasa Gothic、Ioskeley Mono（Term Nerd Font）、Cousine Nerd Font 和 JetBrains Mono Nerd Font。
 
 ### Hyprland 快捷键
 

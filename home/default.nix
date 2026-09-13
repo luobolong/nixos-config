@@ -555,14 +555,6 @@ in
     $DRY_RUN_CMD install -m 0644 ${rimeDefaultCustom} ${config.home.homeDirectory}/.local/share/fcitx5/rime/default.custom.yaml
   '';
 
-  # Codex releases faster than nixpkgs. Refresh the standalone installation
-  # whenever Home Manager applies a new generation.
-  home.activation.updateCodex = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    if ! $DRY_RUN_CMD ${lib.getExe codexUpdater}; then
-      echo "warning: unable to update Codex CLI; keeping the installed fallback" >&2
-    fi
-  '';
-
   # Keep niri's runtime-generated includes writable and available on first login.
   # The noctalia.kdl file also signals to Noctalia that config.kdl already includes it.
   home.activation.ensureNiriRuntimeIncludes = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -641,7 +633,7 @@ in
         enabled = true;
         hover_highlight = true;
         panel_overlap = 12;
-        font_family = "DejaVu Sans Mono";
+        font_family = "JetBrainsMono Nerd Font";
         margin_ends = 14;
         margin_edge = 5;
         scale = 1.1;

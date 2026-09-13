@@ -373,7 +373,7 @@ nix flake update
 nix run .#update-github-releases
 sudo nixos-rebuild switch --flake .#nixos
 
-# Update Codex CLI to OpenAI's latest stable release now; applying the configuration also updates it
+# Manually update Codex CLI to OpenAI's latest stable release; system rebuilds no longer update it
 codex-update
 
 # Compare system closures
@@ -410,7 +410,7 @@ Snapper snapshots are useful for local rollback, but they are not an off-machine
 | Prompt | Starship with OS, directory, Git state, and language versions |
 | Terminal | Kitty, JetBrains Mono Nerd Font, Catppuccin Mocha, 90% opacity |
 | File manager | Dolphin with Kvantum, compact toolbar, and right-side information panel |
-| Launcher/bar/notifications | Noctalia; Mako and legacy network/Bluetooth tray autostart are disabled |
+| Launcher/bar/notifications | Noctalia with JetBrains Mono Nerd Font for the bar; Mako and legacy network/Bluetooth tray autostart are disabled |
 | Input method | Fcitx5 + Rime Ice with a horizontal list of seven candidates per page |
 | Theme | Catppuccin Mocha Mauve, Papirus Dark, 32 px Adwaita cursor |
 | Editors | AstroNvim with absolute line numbers, VS Code, JetBrains IDEs |
@@ -423,7 +423,7 @@ Desktop applications include Firefox, Spotify, QQ, LocalSend, OBS Studio, Missio
 
 Development and maintenance tools include GCC, CMake, Make, pkg-config, Node.js, Python, OpenJDK 25, Lua language server, nil, nixfmt, ShellCheck, Codex, Claude Code, DeepSeek Harness, sops, nh, nvd, and nix-output-monitor.
 
-Installed font families cover Inter, Source Serif, Noto CJK/Emoji, Sarasa Gothic, Cousine Nerd Font, and JetBrains Mono Nerd Font.
+Installed font families cover Inter, Source Serif, Noto CJK/Emoji, Sarasa Gothic, Ioskeley Mono (Term Nerd Font), Cousine Nerd Font, and JetBrains Mono Nerd Font.
 
 ### Hyprland key bindings
 
