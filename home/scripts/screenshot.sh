@@ -4,12 +4,13 @@
 # https://github.com/HyDE-Project/HyDE/blob/master/Configs/.local/lib/hyde/screenshot.sh
 usage() {
   cat <<'EOF'
-Usage: screenshot [area|output|screen] [true|false] [options]
+Usage: screenshot [area|window|output|screen] [true|false] [options]
        screenshot [s|sf|m|p] [options]
 
 Automatically selects the backend for the current Hyprland or niri session.
 
   area, s    Select a region (or click a window in Hyprland)
+  window     Pick a window (niri); select a window or region (Hyprland)
   sf         Freeze the screen, then select a region
   output, m  Capture the focused monitor
   screen, p  Capture all monitors
@@ -45,6 +46,7 @@ case "$freeze" in
 esac
 case "$target" in
   area|s|snip) target=area ;;
+  window) ;;
   sf|snapfreeze) target=area; freeze=true ;;
   output|m|monitor) target=output ;;
   screen|p|printscreen) target=screen ;;
@@ -68,6 +70,7 @@ mkdir -p "$directory"
 file="$directory/$(date +'%Y-%m-%d_%H-%M-%S-%N').png"
 raw_file="$(mktemp --suffix=.png)"
 freeze_pid=""
+event_pid=""
 
 unfreeze() {
   if [[ -n "$freeze_pid" ]]; then
@@ -79,6 +82,11 @@ unfreeze() {
 
 cleanup() {
   unfreeze
+  if [[ -n "$event_pid" ]]; then
+    kill "$event_pid" 2>/dev/null || true
+    wait "$event_pid" 2>/dev/null || true
+    exec {event_fd}<&-
+  fi
   rm -f "$raw_file"
 }
 trap cleanup EXIT
@@ -88,6 +96,39 @@ trap 'exit 129' HUP
 
 if [[ -n "${NIRI_SOCKET:-}" ]]; then
   case "$target" in
+    window)
+      picked_window="$(niri msg --json pick-window)" \
+        || report_error "Could not select a window."
+      # Escape or a click outside a window returns null; never fall back to
+      # the focused window when the user cancels the picker.
+      window_id="$(jq -er '.id // empty' <<< "$picked_window")" || exit 0
+
+      # Screenshot actions return before PNG encoding and saving finishes.
+      # Subscribe first and wait for the initial event to avoid missing the
+      # completion event, then match this capture's unique temporary path.
+      exec {event_fd}< <(niri msg --json event-stream)
+      event_pid=$!
+      IFS= read -r -t 10 -u "$event_fd" event \
+        || report_error "Could not listen for screenshot completion."
+      niri msg action screenshot-window --id "$window_id" --path "$raw_file" \
+        || report_error "Could not capture the selected window."
+      deadline=$((SECONDS + 10))
+      captured=false
+      while (( SECONDS < deadline )) && \
+        IFS= read -r -t "$((deadline - SECONDS))" -u "$event_fd" event; do
+        if jq -e --arg path "$raw_file" '.ScreenshotCaptured.path == $path' \
+          <<< "$event" >/dev/null; then
+          captured=true
+          break
+        fi
+      done
+      [[ "$captured" == true && -s "$raw_file" ]] \
+        || report_error "Timed out waiting for the window screenshot."
+      kill "$event_pid" 2>/dev/null || true
+      wait "$event_pid" 2>/dev/null || true
+      event_pid=""
+      exec {event_fd}<&-
+      ;;
     area)
       if [[ "$freeze" == "true" ]]; then
         wayfreeze --hide-cursor &
@@ -109,6 +150,8 @@ if [[ -n "${NIRI_SOCKET:-}" ]]; then
       ;;
   esac
 else
+  # Grimblast already includes window picking in its area selector.
+  [[ "$target" != window ]] || target=area
   args=()
   if [[ "$freeze" == "true" ]]; then
     args+=(--freeze)

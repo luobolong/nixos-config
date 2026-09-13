@@ -252,8 +252,8 @@ binds {
     // Screen capture (shared with Hyprland; Satty opens after capture)
     // ============================================================
     Mod+Shift+P repeat=false { spawn "hyprpicker" "-a"; }
-    Mod+P repeat=false      { spawn "screenshot" "area"; }
-    Mod+Ctrl+P repeat=false { spawn "screenshot" "area" "true"; }
+    Mod+P repeat=false      { spawn "screenshot" "area" "true"; }
+    Mod+Ctrl+P repeat=false { spawn "screenshot" "window"; }
     Mod+Alt+P repeat=false  { spawn "screenshot" "output"; }
     Print repeat=false      { spawn "screenshot" "screen"; }
 
