@@ -3,16 +3,22 @@
   stdenv,
   cmake,
   curl,
+  fetchFromGitHub,
   obs-studio,
   pkg-config,
   qt6,
-  src,
 }:
 
-stdenv.mkDerivation {
+stdenv.mkDerivation (finalAttrs: {
   pname = "obs-bilibili-stream";
-  version = "2.1.3";
-  inherit src;
+  version = "2.1.5";
+
+  src = fetchFromGitHub {
+    owner = "Zarosmm";
+    repo = "obs-bilibili-stream";
+    tag = finalAttrs.version;
+    hash = "sha256-cFIPbOHhafsH1YLV8wqnRZF+df3K/cEWP6h6KuZsqNc=";
+  };
 
   # This package installs an OBS plugin library, not a standalone Qt app.
   dontWrapQtApps = true;
@@ -39,4 +45,4 @@ stdenv.mkDerivation {
     license = lib.licenses.gpl2Only;
     platforms = lib.platforms.linux;
   };
-}
+})

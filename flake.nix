@@ -55,20 +55,6 @@
       flake = false;
     };
 
-    audiomonitor = {
-      url = "github:luobolong/audiomonitor/7e2ff2fc38c12ce4f94e67dc11fc56a9f3454db6";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    bili-danmaku-tui = {
-      url = "github:Youthdreamer/bili-danmaku-tui";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    obs-bilibili-stream = {
-      url = "https://github.com/Zarosmm/obs-bilibili-stream/archive/refs/tags/2.1.3.tar.gz";
-      flake = false;
-    };
   };
 
   outputs =
@@ -100,6 +86,25 @@
       };
 
       checks.${system}.nixos = self.nixosConfigurations.${hostname}.config.system.build.toplevel;
+
+      packages.${system} = import ./packages/github-releases.nix {
+        pkgs = nixpkgs.legacyPackages.${system};
+      };
+
+      apps.${system}.update-github-releases = {
+        type = "app";
+        meta.description = "Update and build GitHub Release packages not available in nixpkgs";
+        program = nixpkgs.lib.getExe (
+          nixpkgs.legacyPackages.${system}.writeShellApplication {
+            name = "update-github-releases";
+            runtimeInputs = with nixpkgs.legacyPackages.${system}; [
+              nix
+              nix-update
+            ];
+            text = builtins.readFile ./scripts/update-github-releases.sh;
+          }
+        );
+      };
 
       formatter.${system} = nixpkgs.legacyPackages.${system}.nixfmt;
     };
