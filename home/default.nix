@@ -665,7 +665,22 @@ in
           "notifications"
           "session"
         ];
-        thickness = 26;
+        monitor."DP-2" = {
+          start = [
+            "launcher"
+            "settings"
+            "workspaces"
+          ];
+          end = [
+            "tray"
+            "wallpaper"
+            "mpvpaper"
+            "volume"
+            "notifications"
+            "session"
+          ];
+        };
+        thickness = 22;
       };
     };
     settings.plugins.enabled = [
