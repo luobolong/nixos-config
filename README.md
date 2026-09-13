@@ -369,6 +369,10 @@ nix build .#nixosConfigurations.nixos.config.home-manager.users.ben.home.activat
 # 更新锁文件；提交前应审阅 flake.lock
 nix flake update
 
+# 使用 nix-update 更新并构建 nixpkgs 尚未收录的 GitHub 正式版软件，然后应用配置
+nix run .#update-github-releases
+sudo nixos-rebuild switch --flake .#nixos
+
 # 立即将 Codex CLI 更新至 OpenAI 最新稳定版；应用配置时也会自动更新
 codex-update
 
@@ -376,6 +380,8 @@ codex-update
 nix build .#nixosConfigurations.nixos.config.system.build.toplevel
 nvd diff /run/current-system result
 ~~~
+
+软件优先使用 nixpkgs 的包，包括 CC Switch、Clash Verge Rev 和通用工具。`update-github-releases` 只管理当前 nixpkgs 尚未收录的 OBS Bilibili 插件、AudioMonitor 和 bili-danmaku-tui；版本与源码、Go 依赖校验值保存在 `packages/`。此命令需手动运行，不会在每次重建时自动检查 Release。
 
 系统每周清理超过 7 天的旧 Nix store 代次并执行 store 优化。Snapper 的 <code>root</code>（<code>/</code>）和 <code>home</code>（<code>/home</code>）配置在 <code>modules/snapper.nix</code> 中定义，关闭自动创建和所有自动清理算法，不设置快照保留数量策略。时间线和清理定时器不随系统启动，开机快照和自动备份任务也不启用；快照创建和删除由用户通过 Btrfs Assistant 或 Snapper 手动操作。若修改了用户名或主机名，请同步替换上述属性路径。
 

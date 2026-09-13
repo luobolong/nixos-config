@@ -369,6 +369,10 @@ nix build .#nixosConfigurations.nixos.config.home-manager.users.ben.home.activat
 # Update inputs; review flake.lock before committing
 nix flake update
 
+# Use nix-update for GitHub Release packages not yet in nixpkgs, then apply
+nix run .#update-github-releases
+sudo nixos-rebuild switch --flake .#nixos
+
 # Update Codex CLI to OpenAI's latest stable release now; applying the configuration also updates it
 codex-update
 
@@ -376,6 +380,8 @@ codex-update
 nix build .#nixosConfigurations.nixos.config.system.build.toplevel
 nvd diff /run/current-system result
 ~~~
+
+Prefer nixpkgs packages, including CC Switch, Clash Verge Rev, and general-purpose tools. `update-github-releases` manages only the OBS Bilibili plugin, AudioMonitor, and bili-danmaku-tui, which are not currently in nixpkgs. Versions and source and Go dependency hashes are kept in `packages/`. Run this command explicitly; ordinary rebuilds do not check for new releases.
 
 The system removes Nix store generations older than seven days and optimizes the store weekly. Snapper's <code>root</code> (<code>/</code>) and <code>home</code> (<code>/home</code>) configurations are defined in <code>modules/snapper.nix</code>, with automatic snapshot creation and all automatic cleanup algorithms disabled and no snapshot retention limits configured. Timeline and cleanup timers do not start at boot; boot snapshots and automatic backup tasks are also not enabled. Users create and delete snapshots manually through Btrfs Assistant or Snapper. Replace the host and user attribute names above after changing either value.
 

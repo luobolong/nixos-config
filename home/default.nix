@@ -9,9 +9,8 @@
 let
   chatgpt = pkgs.callPackage ../packages/chatgpt.nix { };
   deepseekHarness = pkgs.callPackage ../packages/deepseek-harness.nix { };
-  obsBilibiliStream = pkgs.callPackage ../packages/obs-bilibili-stream.nix {
-    src = inputs.obs-bilibili-stream;
-  };
+  githubReleases = import ../packages/github-releases.nix { inherit pkgs; };
+  obsBilibiliStream = githubReleases.obs-bilibili-stream;
   codexUpdater = pkgs.writeShellApplication {
     name = "codex-update";
     runtimeInputs = with pkgs; [
@@ -37,21 +36,6 @@ let
       system = pkgs.stdenv.hostPlatform.system;
       config.allowUnfree = true;
     }).claude-code;
-  audiomonitor =
-    inputs.audiomonitor.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs
-      (oldAttrs: {
-        postInstall =
-          builtins.replaceStrings
-            [
-              ''bash "$packageSource/packaging/create-icon.sh" $out/share/icons/hicolor/256x256/apps''
-            ]
-            [
-              ''
-                install -Dm644 "$packageSource/resources/icons/appicon_256.png" \
-                              $out/share/icons/hicolor/256x256/apps/audiomonitor.png''
-            ]
-            oldAttrs.postInstall;
-      });
   catppuccinKde = pkgs.catppuccin-kde.override {
     flavour = [ "mocha" ];
     accents = [ "mauve" ];
@@ -221,10 +205,8 @@ in
       firefox
       localsend
       mission-center
-      obs-studio
-      obsBilibiliStream
       pavucontrol
-      audiomonitor
+      githubReleases.audiomonitor
 
       # Hyprland and Wayland desktop tools
       fuzzel
@@ -248,7 +230,7 @@ in
       # Terminal and file search tools
       fastfetch
       btop
-      inputs.bili-danmaku-tui.packages.${pkgs.stdenv.hostPlatform.system}.default
+      githubReleases.bili-danmaku-tui
       ripgrep
       fd
       file
@@ -288,6 +270,7 @@ in
       lua-language-server
       nil
       nixfmt
+      nix-update
       # Keep nixpkgs' Codex as an offline fallback until the standalone updater
       # has installed the latest release into ~/.local/bin.
       codex
@@ -301,6 +284,10 @@ in
   };
 
   programs.home-manager.enable = true;
+  programs.obs-studio = {
+    enable = true;
+    plugins = [ obsBilibiliStream ];
+  };
   programs.java = {
     enable = true;
     # OpenJDK includes lib/src.zip for IDE source navigation.
