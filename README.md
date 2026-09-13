@@ -85,7 +85,7 @@ git diff master...laptop -- flake.nix home/default.nix hosts/nixos modules/core.
 │   ├── default.nix                   # Home Manager、应用、主题和用户服务
 │   ├── hyprland.lua                  # Hyprland Lua 配置
 │   ├── niri.kdl                      # niri 配置
-│   ├── scripts/                      # 截图、命令面板、niri 与 Zsh/Lua 脚本
+│   ├── scripts/                      # 截图、niri 与 Zsh/Lua 脚本
 │   └── zsh.nix                       # Zsh、Starship、fzf 和终端工具
 └── packages/
     ├── chatgpt.nix                   # ChatGPT 官方 Linux 二进制封装
@@ -378,7 +378,7 @@ nix flake update
 nix run .#update-github-releases
 sudo nixos-rebuild switch --flake .#nixos
 
-# 立即将 Codex CLI 更新至 OpenAI 最新稳定版；应用配置时也会自动更新
+# 手动将 Codex CLI 更新至 OpenAI 最新稳定版；系统重建时不再自动更新
 codex-update
 
 # 查看新旧系统闭包差异
@@ -415,7 +415,7 @@ Snapper 快照便于本机回滚，但不能替代异机备份。至少应单独
 | 提示符 | Starship，显示系统、目录、Git 状态和语言版本 |
 | 终端 | Kitty，JetBrains Mono Nerd Font，Catppuccin Mocha，90% 透明度 |
 | 文件管理器 | Dolphin + Kvantum，紧凑工具栏和右侧信息面板 |
-| 启动器/栏/通知 | Noctalia；禁用 Mako 及旧式网络/蓝牙托盘自启动 |
+| 启动器/栏/通知 | Noctalia，栏字体为 JetBrains Mono Nerd Font；禁用 Mako 及旧式网络/蓝牙托盘自启动 |
 | 输入法 | Fcitx5 + Rime Ice，横向候选框，每页 7 个候选词 |
 | 主题 | Catppuccin Mocha Mauve、Papirus Dark、Adwaita 32 px 光标 |
 | 编辑器 | AstroNvim 模板、绝对行号；VS Code 与 JetBrains IDE |
@@ -428,9 +428,17 @@ Snapper 快照便于本机回滚，但不能替代异机备份。至少应单独
 
 开发与维护工具包括 GCC、CMake、Make、pkg-config、Node.js、Python、OpenJDK 25、Lua language server、nil、nixfmt、ShellCheck、Codex、Claude Code、DeepSeek Harness、sops、nh、nvd 和 nix-output-monitor。
 
-系统字体覆盖 Inter、Source Serif、Noto CJK/Emoji、Sarasa Gothic、Cousine Nerd Font 和 JetBrains Mono Nerd Font。
+系统字体覆盖 Inter、Source Serif、Noto CJK/Emoji、Sarasa Gothic、Ioskeley Mono（Term Nerd Font）、Cousine Nerd Font 和 JetBrains Mono Nerd Font。
 
 ### Hyprland 快捷键
+
+Hyprland 和 niri 统一使用 Noctalia 的 [Keybind Cheatsheet](https://noctalia.dev/plugins/community/keybind-cheatsheet) 插件，按 <code>Super + /</code> 打开或关闭。快捷键说明和分类直接写在各自配置中，以中英双语显示，支持中文或英文搜索（例如“截图”或“screenshot”）。速查表用于查看绑定；应用启动使用 <code>Super + A</code>。
+
+修改并重载桌面配置后，可运行以下命令刷新速查表缓存：
+
+~~~bash
+noctalia msg plugin kenn/keybind-cheatsheet:data all refresh
+~~~
 
 #### 窗口、焦点与应用
 
@@ -457,7 +465,7 @@ Snapper 快照便于本机回滚，但不能替代异机备份。至少应单独
 | <code>Super + T/E/C/B/F</code> | 打开 Kitty / Dolphin / VS Code / Firefox |
 | <code>Ctrl + Shift + Escape</code> | 打开 Mission Center |
 | <code>Super + A/V</code> | 打开 Noctalia 启动器 / 剪贴板 |
-| <code>Super + /</code> | 打开可搜索的 Hyprland 命令面板 |
+| <code>Super + /</code> | 打开 Noctalia 快捷键速查表（支持中英文搜索） |
 
 #### 工作区与手势
 
@@ -543,7 +551,7 @@ Hyprland 和 niri 共用 <code>screenshot</code> 脚本，按当前会话自动�
 | <code>Super + Ctrl + Home/End</code> | 把列移到最前/最后 |
 | <code>Super + G</code> / <code>Super + Ctrl + G</code> | 居中当前列 / 居中完整可见列 |
 | <code>Super + Ctrl + F</code> | 把列扩展到剩余宽度 |
-| <code>Super + Shift + /</code> | 显示 niri 快捷键覆盖层 |
+| <code>Super + /</code> | 打开 Noctalia 快捷键速查表（支持中英文搜索） |
 
 应用启动和截图快捷键与 Hyprland 基本一致：<code>Super + T/E/C/B</code>、<code>Super + A/V</code>、<code>Ctrl + Shift + Escape</code> 以及同一组 <code>P</code>/<code>Print</code> 截图键。niri 另外配置了麦克风静音、Playerctl 播放控制和锁屏状态下可用的媒体/亮度键。
 

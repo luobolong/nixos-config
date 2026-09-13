@@ -147,25 +147,6 @@ let
     ];
     text = builtins.readFile ./scripts/niri-smart-direction.sh;
   };
-  commandPalette = pkgs.writeShellApplication {
-    name = "hypr-command-palette";
-    runtimeInputs = with pkgs; [
-      brightnessctl
-      fuzzel
-      hyprland
-      pipewire
-    ];
-    text = (
-      lib.replaceStrings
-        [
-          "@coreutils@"
-        ]
-        [
-          "${pkgs.coreutils}"
-        ]
-        (builtins.readFile ./scripts/hypr-command-palette.sh)
-    );
-  };
 in
 {
   imports = [ ./zsh.nix ];
@@ -209,14 +190,12 @@ in
       githubReleases.audiomonitor
 
       # Hyprland and Wayland desktop tools
-      fuzzel
       wl-clipboard
       hyprpicker
       screenshotGrimblast
       grim
       screenshotSlurp
       screenshot
-      commandPalette
       niriSmartDirection
       brightnessctl
       playerctl
@@ -509,14 +488,6 @@ in
     '';
   };
 
-  xdg.configFile."fuzzel/fuzzel.ini".text = ''
-    [main]
-    include=${inputs.catppuccin-fuzzel}/themes/catppuccin-mocha/mauve.ini
-    font=Inter:size=12
-    icon-theme=Papirus-Dark
-    terminal=kitty
-  '';
-
   xdg.configFile."satty/config.toml".text = ''
     [general]
     fullscreen = false
@@ -553,14 +524,6 @@ in
     $DRY_RUN_CMD mkdir -p ${config.home.homeDirectory}/.local/share/fcitx5/rime
     $DRY_RUN_CMD ${pkgs.rsync}/bin/rsync -rL --chmod=u+w ${inputs.rime-ice}/ ${config.home.homeDirectory}/.local/share/fcitx5/rime/
     $DRY_RUN_CMD install -m 0644 ${rimeDefaultCustom} ${config.home.homeDirectory}/.local/share/fcitx5/rime/default.custom.yaml
-  '';
-
-  # Codex releases faster than nixpkgs. Refresh the standalone installation
-  # whenever Home Manager applies a new generation.
-  home.activation.updateCodex = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    if ! $DRY_RUN_CMD ${lib.getExe codexUpdater}; then
-      echo "warning: unable to update Codex CLI; keeping the installed fallback" >&2
-    fi
   '';
 
   # Keep niri's runtime-generated includes writable and available on first login.
@@ -680,12 +643,13 @@ in
             "session"
           ];
         };
-        thickness = 24;
+        thickness = 26;
       };
     };
     settings.plugins.enabled = [
       "noctalia/mpvpaper"
       "h465855hgg/lyrics"
+      "kenn/keybind-cheatsheet"
     ];
     settings.widget.mpvpaper.type = "noctalia/mpvpaper:mpvpaper";
     settings.widget.lyrics.type = "h465855hgg/lyrics:lyrics";

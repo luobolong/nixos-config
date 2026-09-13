@@ -85,7 +85,7 @@ git diff master...laptop -- flake.nix home/default.nix hosts/nixos modules/core.
 │   ├── default.nix                   # Home Manager, applications, theming, services
 │   ├── hyprland.lua                  # Hyprland Lua configuration
 │   ├── niri.kdl                      # niri configuration
-│   ├── scripts/                      # Capture, palette, niri and Zsh/Lua scripts
+│   ├── scripts/                      # Capture, niri and Zsh/Lua scripts
 │   └── zsh.nix                       # Zsh, Starship, fzf, terminal tools
 └── packages/
     ├── chatgpt.nix                   # Official ChatGPT Linux binary wrapper
@@ -378,7 +378,7 @@ nix flake update
 nix run .#update-github-releases
 sudo nixos-rebuild switch --flake .#nixos
 
-# Update Codex CLI to OpenAI's latest stable release now; applying the configuration also updates it
+# Manually update Codex CLI to OpenAI's latest stable release; system rebuilds no longer update it
 codex-update
 
 # Compare system closures
@@ -415,7 +415,7 @@ Snapper snapshots are useful for local rollback, but they are not an off-machine
 | Prompt | Starship with OS, directory, Git state, and language versions |
 | Terminal | Kitty, JetBrains Mono Nerd Font, Catppuccin Mocha, 90% opacity |
 | File manager | Dolphin with Kvantum, compact toolbar, and right-side information panel |
-| Launcher/bar/notifications | Noctalia; Mako and legacy network/Bluetooth tray autostart are disabled |
+| Launcher/bar/notifications | Noctalia with JetBrains Mono Nerd Font for the bar; Mako and legacy network/Bluetooth tray autostart are disabled |
 | Input method | Fcitx5 + Rime Ice with a horizontal list of seven candidates per page |
 | Theme | Catppuccin Mocha Mauve, Papirus Dark, 32 px Adwaita cursor |
 | Editors | AstroNvim with absolute line numbers, VS Code, JetBrains IDEs |
@@ -428,9 +428,17 @@ Desktop applications include Firefox, Spotify, QQ, LocalSend, OBS Studio, Missio
 
 Development and maintenance tools include GCC, CMake, Make, pkg-config, Node.js, Python, OpenJDK 25, Lua language server, nil, nixfmt, ShellCheck, Codex, Claude Code, DeepSeek Harness, sops, nh, nvd, and nix-output-monitor.
 
-Installed font families cover Inter, Source Serif, Noto CJK/Emoji, Sarasa Gothic, Cousine Nerd Font, and JetBrains Mono Nerd Font.
+Installed font families cover Inter, Source Serif, Noto CJK/Emoji, Sarasa Gothic, Ioskeley Mono (Term Nerd Font), Cousine Nerd Font, and JetBrains Mono Nerd Font.
 
 ### Hyprland key bindings
+
+Hyprland and niri both use the Noctalia [Keybind Cheatsheet](https://noctalia.dev/plugins/community/keybind-cheatsheet) plugin, toggled with <code>Super + /</code>. Bilingual Chinese/English descriptions and categories live in each compositor configuration; search in either language (for example, “截图” or “screenshot”). The cheatsheet displays bindings; use <code>Super + A</code> to launch applications.
+
+After editing and reloading the compositor configuration, refresh the cheatsheet cache with:
+
+~~~bash
+noctalia msg plugin kenn/keybind-cheatsheet:data all refresh
+~~~
 
 #### Windows, focus, and applications
 
@@ -457,7 +465,7 @@ Installed font families cover Inter, Source Serif, Noto CJK/Emoji, Sarasa Gothic
 | <code>Super + T/E/C/B/F</code> | Open Kitty / Dolphin / VS Code / Firefox |
 | <code>Ctrl + Shift + Escape</code> | Open Mission Center |
 | <code>Super + A/V</code> | Open the Noctalia launcher / clipboard |
-| <code>Super + /</code> | Open the searchable Hyprland command palette |
+| <code>Super + /</code> | Open the Noctalia keybind cheatsheet (Chinese/English search) |
 
 #### Workspaces and gestures
 
@@ -543,7 +551,7 @@ The smart directional helper first inspects the focused window. Floating move an
 | <code>Super + Ctrl + Home/End</code> | Move the column to the beginning/end |
 | <code>Super + G</code> / <code>Super + Ctrl + G</code> | Center the current column / all fully visible columns |
 | <code>Super + Ctrl + F</code> | Expand the column into remaining width |
-| <code>Super + Shift + /</code> | Show the niri hotkey overlay |
+| <code>Super + /</code> | Open the Noctalia keybind cheatsheet (Chinese/English search) |
 
 Application and capture bindings largely match Hyprland: <code>Super + T/E/C/B</code>, <code>Super + A/V</code>, <code>Ctrl + Shift + Escape</code>, and the same <code>P</code>/<code>Print</code> capture family. niri additionally binds microphone mute, Playerctl playback controls, and media/brightness keys that remain available while locked.
 
