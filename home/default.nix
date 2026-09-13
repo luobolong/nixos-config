@@ -641,7 +641,7 @@ in
         enabled = true;
         hover_highlight = true;
         panel_overlap = 12;
-        font_family = "JetBrainsMono Nerd Font";
+        font_family = "DejaVu Sans Mono";
         margin_ends = 14;
         margin_edge = 5;
         scale = 1.1;
@@ -678,7 +678,7 @@ in
             "session"
           ];
         };
-        thickness = 24;
+        thickness = 26;
       };
     };
     settings.plugins.enabled = [
