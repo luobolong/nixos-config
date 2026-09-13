@@ -207,25 +207,74 @@ hl.on("window.destroy", function(window)
   end
 end)
 
--- Window and session actions.
-hl.bind(mainMod .. " + Q", hl.dsp.window.close())
-hl.bind("ALT + F4", hl.dsp.window.close())
-hl.bind(mainMod .. " + ALT + F4", hl.dsp.window.kill())
-hl.bind(mainMod .. " + W", hl.dsp.window.float({ action = "toggle" }))
-hl.bind(mainMod .. " + G", hl.dsp.group.toggle())
-hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("hyprlock"))
-hl.bind("SHIFT + F11", hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }))
-hl.bind(mainMod .. " + D", hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }))
-hl.bind(mainMod .. " + M", hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" }))
+-- 1. 窗口与会话 / Windows and session
+hl.bind(
+  mainMod .. " + Q",
+  hl.dsp.window.close(),
+  { description = "关闭当前窗口 / Close window" }
+)
+hl.bind("ALT + F4", hl.dsp.window.close(), { description = "关闭当前窗口 / Close window" })
+hl.bind(
+  mainMod .. " + ALT + F4",
+  hl.dsp.window.kill(),
+  { description = "强制结束当前窗口 / Force kill window" }
+)
+hl.bind(
+  mainMod .. " + W",
+  hl.dsp.window.float({ action = "toggle" }),
+  { description = "切换窗口浮动 / Toggle floating" }
+)
+hl.bind(
+  mainMod .. " + G",
+  hl.dsp.group.toggle(),
+  { description = "切换窗口分组 / Toggle grouping" }
+)
+hl.bind(
+  mainMod .. " + L",
+  hl.dsp.exec_cmd("hyprlock"),
+  { description = "锁定屏幕 / Lock screen" }
+)
+hl.bind(
+  "SHIFT + F11",
+  hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }),
+  { description = "切换窗口全屏 / Toggle fullscreen" }
+)
+hl.bind(
+  mainMod .. " + D",
+  hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }),
+  { description = "切换窗口全屏 / Toggle fullscreen" }
+)
+hl.bind(
+  mainMod .. " + M",
+  hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" }),
+  { description = "切换窗口最大化 / Toggle maximize" }
+)
 hl.bind(mainMod .. " + SHIFT + W", function()
   hl.dispatch(hl.dsp.window.float({ action = "set" }))
   hl.dispatch(hl.dsp.window.pin({ action = "toggle" }))
-end)
-hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))
-hl.bind(mainMod .. " + CTRL + H", hl.dsp.group.prev())
-hl.bind(mainMod .. " + CTRL + L", hl.dsp.group.next())
-hl.bind("ALT + Tab", hl.dsp.exec_cmd("noctalia msg window-switcher"))
+end, { description = "浮动并切换窗口置顶 / Float and toggle pin" })
+hl.bind(
+  mainMod .. " + J",
+  hl.dsp.layout("togglesplit"),
+  { description = "切换平铺分割方向 / Toggle split direction" }
+)
+hl.bind(
+  mainMod .. " + CTRL + H",
+  hl.dsp.group.prev(),
+  { description = "切换到组内上一个窗口 / Previous grouped window" }
+)
+hl.bind(
+  mainMod .. " + CTRL + L",
+  hl.dsp.group.next(),
+  { description = "切换到组内下一个窗口 / Next grouped window" }
+)
+hl.bind(
+  "ALT + Tab",
+  hl.dsp.exec_cmd("noctalia msg window-switcher"),
+  { description = "打开窗口切换器 / Window switcher" }
+)
 
+-- 2. 屏幕缩放 / Screen zoom
 local function setZoom(targetZoom)
   hl.config({ cursor = { zoom_factor = math.min(10, math.max(1, targetZoom)) } })
 end
@@ -240,22 +289,17 @@ end
 hl.bind(mainMod .. " + ALT + Z", function()
   local currentZoom = tonumber(hl.get_config("cursor.zoom_factor")) or 1
   setZoom(currentZoom > 1 and 1 or 2)
-end)
-hl.bind(
-  mainMod .. " + ALT + mouse_up",
-  function()
-    adjustZoom(0.25)
-  end,
-  { non_consuming = false }
-)
-hl.bind(
-  mainMod .. " + ALT + mouse_down",
-  function()
-    adjustZoom(-0.25)
-  end,
-  { non_consuming = false }
-)
+end, { description = "切换两倍屏幕放大 / Toggle 2x zoom" })
+hl.bind(mainMod .. " + ALT + mouse_up", function()
+  adjustZoom(0.25)
+end, { non_consuming = false, description = "增加屏幕放大倍率 / Zoom in" })
+hl.bind(mainMod .. " + ALT + mouse_down", function()
+  adjustZoom(-0.25)
+end, { non_consuming = false, description = "降低屏幕放大倍率 / Zoom out" })
 
+-- 3. 焦点与窗口移动 / Focus and movement
+local directionLabels =
+  { left = "向左 / Left", right = "向右 / Right", up = "向上 / Up", down = "向下 / Down" }
 local directions = {
   left = "l",
   right = "r",
@@ -264,13 +308,25 @@ local directions = {
 }
 
 for key, direction in pairs(directions) do
-  hl.bind(mainMod .. " + " .. key, hl.dsp.focus({ direction = direction }))
+  hl.bind(
+    mainMod .. " + " .. key,
+    hl.dsp.focus({ direction = direction }),
+    { description = "切换焦点 / Focus：" .. directionLabels[key] }
+  )
   hl.bind(
     mainMod .. " + CTRL + SHIFT + " .. key,
-    hl.dsp.window.move({ direction = direction })
+    hl.dsp.window.move({ direction = direction }),
+    { description = "移动窗口 / Move：" .. directionLabels[key] }
   )
 end
 
+-- 4. 窗口大小 / Window size
+local resizeLabels = {
+  left = "缩小宽度 / Narrower",
+  right = "增大宽度 / Wider",
+  up = "缩小高度 / Shorter",
+  down = "增大高度 / Taller",
+}
 local resizeSteps = {
   right = { 50, 0 },
   left = { -50, 0 },
@@ -282,109 +338,211 @@ for key, step in pairs(resizeSteps) do
   hl.bind(
     mainMod .. " + SHIFT + " .. key,
     hl.dsp.window.resize({ x = step[1], y = step[2], relative = true }),
-    { repeating = true }
+    { repeating = true, description = "调整窗口大小 / Resize：" .. resizeLabels[key] }
   )
 end
 
--- Frequently used applications.
-hl.bind(mainMod .. " + T", hl.dsp.exec_cmd(terminal))
-hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
-hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("code"))
-hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("firefox"))
-hl.bind(mainMod .. " + F", hl.dsp.exec_cmd("firefox"))
-hl.bind("CTRL + SHIFT + Escape", hl.dsp.exec_cmd("missioncenter"))
-hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("noctalia msg panel-toggle launcher"))
-hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("noctalia msg panel-toggle clipboard"))
-hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd("hypr-command-palette"))
+-- 5. 应用与快捷键帮助 / Applications and help
+hl.bind(
+  mainMod .. " + T",
+  hl.dsp.exec_cmd(terminal),
+  { description = "打开终端 Kitty / Open terminal Kitty" }
+)
+hl.bind(
+  mainMod .. " + E",
+  hl.dsp.exec_cmd(fileManager),
+  { description = "打开文件管理器 Dolphin / Open file manager Dolphin" }
+)
+hl.bind(
+  mainMod .. " + C",
+  hl.dsp.exec_cmd("code"),
+  { description = "打开编辑器 VS Code / Open editor VS Code" }
+)
+hl.bind(
+  mainMod .. " + B",
+  hl.dsp.exec_cmd("firefox"),
+  { description = "打开浏览器 Firefox / Open browser Firefox" }
+)
+hl.bind(
+  mainMod .. " + F",
+  hl.dsp.exec_cmd("firefox"),
+  { description = "打开浏览器 Firefox / Open browser Firefox" }
+)
+hl.bind(
+  "CTRL + SHIFT + Escape",
+  hl.dsp.exec_cmd("missioncenter"),
+  { description = "打开系统监视器 / System monitor" }
+)
+hl.bind(
+  mainMod .. " + A",
+  hl.dsp.exec_cmd("noctalia msg panel-toggle launcher"),
+  { description = "打开应用启动器 / Application launcher" }
+)
+hl.bind(
+  mainMod .. " + V",
+  hl.dsp.exec_cmd("noctalia msg panel-toggle clipboard"),
+  { description = "打开剪贴板历史 / Clipboard history" }
+)
+hl.bind(
+  mainMod .. " + slash",
+  hl.dsp.exec_cmd("noctalia msg panel-toggle kenn/keybind-cheatsheet:cheatsheet"),
+  { description = "打开快捷键速查表 / Keybind cheatsheet" }
+)
 
+-- 6. 工作区 / Workspaces
 -- Workspaces 1–10; digit key 0 maps to workspace 10.
 for workspace = 1, 10 do
   local key = workspace % 10
-  hl.bind(mainMod .. " + " .. key, hl.dsp.focus({ workspace = workspace }))
+  hl.bind(
+    mainMod .. " + " .. key,
+    hl.dsp.focus({ workspace = workspace }),
+    { description = "切换到工作区 / Focus workspace " .. workspace }
+  )
   hl.bind(
     mainMod .. " + SHIFT + " .. key,
-    hl.dsp.window.move({ workspace = workspace, follow = true })
+    hl.dsp.window.move({ workspace = workspace, follow = true }),
+    { description = "移动并跟随到工作区 / Move and follow to workspace " .. workspace }
   )
 end
 
-hl.bind(mainMod .. " + CTRL + Down", hl.dsp.focus({ workspace = "empty" }))
+hl.bind(
+  mainMod .. " + CTRL + Down",
+  hl.dsp.focus({ workspace = "empty" }),
+  { description = "切换到空工作区 / Empty workspace" }
+)
 local externalPointersOnly = {
   device = { inclusive = false, list = trackpadDevices },
 }
-hl.bind(
-  mainMod .. " + mouse_down",
-  hl.dsp.focus({ workspace = "e+1" }),
-  externalPointersOnly
-)
-hl.bind(
-  mainMod .. " + mouse_up",
-  hl.dsp.focus({ workspace = "e-1" }),
-  externalPointersOnly
-)
+hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }), {
+  device = externalPointersOnly.device,
+  description = "切换到下一个已有工作区 / Next existing workspace",
+})
+hl.bind(mainMod .. " + mouse_up", hl.dsp.focus({ workspace = "e-1" }), {
+  device = externalPointersOnly.device,
+  description = "切换到上一个已有工作区 / Previous existing workspace",
+})
 
-hl.bind(mainMod .. " + CTRL + Right", hl.dsp.focus({ workspace = "r+1" }))
-hl.bind(mainMod .. " + CTRL + Left", hl.dsp.focus({ workspace = "r-1" }))
+hl.bind(
+  mainMod .. " + CTRL + Right",
+  hl.dsp.focus({ workspace = "r+1" }),
+  { description = "切换到下一个工作区 / Next workspace" }
+)
+hl.bind(
+  mainMod .. " + CTRL + Left",
+  hl.dsp.focus({ workspace = "r-1" }),
+  { description = "切换到上一个工作区 / Previous workspace" }
+)
 hl.bind(
   mainMod .. " + ALT + CTRL + Right",
-  hl.dsp.window.move({ workspace = "r+1", follow = true })
+  hl.dsp.window.move({ workspace = "r+1", follow = true }),
+  { description = "移动窗口到下一个工作区并跟随 / Move and follow to next workspace" }
 )
 hl.bind(
   mainMod .. " + ALT + CTRL + Left",
-  hl.dsp.window.move({ workspace = "r-1", follow = true })
+  hl.dsp.window.move({ workspace = "r-1", follow = true }),
+  {
+    description = "移动窗口到上一个工作区并跟随 / Move and follow to previous workspace",
+  }
 )
 
 local function bindSpecialWorkspace(key, name)
   hl.bind(
     mainMod .. " + SHIFT + " .. key,
-    hl.dsp.window.move({ workspace = "special:" .. name, follow = true })
+    hl.dsp.window.move({ workspace = "special:" .. name, follow = true }),
+    {
+      description = "移入并跟随 / Move and follow to special workspace " .. name,
+    }
   )
   hl.bind(
     mainMod .. " + ALT + " .. key,
-    hl.dsp.window.move({ workspace = "special:" .. name, follow = false })
+    hl.dsp.window.move({ workspace = "special:" .. name, follow = false }),
+    {
+      description = "静默移入 / Move silently to special workspace " .. name,
+    }
   )
-  hl.bind(mainMod .. " + " .. key, hl.dsp.workspace.toggle_special(name))
+  hl.bind(
+    mainMod .. " + " .. key,
+    hl.dsp.workspace.toggle_special(name),
+    { description = "切换特殊工作区 / Toggle special workspace " .. name }
+  )
 end
 
 bindSpecialWorkspace("S", "S")
 
+-- 7. 截图与取色 / Screenshots and colors
 -- Screen capture (shared with niri).
-hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd("hyprpicker -a"))
-hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("screenshot area"))
-hl.bind(mainMod .. " + CTRL + P", hl.dsp.exec_cmd("screenshot area true"))
-hl.bind(mainMod .. " + ALT + P", hl.dsp.exec_cmd("screenshot output"))
-hl.bind("Print", hl.dsp.exec_cmd("screenshot screen"))
+hl.bind(
+  mainMod .. " + SHIFT + P",
+  hl.dsp.exec_cmd("hyprpicker -a"),
+  { description = "拾取屏幕颜色 / Color picker" }
+)
+hl.bind(
+  mainMod .. " + P",
+  hl.dsp.exec_cmd("screenshot area"),
+  { description = "截图：选取区域或窗口 / Screenshot region or window" }
+)
+hl.bind(mainMod .. " + CTRL + P", hl.dsp.exec_cmd("screenshot area true"), {
+  description = "截图：冻结画面后选取区域或窗口 / Screenshot frozen region or window",
+})
+hl.bind(
+  mainMod .. " + ALT + P",
+  hl.dsp.exec_cmd("screenshot output"),
+  { description = "截图：当前显示器 / Screenshot current display" }
+)
+hl.bind(
+  "Print",
+  hl.dsp.exec_cmd("screenshot screen"),
+  { description = "截图：所有显示器 / Screenshot all displays" }
+)
 
+-- 8. 音量与亮度 / Volume and brightness
 -- Volume and brightness keys remain available while locked and support
 -- press-and-hold repeating.
-local mediaFlags = { locked = true, repeating = true }
 hl.bind(
   "XF86AudioRaiseVolume",
   hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"),
-  mediaFlags
+  { locked = true, repeating = true, description = "音量增加 5% / Volume up 5%" }
 )
 hl.bind(
   "XF86AudioLowerVolume",
   hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),
-  mediaFlags
+  { locked = true, repeating = true, description = "音量降低 5% / Volume down 5%" }
 )
 hl.bind(
   "XF86AudioMute",
   hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),
-  mediaFlags
+  { locked = true, repeating = true, description = "切换扬声器静音 / Toggle speaker mute" }
 )
 hl.bind(
   "XF86MonBrightnessUp",
   hl.dsp.exec_cmd("brightnessctl set 5%+"),
-  mediaFlags
+  { locked = true, repeating = true, description = "亮度增加 5% / Brightness up 5%" }
 )
 hl.bind(
   "XF86MonBrightnessDown",
   hl.dsp.exec_cmd("brightnessctl set 5%-"),
-  mediaFlags
+  { locked = true, repeating = true, description = "亮度降低 5% / Brightness down 5%" }
 )
 
+-- 9. 鼠标拖动 / Mouse dragging
 -- Super + left/right mouse button moves or resizes windows.
-hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
-hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
-hl.bind(mainMod .. " + Z", hl.dsp.window.drag(), { mouse = true })
-hl.bind(mainMod .. " + X", hl.dsp.window.resize(), { mouse = true })
+hl.bind(
+  mainMod .. " + mouse:272",
+  hl.dsp.window.drag(),
+  { mouse = true, description = "拖动窗口 / Drag window" }
+)
+hl.bind(
+  mainMod .. " + mouse:273",
+  hl.dsp.window.resize(),
+  { mouse = true, description = "拖动调整窗口大小 / Drag to resize window" }
+)
+hl.bind(
+  mainMod .. " + Z",
+  hl.dsp.window.drag(),
+  { mouse = true, description = "拖动窗口 / Drag window" }
+)
+hl.bind(
+  mainMod .. " + X",
+  hl.dsp.window.resize(),
+  { mouse = true, description = "拖动调整窗口大小 / Drag to resize window" }
+)

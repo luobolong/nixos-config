@@ -85,7 +85,7 @@ git diff master...laptop -- flake.nix home/default.nix hosts/nixos modules/core.
 │   ├── default.nix                   # Home Manager、应用、主题和用户服务
 │   ├── hyprland.lua                  # Hyprland Lua 配置
 │   ├── niri.kdl                      # niri 配置
-│   ├── scripts/                      # 截图、命令面板、niri 与 Zsh/Lua 脚本
+│   ├── scripts/                      # 截图、niri 与 Zsh/Lua 脚本
 │   └── zsh.nix                       # Zsh、Starship、fzf 和终端工具
 └── packages/
     ├── chatgpt.nix                   # ChatGPT 官方 Linux 二进制封装
@@ -427,6 +427,14 @@ Snapper 快照便于本机回滚，但不能替代异机备份。至少应单独
 
 ### Hyprland 快捷键
 
+Hyprland 和 niri 统一使用 Noctalia 的 [Keybind Cheatsheet](https://noctalia.dev/plugins/community/keybind-cheatsheet) 插件，按 <code>Super + /</code> 打开或关闭。快捷键说明和分类直接写在各自配置中，以中英双语显示，支持中文或英文搜索（例如“截图”或“screenshot”）。速查表用于查看绑定；应用启动使用 <code>Super + A</code>。
+
+修改并重载桌面配置后，可运行以下命令刷新速查表缓存：
+
+~~~bash
+noctalia msg plugin kenn/keybind-cheatsheet:data all refresh
+~~~
+
 #### 窗口、焦点与应用
 
 | 快捷键 | 动作 |
@@ -452,7 +460,7 @@ Snapper 快照便于本机回滚，但不能替代异机备份。至少应单独
 | <code>Super + T/E/C/B/F</code> | 打开 Kitty / Dolphin / VS Code / Firefox |
 | <code>Ctrl + Shift + Escape</code> | 打开 Mission Center |
 | <code>Super + A/V</code> | 打开 Noctalia 启动器 / 剪贴板 |
-| <code>Super + /</code> | 打开可搜索的 Hyprland 命令面板 |
+| <code>Super + /</code> | 打开 Noctalia 快捷键速查表（支持中英文搜索） |
 
 #### 工作区与手势
 
@@ -538,7 +546,7 @@ Hyprland 和 niri 共用 <code>screenshot</code> 脚本，按当前会话自动�
 | <code>Super + Ctrl + Home/End</code> | 把列移到最前/最后 |
 | <code>Super + G</code> / <code>Super + Ctrl + G</code> | 居中当前列 / 居中完整可见列 |
 | <code>Super + Ctrl + F</code> | 把列扩展到剩余宽度 |
-| <code>Super + Shift + /</code> | 显示 niri 快捷键覆盖层 |
+| <code>Super + /</code> | 打开 Noctalia 快捷键速查表（支持中英文搜索） |
 
 应用启动和截图快捷键与 Hyprland 基本一致：<code>Super + T/E/C/B</code>、<code>Super + A/V</code>、<code>Ctrl + Shift + Escape</code> 以及同一组 <code>P</code>/<code>Print</code> 截图键。niri 另外配置了麦克风静音、Playerctl 播放控制和锁屏状态下可用的媒体/亮度键。
 

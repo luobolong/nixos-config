@@ -85,7 +85,7 @@ git diff master...laptop -- flake.nix home/default.nix hosts/nixos modules/core.
 │   ├── default.nix                   # Home Manager, applications, theming, services
 │   ├── hyprland.lua                  # Hyprland Lua configuration
 │   ├── niri.kdl                      # niri configuration
-│   ├── scripts/                      # Capture, palette, niri and Zsh/Lua scripts
+│   ├── scripts/                      # Capture, niri and Zsh/Lua scripts
 │   └── zsh.nix                       # Zsh, Starship, fzf, terminal tools
 └── packages/
     ├── chatgpt.nix                   # Official ChatGPT Linux binary wrapper
@@ -427,6 +427,14 @@ Installed font families cover Inter, Source Serif, Noto CJK/Emoji, Sarasa Gothic
 
 ### Hyprland key bindings
 
+Hyprland and niri both use the Noctalia [Keybind Cheatsheet](https://noctalia.dev/plugins/community/keybind-cheatsheet) plugin, toggled with <code>Super + /</code>. Bilingual Chinese/English descriptions and categories live in each compositor configuration; search in either language (for example, “截图” or “screenshot”). The cheatsheet displays bindings; use <code>Super + A</code> to launch applications.
+
+After editing and reloading the compositor configuration, refresh the cheatsheet cache with:
+
+~~~bash
+noctalia msg plugin kenn/keybind-cheatsheet:data all refresh
+~~~
+
 #### Windows, focus, and applications
 
 | Binding | Action |
@@ -452,7 +460,7 @@ Installed font families cover Inter, Source Serif, Noto CJK/Emoji, Sarasa Gothic
 | <code>Super + T/E/C/B/F</code> | Open Kitty / Dolphin / VS Code / Firefox |
 | <code>Ctrl + Shift + Escape</code> | Open Mission Center |
 | <code>Super + A/V</code> | Open the Noctalia launcher / clipboard |
-| <code>Super + /</code> | Open the searchable Hyprland command palette |
+| <code>Super + /</code> | Open the Noctalia keybind cheatsheet (Chinese/English search) |
 
 #### Workspaces and gestures
 
@@ -538,7 +546,7 @@ The smart directional helper first inspects the focused window. Floating move an
 | <code>Super + Ctrl + Home/End</code> | Move the column to the beginning/end |
 | <code>Super + G</code> / <code>Super + Ctrl + G</code> | Center the current column / all fully visible columns |
 | <code>Super + Ctrl + F</code> | Expand the column into remaining width |
-| <code>Super + Shift + /</code> | Show the niri hotkey overlay |
+| <code>Super + /</code> | Open the Noctalia keybind cheatsheet (Chinese/English search) |
 
 Application and capture bindings largely match Hyprland: <code>Super + T/E/C/B</code>, <code>Super + A/V</code>, <code>Ctrl + Shift + Escape</code>, and the same <code>P</code>/<code>Print</code> capture family. niri additionally binds microphone mute, Playerctl playback controls, and media/brightness keys that remain available while locked.
 

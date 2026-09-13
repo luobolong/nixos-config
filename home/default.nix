@@ -147,25 +147,6 @@ let
     ];
     text = builtins.readFile ./scripts/niri-smart-direction.sh;
   };
-  commandPalette = pkgs.writeShellApplication {
-    name = "hypr-command-palette";
-    runtimeInputs = with pkgs; [
-      brightnessctl
-      fuzzel
-      hyprland
-      pipewire
-    ];
-    text = (
-      lib.replaceStrings
-        [
-          "@coreutils@"
-        ]
-        [
-          "${pkgs.coreutils}"
-        ]
-        (builtins.readFile ./scripts/hypr-command-palette.sh)
-    );
-  };
 in
 {
   imports = [ ./zsh.nix ];
@@ -209,14 +190,12 @@ in
       githubReleases.audiomonitor
 
       # Hyprland and Wayland desktop tools
-      fuzzel
       wl-clipboard
       hyprpicker
       screenshotGrimblast
       grim
       screenshotSlurp
       screenshot
-      commandPalette
       niriSmartDirection
       brightnessctl
       playerctl
@@ -509,14 +488,6 @@ in
     '';
   };
 
-  xdg.configFile."fuzzel/fuzzel.ini".text = ''
-    [main]
-    include=${inputs.catppuccin-fuzzel}/themes/catppuccin-mocha/mauve.ini
-    font=Inter:size=12
-    icon-theme=Papirus-Dark
-    terminal=kitty
-  '';
-
   xdg.configFile."satty/config.toml".text = ''
     [general]
     fullscreen = false
@@ -676,6 +647,7 @@ in
     settings.plugins.enabled = [
       "noctalia/mpvpaper"
       "h465855hgg/lyrics"
+      "kenn/keybind-cheatsheet"
     ];
     settings.widget.mpvpaper.type = "noctalia/mpvpaper:mpvpaper";
     settings.widget.lyrics.type = "h465855hgg/lyrics:lyrics";

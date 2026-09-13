@@ -16,22 +16,6 @@
         "type": "github"
       }
     },
-    "catppuccin-fuzzel": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1771578346,
-        "narHash": "sha256-+/7lxQTRDZ0m+GAAFIjvFt8EXDeqZUtv0pLnNgaauZw=",
-        "owner": "catppuccin",
-        "repo": "fuzzel",
-        "rev": "879879da8a7dc58f173b4cd7987723fd19bef6d5",
-        "type": "github"
-      },
-      "original": {
-        "owner": "catppuccin",
-        "repo": "fuzzel",
-        "type": "github"
-      }
-    },
     "crane": {
       "locked": {
         "lastModified": 1781825982,
@@ -271,7 +255,6 @@
     "root": {
       "inputs": {
         "astronvim": "astronvim",
-        "catppuccin-fuzzel": "catppuccin-fuzzel",
         "disko": "disko",
         "home-manager": "home-manager",
         "lanzaboote": "lanzaboote",
