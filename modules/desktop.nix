@@ -81,7 +81,6 @@
       noto-fonts-color-emoji
       noto-fonts-monochrome-emoji
       sarasa-gothic
-      ioskeley-mono.normal-term-NF
       nerd-fonts.cousine
       nerd-fonts.jetbrains-mono
     ];
