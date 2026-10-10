@@ -603,10 +603,13 @@ in
         color = "#FFFFFF";
         enabled = true;
         hover_highlight = true;
-        panel_overlap = 12;
+        panel_overlap = 3;
         font_family = "JetBrainsMono Nerd Font";
-        margin_ends = 14;
+        font_scale = 0.9;
+        margin_ends = 0;
         margin_edge = 5;
+        margin_opposite_edge = 0;
+        padding = 10;
         scale = 1.1;
         shadow = false;
         start = [
@@ -628,21 +631,6 @@ in
           "notifications"
           "session"
         ];
-        monitor."DP-2" = {
-          start = [
-            "launcher"
-            "settings"
-            "workspaces"
-          ];
-          end = [
-            "tray"
-            "wallpaper"
-            "mpvpaper"
-            "volume"
-            "notifications"
-            "session"
-          ];
-        };
         thickness = 26;
       };
     };
