@@ -226,6 +226,7 @@ in
       p7zip
 
       # Hardware, storage, and network diagnostics
+      duf
       pciutils
       usbutils
       smartmontools
