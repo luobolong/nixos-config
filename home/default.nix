@@ -350,6 +350,7 @@ in
       bold_italic_font = "auto";
       font_size = 11;
       window_padding_width = 15;
+      remember_window_size = false;
       enable_audio_bell = "no";
       cursor_trail = 1;
       background_opacity = "0.90";
