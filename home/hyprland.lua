@@ -25,12 +25,12 @@ hl.config({
   input = {
     kb_layout = "us",
     follow_mouse = 1,
-    sensitivity = -0.6,
+    sensitivity = 0,
     accel_profile = "flat",
     touchpad = {
       disable_while_typing = true,
       natural_scroll = true,
-      scroll_factor = 0.5,
+      scroll_factor = 0.3,
       tap_to_click = true,
       tap_button_map = "lrm",
       clickfinger_behavior = true,
