@@ -7,7 +7,7 @@
 }:
 let
   pname = "chatgpt";
-  version = "26.825.51511";
+  version = "26.1007.21434";
 
   unwrapped = stdenvNoCC.mkDerivation {
     pname = "${pname}-unwrapped";
@@ -15,7 +15,7 @@ let
 
     src = fetchurl {
       url = "https://persistent.oaistatic.com/codex-app-prod/linux/deb/pool/main/c/chatgpt/chatgpt_${version}_amd64.deb";
-      hash = "sha256-NVSwAixs+1EzJvQ/0R9xiDWncIasTXyi/z67ui1Mf0U=";
+      hash = "sha256-J2tTQcPXSyYdOtUhBvf6ft3gaEHkdn/ipAy1QJmx8+0=";
     };
 
     nativeBuildInputs = [ dpkg ];

@@ -72,6 +72,10 @@
       system = "x86_64-linux";
       hostname = "nixos";
       username = "ben";
+      packagePkgs = import nixpkgs {
+        inherit system;
+        config.allowUnfree = true;
+      };
     in
     {
       nixosConfigurations.${hostname} = nixpkgs.lib.nixosSystem {
@@ -89,23 +93,46 @@
 
       checks.${system}.nixos = self.nixosConfigurations.${hostname}.config.system.build.toplevel;
 
-      packages.${system} = import ./packages/github-releases.nix {
-        pkgs = nixpkgs.legacyPackages.${system};
-      };
+      packages.${system} =
+        (import ./packages/github-releases.nix {
+          pkgs = packagePkgs;
+        })
+        // {
+          chatgpt = packagePkgs.callPackage ./packages/chatgpt.nix { };
+        };
 
-      apps.${system}.update-github-releases = {
-        type = "app";
-        meta.description = "Update and build GitHub Release packages not available in nixpkgs";
-        program = nixpkgs.lib.getExe (
-          nixpkgs.legacyPackages.${system}.writeShellApplication {
-            name = "update-github-releases";
-            runtimeInputs = with nixpkgs.legacyPackages.${system}; [
-              nix
-              nix-update
-            ];
-            text = builtins.readFile ./scripts/update-github-releases.sh;
-          }
-        );
+      apps.${system} = {
+        update-chatgpt = {
+          type = "app";
+          meta.description = "Update ChatGPT from OpenAI's official Linux package repository";
+          program = nixpkgs.lib.getExe (
+            packagePkgs.writeShellApplication {
+              name = "update-chatgpt";
+              runtimeInputs = with packagePkgs; [
+                curl
+                gawk
+                nix
+                nix-update
+              ];
+              text = builtins.readFile ./scripts/update-chatgpt.sh;
+            }
+          );
+        };
+
+        update-github-releases = {
+          type = "app";
+          meta.description = "Update and build GitHub Release packages not available in nixpkgs";
+          program = nixpkgs.lib.getExe (
+            packagePkgs.writeShellApplication {
+              name = "update-github-releases";
+              runtimeInputs = with packagePkgs; [
+                nix
+                nix-update
+              ];
+              text = builtins.readFile ./scripts/update-github-releases.sh;
+            }
+          );
+        };
       };
 
       formatter.${system} = nixpkgs.legacyPackages.${system}.nixfmt;

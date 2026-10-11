@@ -373,6 +373,10 @@ nix flake update
 nix run .#update-github-releases
 sudo nixos-rebuild switch --flake .#nixos
 
+# Update ChatGPT from OpenAI's official Linux repository and verify the build
+nix run .#update-chatgpt
+sudo nixos-rebuild switch --flake .#nixos
+
 # Manually update Codex CLI to OpenAI's latest stable release; system rebuilds no longer update it
 codex-update
 
@@ -381,7 +385,7 @@ nix build .#nixosConfigurations.nixos.config.system.build.toplevel
 nvd diff /run/current-system result
 ~~~
 
-Prefer nixpkgs packages, including CC Switch, Clash Verge Rev, and general-purpose tools. `update-github-releases` manages only the OBS Bilibili plugin, AudioMonitor, and bili-danmaku-tui, which are not currently in nixpkgs. Versions and source and Go dependency hashes are kept in `packages/`. Run this command explicitly; ordinary rebuilds do not check for new releases.
+Prefer nixpkgs packages, including CC Switch, Clash Verge Rev, and general-purpose tools. `update-github-releases` manages only the OBS Bilibili plugin, AudioMonitor, and bili-danmaku-tui, which are not currently in nixpkgs. Versions and source and Go dependency hashes are kept in `packages/`. `update-chatgpt` reads the latest version from OpenAI's official package repository, uses `nix-update` to refresh the pinned version and SHA-256, and verifies the result with a build, preserving reproducible Nix evaluation instead of using a mutable URL. Run this command explicitly; ordinary system rebuilds do not check for new releases.
 
 The system removes Nix store generations older than seven days and optimizes the store weekly. Snapper's <code>root</code> (<code>/</code>) and <code>home</code> (<code>/home</code>) configurations are defined in <code>modules/snapper.nix</code>, with automatic snapshot creation and all automatic cleanup algorithms disabled and no snapshot retention limits configured. Timeline and cleanup timers do not start at boot; boot snapshots and automatic backup tasks are also not enabled. Users create and delete snapshots manually through Btrfs Assistant or Snapper. Replace the host and user attribute names above after changing either value.
 
