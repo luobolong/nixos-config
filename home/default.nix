@@ -273,6 +273,8 @@ in
     enable = true;
     extraPackages = with pkgs; [
       umu-launcher
+      # Lutris 0.5.22 calls /usr/bin/vulkaninfo inside its FHS environment.
+      vulkan-tools
       gamescope
       mangohud
     ];
