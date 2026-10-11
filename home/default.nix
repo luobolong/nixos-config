@@ -88,36 +88,6 @@ let
         --add-flags "--wayland-text-input-version=3"
     '';
   };
-  qqWayland = pkgs.qq.override {
-    commandLineArgs = lib.concatStringsSep " " [
-      "--ozone-platform=wayland"
-      "--enable-wayland-ime"
-      "--wayland-text-input-version=3"
-    ];
-  };
-  linuxqqClipsync = pkgs.rustPlatform.buildRustPackage {
-    pname = "linuxqq-clipsync";
-    version = "0.1.0";
-    src = inputs.linuxqq-clipsync;
-    cargoLock.lockFile = "${inputs.linuxqq-clipsync}/Cargo.lock";
-    nativeBuildInputs = [ pkgs.makeWrapper ];
-    postInstall = ''
-      wrapProgram "$out/bin/linuxqq-clipsync" \
-        --prefix PATH : "${
-          lib.makeBinPath [
-            pkgs.clipnotify
-            pkgs.wl-clipboard
-            pkgs.xclip
-          ]
-        }"
-    '';
-    meta = {
-      description = "Synchronize the X11 and Wayland clipboards for Linux QQ";
-      homepage = "https://github.com/SHORiN-KiWATA/linuxqq-clipsync";
-      license = lib.licenses.mit;
-      mainProgram = "linuxqq-clipsync";
-    };
-  };
   screenshotSlurp = pkgs.slurp.overrideAttrs (oldAttrs: {
     patches = (oldAttrs.patches or [ ]) ++ [ ../packages/patches/slurp-drag-threshold.patch ];
   });
@@ -170,8 +140,6 @@ in
       jetbrains.datagrip
       jetbrains.goland
       spotify
-      qqWayland
-      linuxqqClipsync
       discord
       telegram-desktop
       cc-switch
@@ -696,20 +664,6 @@ in
     pinentry.package = pkgs.pinentry-qt;
   };
   services.ssh-agent.enable = true;
-
-  systemd.user.services.linuxqq-clipsync = {
-    Unit = {
-      Description = "Synchronize X11 and Wayland clipboards for Linux QQ";
-      After = [ "graphical-session.target" ];
-      PartOf = [ "graphical-session.target" ];
-    };
-    Service = {
-      ExecStart = lib.getExe linuxqqClipsync;
-      Restart = "on-failure";
-      RestartSec = 3;
-    };
-    Install.WantedBy = [ "graphical-session.target" ];
-  };
 
   home.sessionPath = [ "$HOME/.local/bin" ];
   home.sessionVariables = {

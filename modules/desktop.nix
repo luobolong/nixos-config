@@ -1,4 +1,9 @@
-{ config, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 {
   programs.hyprland = {
     enable = true;
@@ -11,6 +16,17 @@
 
   programs.niri = {
     enable = true;
+  };
+
+  programs.linuxqq-wayland-fix = {
+    enable = true;
+    qq = pkgs.qq.override {
+      commandLineArgs = lib.concatStringsSep " " [
+        "--ozone-platform=wayland"
+        "--enable-wayland-ime"
+        "--wayland-text-input-version=3"
+      ];
+    };
   };
 
   programs.noctalia = {
