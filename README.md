@@ -412,7 +412,7 @@ Snapper 快照便于本机回滚，但不能替代异机备份。至少应单独
 | 文件管理器 | Dolphin + Kvantum，紧凑工具栏和右侧信息面板 |
 | 启动器/栏/通知 | Noctalia，栏字体为 JetBrains Mono Nerd Font；禁用 Mako 及旧式网络/蓝牙托盘自启动 |
 | 输入法 | Fcitx5 + Rime Ice，横向候选框，每页 7 个候选词 |
-| 主题 | Catppuccin Mocha Mauve、Papirus Dark、Adwaita 32 px 光标 |
+| 主题 | Catppuccin Mocha Mauve、Papirus Dark、Bibata Modern Ice 32 px 光标 |
 | 编辑器 | AstroNvim 模板、绝对行号；VS Code 与 JetBrains IDE |
 | 默认程序 | Kitty 终端、Dolphin 目录、Firefox 网页、VS Code 文本、Okular PDF、Gwenview 图片、mpv 音视频、Ark 压缩包 |
 | 音频 | PipeWire 的 ALSA、32 位 ALSA 与 PulseAudio 兼容层 |

@@ -157,8 +157,8 @@ in
     stateVersion = "25.11";
     pointerCursor = {
       enable = true;
-      name = "Adwaita";
-      package = pkgs.adwaita-icon-theme;
+      name = "Bibata-Modern-Ice";
+      package = pkgs.bibata-cursors;
       size = 32;
       gtk.enable = true;
       x11.enable = true;
@@ -727,7 +727,7 @@ in
     ELECTRON_OZONE_PLATFORM_HINT = "auto";
     TERMINAL = "kitty";
     XMODIFIERS = "@im=fcitx";
-    XCURSOR_THEME = "Adwaita";
-    XCURSOR_SIZE = "32";
+    XCURSOR_THEME = config.home.pointerCursor.name;
+    XCURSOR_SIZE = toString config.home.pointerCursor.size;
   };
 }
