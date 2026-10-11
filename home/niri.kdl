@@ -35,6 +35,13 @@ input {
     focus-follows-mouse max-scroll-amount="0%"
 }
 
+gestures {
+    // Disable opening overview when the pointer reaches a screen corner.
+    hot-corners {
+        off
+    }
+}
+
 layout {
     gaps 10
     center-focused-column "never"
