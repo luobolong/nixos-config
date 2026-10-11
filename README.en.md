@@ -412,7 +412,7 @@ Snapper snapshots are useful for local rollback, but they are not an off-machine
 | File manager | Dolphin with Kvantum, compact toolbar, and right-side information panel |
 | Launcher/bar/notifications | Noctalia with JetBrains Mono Nerd Font for the bar; Mako and legacy network/Bluetooth tray autostart are disabled |
 | Input method | Fcitx5 + Rime Ice with a horizontal list of seven candidates per page |
-| Theme | Catppuccin Mocha Mauve, Papirus Dark, 24 px Bibata Modern Ice cursor |
+| Theme | Catppuccin Mocha Mauve, Papirus Dark, Bibata Modern Ice cursor |
 | Editors | AstroNvim with absolute line numbers, VS Code, JetBrains IDEs |
 | Defaults | Kitty for terminals, Dolphin for directories, Firefox for the web, VS Code for text, Okular for PDF, Gwenview for images, mpv for media, Ark for archives |
 | Audio | PipeWire with ALSA, 32-bit ALSA, and PulseAudio compatibility |
