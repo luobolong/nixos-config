@@ -94,6 +94,11 @@ window-rule {
     open-floating true
 }
 
+cursor {
+    xcursor-theme "Bibata-Modern-Ice"
+    xcursor-size 32
+}
+
 prefer-no-csd
 
 hotkey-overlay {
@@ -104,8 +109,6 @@ environment {
     NIXOS_OZONE_WL "1"
     ELECTRON_OZONE_PLATFORM_HINT "auto"
     XMODIFIERS "@im=fcitx"
-    XCURSOR_THEME "Adwaita"
-    XCURSOR_SIZE "32"
 }
 
 binds {
