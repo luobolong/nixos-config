@@ -264,6 +264,12 @@ in
   };
 
   programs.home-manager.enable = true;
+  programs.lutris = {
+    enable = true;
+    extraPackages = [ pkgs.umu-launcher ];
+    protonPackages = [ pkgs.proton-ge-bin ];
+    defaultWinePackage = pkgs.proton-ge-bin;
+  };
   programs.obs-studio = {
     enable = true;
     plugins = [ obsBilibiliStream ];
