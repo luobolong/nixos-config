@@ -45,9 +45,9 @@
       flake = false;
     };
 
-    linuxqq-clipsync = {
-      url = "github:SHORiN-KiWATA/linuxqq-clipsync";
-      flake = false;
+    linuxqq-wayland-fix = {
+      url = "github:SHORiN-KiWATA/linuxqq-wayland-fix";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     astronvim = {
@@ -87,6 +87,7 @@
           sops-nix.nixosModules.sops
           home-manager.nixosModules.home-manager
           noctalia.nixosModules.default
+          inputs.linuxqq-wayland-fix.nixosModules.default
           ./hosts/nixos
         ];
       };

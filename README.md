@@ -34,7 +34,7 @@
 - 使用 Fcitx5 + Rime Ice，提供中英文输入。
 - 使用 PipeWire、NetworkManager、BlueZ/Blueman、UDisks2 与桌面门户。
 - 使用 Btrfs 子卷和周期 TRIM；保留 Snapper，由用户手动管理快照和清理。
-- 打包 ChatGPT Linux 客户端、DeepSeek Harness、Linux QQ 剪贴板同步和 AudioMonitor。
+- 打包 ChatGPT Linux 客户端、DeepSeek Harness 和 AudioMonitor，并集成 [linuxqq-wayland-fix](https://github.com/SHORiN-KiWATA/linuxqq-wayland-fix) 修复 QQ 的 Wayland 剪贴板、屏幕共享与截图。
 - 为 Wayland、Electron、Qt/KDE 和 GTK 应用统一 Catppuccin Mocha 风格。
 
 ### 分支模型
@@ -349,7 +349,8 @@ sudo nixos-rebuild boot --flake .#nixos
 - 在对应会话运行 <code>hyprctl monitors</code> 或 <code>niri msg outputs</code>；<code>laptop</code> 还应确认内屏存在 2880×1800@120 Hz 模式。
 - 使用 <code>journalctl -b -k | grep -Ei 'edid|displayid|amdgpu'</code> 检查 EDID 与 AMDGPU 日志。
 - 用 <code>Ctrl + Space</code> 切换 Fcitx5/Rime，并用 <code>F4</code> 选择雾凇拼音方案；候选窗异常时可运行 <code>fcitx5 -r</code> 和 <code>fcitx5-configtool</code>。
-- 检查 <code>systemctl --user --failed</code> 和 <code>systemctl --user status noctalia</code>，确认 Noctalia、Linux QQ 剪贴板同步等用户服务没有失败。
+- 检查 <code>systemctl --user --failed</code> 和 <code>systemctl --user status noctalia</code>，确认 Noctalia 等用户服务没有失败。
+- 完全退出 QQ（包括托盘）后，从「QQ（Wayland修复版）」启动，检查剪贴板、屏幕共享和截图；可运行 <code>linuxqq-wayland-fix --doctor</code> 自检。
 - 首次使用 Claude Code、Codex 或 Gemini CLI 前，在 CC Switch 中添加并启用对应的 API 供应商；配置本身不保存这些服务的令牌。
 - 首次运行 <code>nvim</code>，让 AstroNvim 完成插件初始化。
 - 再次确认 <code>sudo sbctl status</code>、Windows 启动项、音频、蓝牙、挂起与恢复。
@@ -560,7 +561,6 @@ Hyprland 和 niri 共用 <code>screenshot</code> 脚本，按当前会话自动�
 - nwg-displays 写入 <code>~/.config/niri/monitor.kdl</code>，以及 Hyprland 的 monitor/workspace Lua 模块。
 - Home Manager 首次激活时会创建 niri 的两个可写 include 文件，但主 <code>config.kdl</code> 仍由声明式配置管理。
 - Rime Ice 以可写副本同步到用户数据目录，以便 Fcitx5 生成编译产物。
-- Linux QQ 剪贴板同步作为图形会话内的 systemd user service 运行。
 - sops-nix 运行时使用主机 SSH Ed25519 密钥作为 Age 密钥来源；<code>.sops.yaml</code> 为 <code>secrets/*.yaml</code> 声明 GPG 与 Age 接收者，但仓库当前没有具体 secret 文件。
 - <code>/var/lib/sbctl</code> 保存本机 Secure Boot 私钥，必须纳入安全离线备份，但不能提交到仓库。
 

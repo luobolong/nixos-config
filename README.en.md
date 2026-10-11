@@ -34,7 +34,7 @@ Highlights:
 - Fcitx5 with Rime Ice provides Chinese and English input.
 - PipeWire, NetworkManager, BlueZ/Blueman, UDisks2, and desktop portals are configured.
 - Btrfs subvolumes and periodic TRIM are enabled; Snapper is available for users to manage snapshots and cleanup manually.
-- Local packages cover the ChatGPT Linux app, DeepSeek Harness, Linux QQ clipboard synchronization, and AudioMonitor.
+- Local packages cover the ChatGPT Linux app, DeepSeek Harness, and AudioMonitor; [linuxqq-wayland-fix](https://github.com/SHORiN-KiWATA/linuxqq-wayland-fix) provides QQ clipboard, screen-sharing, and screenshot fixes on Wayland.
 - Wayland, Electron, Qt/KDE, and GTK applications share a Catppuccin Mocha-oriented desktop.
 
 ### Branch model
@@ -349,7 +349,8 @@ After entering the graphical session for the first time:
 - Run <code>hyprctl monitors</code> or <code>niri msg outputs</code> in the corresponding session. On <code>laptop</code>, confirm that the internal display offers 2880×1800 at 120 Hz.
 - Inspect EDID and AMDGPU messages with <code>journalctl -b -k | grep -Ei 'edid|displayid|amdgpu'</code>.
 - Toggle Fcitx5/Rime with <code>Ctrl + Space</code> and select the Rime Ice schema with <code>F4</code>. If the candidate window fails, run <code>fcitx5 -r</code> and <code>fcitx5-configtool</code>.
-- Check <code>systemctl --user --failed</code> and <code>systemctl --user status noctalia</code>, and make sure Noctalia, Linux QQ clipboard synchronization, and other user services did not fail.
+- Check <code>systemctl --user --failed</code> and <code>systemctl --user status noctalia</code>, and make sure Noctalia and other user services did not fail.
+- Fully quit QQ, including its tray icon, then launch “QQ (Wayland Fix)” and check clipboard access, screen sharing, and screenshots. Run <code>linuxqq-wayland-fix --doctor</code> for diagnostics.
 - Before first use of Claude Code, Codex, or Gemini CLI, add and enable the corresponding API provider in CC Switch. This configuration does not store those service tokens.
 - Run <code>nvim</code> once so AstroNvim can complete plugin initialization.
 - Recheck <code>sudo sbctl status</code>, the Windows boot entry, audio, Bluetooth, suspend, and resume.
@@ -560,7 +561,6 @@ Application and capture bindings largely match Hyprland: <code>Super + T/E/C/B</
 - nwg-displays writes <code>~/.config/niri/monitor.kdl</code> and Hyprland monitor/workspace Lua modules.
 - Home Manager creates the two writable niri include files on first activation while keeping the main <code>config.kdl</code> declarative.
 - Rime Ice is synchronized as a writable copy so Fcitx5 can generate compiled artifacts.
-- Linux QQ clipboard synchronization runs as a systemd user service in the graphical session.
 - At runtime, sops-nix derives an Age key from the host SSH Ed25519 key. <code>.sops.yaml</code> declares GPG and Age recipients for <code>secrets/*.yaml</code>, but no concrete secret file exists yet.
 - <code>/var/lib/sbctl</code> stores this machine's Secure Boot private keys. Keep a safe offline backup, but never commit them to the repository.
 
