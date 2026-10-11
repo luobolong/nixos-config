@@ -189,6 +189,11 @@ in
       pavucontrol
       githubReleases.audiomonitor
 
+      # Gaming tools
+      wineWow64Packages.full
+      gamescope
+      mangohud
+
       # Hyprland and Wayland desktop tools
       wl-clipboard
       hyprpicker
@@ -266,8 +271,13 @@ in
   programs.home-manager.enable = true;
   programs.lutris = {
     enable = true;
-    extraPackages = [ pkgs.umu-launcher ];
+    extraPackages = with pkgs; [
+      umu-launcher
+      gamescope
+      mangohud
+    ];
     protonPackages = [ pkgs.proton-ge-bin ];
+    winePackages = [ pkgs.wineWow64Packages.full ];
     defaultWinePackage = pkgs.proton-ge-bin;
   };
   programs.obs-studio = {
