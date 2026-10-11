@@ -96,7 +96,7 @@ window-rule {
 
 cursor {
     xcursor-theme "Bibata-Modern-Ice"
-    xcursor-size 24
+    xcursor-size 28
 }
 
 prefer-no-csd
