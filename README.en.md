@@ -449,7 +449,8 @@ noctalia msg plugin kenn/keybind-cheatsheet:data all refresh
 | <code>Super + W</code> | Toggle floating |
 | <code>Super + Shift + W</code> | Set floating and toggle pinning |
 | <code>Super + G</code> | Toggle window grouping |
-| <code>Super + Ctrl + H/L</code> | Select the previous/next group member |
+| <code>Super + Ctrl + H</code> / <code>Super + [</code> | Select the previous group member |
+| <code>Super + Ctrl + L</code> / <code>Super + ]</code> | Select the next group member |
 | <code>Super + J</code> | Toggle the Dwindle split direction |
 | <code>Super + D</code> / <code>Shift + F11</code> | Toggle fullscreen |
 | <code>Super + M</code> | Toggle maximized state |
@@ -467,6 +468,8 @@ noctalia msg plugin kenn/keybind-cheatsheet:data all refresh
 | <code>Super + A/V</code> | Open the Noctalia launcher / clipboard |
 | <code>Super + /</code> | Open the Noctalia keybind cheatsheet (Chinese/English search) |
 
+Window group tabs use Noctalia theme background colors, a title font size of 10, and a tab height of 20.
+
 #### Workspaces and gestures
 
 | Binding or gesture | Action |
@@ -480,7 +483,7 @@ noctalia msg plugin kenn/keybind-cheatsheet:data all refresh
 | <code>Super + S</code> | Toggle special workspace S |
 | <code>Super + Shift + S</code> | Move to S and follow |
 | <code>Super + Alt + S</code> | Move silently to S |
-| Three-finger horizontal swipe | Move one workspace at a time |
+| Three-finger horizontal swipe | Move one workspace at a time; swipe past the last workspace to create an empty one |
 | Four-finger swipe | Drag the active window |
 | Four-finger pinch in / out | Unset maximized / toggle maximized |
 

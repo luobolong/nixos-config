@@ -449,7 +449,8 @@ noctalia msg plugin kenn/keybind-cheatsheet:data all refresh
 | <code>Super + W</code> | 切换浮动 |
 | <code>Super + Shift + W</code> | 设为浮动并切换置顶 |
 | <code>Super + G</code> | 切换窗口组 |
-| <code>Super + Ctrl + H/L</code> | 切换组内上一个/下一个窗口 |
+| <code>Super + Ctrl + H</code> / <code>Super + [</code> | 切换组内上一个窗口 |
+| <code>Super + Ctrl + L</code> / <code>Super + ]</code> | 切换组内下一个窗口 |
 | <code>Super + J</code> | 切换 Dwindle 分割方向 |
 | <code>Super + D</code> / <code>Shift + F11</code> | 切换全屏 |
 | <code>Super + M</code> | 切换最大化 |
@@ -467,6 +468,8 @@ noctalia msg plugin kenn/keybind-cheatsheet:data all refresh
 | <code>Super + A/V</code> | 打开 Noctalia 启动器 / 剪贴板 |
 | <code>Super + /</code> | 打开 Noctalia 快捷键速查表（支持中英文搜索） |
 
+窗口组标签使用 Noctalia 主题背景色，标题字号为 10，标签高度为 20。
+
 #### 工作区与手势
 
 | 快捷键或手势 | 动作 |
@@ -480,7 +483,7 @@ noctalia msg plugin kenn/keybind-cheatsheet:data all refresh
 | <code>Super + S</code> | 切换特殊工作区 S |
 | <code>Super + Shift + S</code> | 把窗口移到 S 并跟随 |
 | <code>Super + Alt + S</code> | 把窗口静默移到 S |
-| 三指水平滑动 | 一次切换一个工作区 |
+| 三指水平滑动 | 一次切换一个工作区；滑过末尾可进入新建的空工作区 |
 | 四指滑动 | 拖动活动窗口 |
 | 四指捏合 / 张开 | 取消最大化 / 切换最大化 |
 
