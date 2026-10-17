@@ -448,6 +448,7 @@ noctalia msg plugin kenn/keybind-cheatsheet:data all refresh
 | <code>Super + Alt + F4</code> | 强制终止活动窗口 |
 | <code>Super + W</code> | 切换浮动 |
 | <code>Super + Shift + W</code> | 设为浮动并切换置顶 |
+| <code>Super + Ctrl + W</code> | 切换已浮动窗口的置顶（pin） |
 | <code>Super + G</code> | 切换窗口组 |
 | <code>Super + Ctrl + H</code> / <code>Super + [</code> | 切换组内上一个窗口 |
 | <code>Super + Ctrl + L</code> / <code>Super + ]</code> | 切换组内下一个窗口 |
@@ -462,6 +463,8 @@ noctalia msg plugin kenn/keybind-cheatsheet:data all refresh
 | <code>Alt + Tab</code> | 打开 Noctalia 窗口切换器 |
 | <code>Super + L</code> | 使用 Hyprlock 锁屏 |
 | <code>Super + Alt + Z</code> | 在 1× 与 2× 指针居中缩放之间切换 |
+| <code>Super + Alt + =/-</code> | 以 0.25× 步长增加/降低屏幕放大倍率，支持长按 |
+| <code>Super + Alt + 0</code> | 恢复屏幕原始倍率（1×） |
 | <code>Super + Alt + 滚轮</code> | 以 0.25× 步长调整屏幕缩放 |
 | <code>Super + T/E/C/B/F</code> | 打开 Kitty / Dolphin / VS Code / Firefox |
 | <code>Ctrl + Shift + Escape</code> | 打开 Mission Center |

@@ -448,6 +448,7 @@ noctalia msg plugin kenn/keybind-cheatsheet:data all refresh
 | <code>Super + Alt + F4</code> | Force-kill the active window |
 | <code>Super + W</code> | Toggle floating |
 | <code>Super + Shift + W</code> | Set floating and toggle pinning |
+| <code>Super + Ctrl + W</code> | Toggle pinning for an already floating window |
 | <code>Super + G</code> | Toggle window grouping |
 | <code>Super + Ctrl + H</code> / <code>Super + [</code> | Select the previous group member |
 | <code>Super + Ctrl + L</code> / <code>Super + ]</code> | Select the next group member |
@@ -462,6 +463,8 @@ noctalia msg plugin kenn/keybind-cheatsheet:data all refresh
 | <code>Alt + Tab</code> | Open the Noctalia window switcher |
 | <code>Super + L</code> | Lock with Hyprlock |
 | <code>Super + Alt + Z</code> | Toggle pointer-centered zoom between 1× and 2× |
+| <code>Super + Alt + =/-</code> | Increase/decrease zoom in 0.25× steps; hold to repeat |
+| <code>Super + Alt + 0</code> | Reset zoom to 1× |
 | <code>Super + Alt + wheel</code> | Adjust zoom in 0.25× steps |
 | <code>Super + T/E/C/B/F</code> | Open Kitty / Dolphin / VS Code / Firefox |
 | <code>Ctrl + Shift + Escape</code> | Open Mission Center |
