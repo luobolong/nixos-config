@@ -262,6 +262,11 @@ hl.bind(mainMod .. " + SHIFT + W", function()
   hl.dispatch(hl.dsp.window.pin({ action = "toggle" }))
 end, { description = "浮动并切换窗口置顶 / Float and toggle pin" })
 hl.bind(
+  mainMod .. " + CTRL + W",
+  hl.dsp.window.pin({ action = "toggle" }),
+  { description = "切换浮动窗口置顶 / Toggle floating window pin" }
+)
+hl.bind(
   mainMod .. " + J",
   hl.dsp.layout("togglesplit"),
   { description = "切换平铺分割方向 / Toggle split direction" }
@@ -303,11 +308,20 @@ local function adjustZoom(delta)
 end
 
 -- Toggle Hyprland's built-in cursor-centered magnifier at 2x zoom, or adjust
--- it in 0.25x steps while Super+Alt is held.
+-- it in 0.25x steps with the keyboard or wheel while Super+Alt is held.
 hl.bind(mainMod .. " + ALT + Z", function()
   local currentZoom = tonumber(hl.get_config("cursor.zoom_factor")) or 1
   setZoom(currentZoom > 1 and 1 or 2)
 end, { description = "切换两倍屏幕放大 / Toggle 2x zoom" })
+hl.bind(mainMod .. " + ALT + equal", function()
+  adjustZoom(0.25)
+end, { repeating = true, description = "增加屏幕放大倍率 / Zoom in" })
+hl.bind(mainMod .. " + ALT + minus", function()
+  adjustZoom(-0.25)
+end, { repeating = true, description = "降低屏幕放大倍率 / Zoom out" })
+hl.bind(mainMod .. " + ALT + 0", function()
+  setZoom(1)
+end, { description = "恢复屏幕原始倍率 / Reset zoom to 1x" })
 hl.bind(mainMod .. " + ALT + mouse_up", function()
   adjustZoom(0.25)
 end, { non_consuming = false, description = "增加屏幕放大倍率 / Zoom in" })
