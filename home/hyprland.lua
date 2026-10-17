@@ -59,7 +59,7 @@ hl.config({
     workspace_swipe_invert = true,
     workspace_swipe_min_speed_to_force = 25,
     workspace_swipe_cancel_ratio = 0.35,
-    workspace_swipe_create_new = false,
+    workspace_swipe_create_new = true,
     workspace_swipe_direction_lock = true,
     workspace_swipe_direction_lock_threshold = 12,
     workspace_swipe_forever = false,
@@ -80,6 +80,14 @@ hl.config({
       ignore_opacity = true,
       -- Blur the complete workspace behind an opened special workspace.
       special = true,
+    },
+  },
+  group = {
+    groupbar = {
+      -- Fill tab backgrounds with Noctalia's colors and enlarge titles slightly.
+      gradients = true,
+      font_size = 10,
+      height = 20,
     },
   },
   animations = {
@@ -265,6 +273,16 @@ hl.bind(
 )
 hl.bind(
   mainMod .. " + CTRL + L",
+  hl.dsp.group.next(),
+  { description = "切换到组内下一个窗口 / Next grouped window" }
+)
+hl.bind(
+  mainMod .. " + bracketleft",
+  hl.dsp.group.prev(),
+  { description = "切换到组内上一个窗口 / Previous grouped window" }
+)
+hl.bind(
+  mainMod .. " + bracketright",
   hl.dsp.group.next(),
   { description = "切换到组内下一个窗口 / Next grouped window" }
 )
