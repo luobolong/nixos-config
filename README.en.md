@@ -519,7 +519,7 @@ Volume up, volume down, mute, and brightness keys remain available while locked.
 | <code>Super + M</code> | Maximize the window to available edges |
 | <code>Super + Backslash</code> | Toggle tabbed column display |
 | <code>Super + Alt + L</code> | Lock through Noctalia |
-| <code>Alt + Tab</code> | Open niri native recent-window switching |
+| <code>Alt + Tab</code> | Open the Noctalia window switcher |
 | <code>Super + Tab</code> | Focus the previous workspace |
 | <code>Super + Escape</code> | Toggle shortcut inhibition |
 | <code>Super + Shift + E</code> | Exit niri |

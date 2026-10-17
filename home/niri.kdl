@@ -138,8 +138,13 @@ binds {
         spawn "noctalia" "msg" "session" "lock";
     }
 
-    // Native niri recent-windows owns Alt+Tab. Super+Tab remains a quick
-    // workspace back-and-forth shortcut.
+    // Match Hyprland's Noctalia window switcher. This explicit binding takes
+    // precedence over niri's default recent-windows shortcut.
+    Alt+Tab repeat=false hotkey-overlay-title="打开窗口切换器 / Window switcher" {
+        spawn "noctalia" "msg" "window-switcher";
+    }
+
+    // Super+Tab remains a quick workspace back-and-forth shortcut.
     Mod+Tab repeat=false hotkey-overlay-title="切换到上次工作区 / Previous workspace" { focus-workspace-previous; }
 
     // Escape hatch for remote desktop, games, and other shortcut inhibitors.
