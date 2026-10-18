@@ -522,7 +522,7 @@ Hyprland 和 niri 共用 <code>screenshot</code> 脚本，按当前会话自动�
 | <code>Super + M</code> | 将窗口最大化到可用边缘 |
 | <code>Super + Backslash</code> | 切换列标签显示 |
 | <code>Super + Alt + L</code> | 使用 Noctalia 锁屏 |
-| <code>Alt + Tab</code> | 打开 Noctalia 窗口切换器 |
+| <code>Alt + Tab</code> / <code>Alt + Shift + Tab</code> | 使用 niri 原生窗口切换器正向/反向切换（含实时预览） |
 | <code>Super + Tab</code> | 返回上一个工作区 |
 | <code>Super + Escape</code> | 切换快捷键抑制 |
 | <code>Super + Shift + E</code> | 退出 niri |
