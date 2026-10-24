@@ -50,6 +50,7 @@ in
           "video"
           "audio"
           "input"
+          "dialout"
         ];
         shell = pkgs.zsh;
       };
