@@ -35,6 +35,7 @@
   };
 
   services.displayManager.noctalia-greeter.enable = true;
+  services.turing-screen.enable = true;
 
   xdg.portal = {
     enable = true;
