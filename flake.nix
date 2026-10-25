@@ -49,12 +49,6 @@
       url = "github:AstroNvim/template";
       flake = false;
     };
-
-    turing-screen = {
-      url = "github:luobolong/turing-smart-screen-qt";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
   };
 
   outputs =
@@ -86,7 +80,6 @@
           home-manager.nixosModules.home-manager
           noctalia.nixosModules.default
           inputs.linuxqq-wayland-fix.nixosModules.default
-          inputs.turing-screen.nixosModules.default
           ./hosts/nixos
         ];
       };
@@ -99,7 +92,6 @@
         })
         // {
           chatgpt = packagePkgs.callPackage ./packages/chatgpt.nix { };
-          turing-screen = inputs.turing-screen.packages.${system}.default;
         };
 
       apps.${system} = {
