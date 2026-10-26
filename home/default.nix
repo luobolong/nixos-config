@@ -547,7 +547,7 @@ in
         background_opacity = 0.0;
         border_width = 0.0;
         capsule = true;
-        capsule_border = "outline";
+        capsule_border = "outline_variant";
         capsule_foreground = "#FFFFFF";
         capsule_opacity = 0.3;
         capsule_padding = 10.0;
