@@ -1,5 +1,5 @@
 # shellcheck shell=bash
-# Shared screenshot workflow for Hyprland and niri.
+# Shared screenshot workflow for Hyprland, niri, and Mango.
 # Capture/copy/annotate workflow inspired by HyDE's screenshot.sh:
 # https://github.com/HyDE-Project/HyDE/blob/master/Configs/.local/lib/hyde/screenshot.sh
 usage() {
@@ -7,10 +7,10 @@ usage() {
 Usage: screenshot [area|window|output|screen] [true|false] [options]
        screenshot [s|sf|m|p] [options]
 
-Automatically selects the backend for the current Hyprland or niri session.
+Automatically selects the backend for the current Hyprland, niri, or Mango session.
 
-  area, s    Select a region (or click a window in Hyprland)
-  window     Pick a window (niri); select a window or region (Hyprland)
+  area, s    Select a region (or click a window in Hyprland/Mango)
+  window     Pick a window (niri/Mango); select a window or region (Hyprland)
   sf         Freeze the screen, then select a region
   output, m  Capture the focused monitor
   screen, p  Capture all monitors
@@ -94,7 +94,55 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 trap 'exit 129' HUP
 
-if [[ -n "${NIRI_SOCKET:-}" ]]; then
+if [[ -n "${MANGO_INSTANCE_SIGNATURE:-}" ]]; then
+  case "$target" in
+    area|window)
+      monitors="$(mmsg get all-monitors | jq -ce '.monitors | arrays')" \
+        || report_error "Could not query Mango monitors."
+      # Scroller windows can extend beyond their monitor. Offer only the
+      # visible intersection, excluding hidden tabs and swallowed windows.
+      rectangles="$(mmsg get all-clients | jq -r --argjson monitors "$monitors" '
+        .clients[]
+        | select(.is_visible and (.is_minimized | not) and (.is_swallowedby | not))
+        | select((.is_group | not) or .is_group_focus)
+        | . as $client
+        | ($monitors[] | select(.name == $client.monitor)) as $monitor
+        | ([.x, $monitor.x] | max) as $x
+        | ([.y, $monitor.y] | max) as $y
+        | ([.x + .width, $monitor.x + $monitor.width] | min) - $x as $width
+        | ([.y + .height, $monitor.y + $monitor.height] | min) - $y as $height
+        | select($width > 0 and $height > 0)
+        | "\($x),\($y) \($width)x\($height)"
+      ')" || report_error "Could not query Mango windows."
+      selection_args=()
+      if [[ "$target" == window ]]; then
+        [[ -n "$rectangles" ]] || exit 0
+        selection_args+=(-r)
+      fi
+      if [[ "$freeze" == true ]]; then
+        wayfreeze --hide-cursor &
+        freeze_pid=$!
+        sleep 0.1
+        kill -0 "$freeze_pid" 2>/dev/null || report_error "Could not freeze the screen."
+      fi
+      if [[ -n "$rectangles" ]]; then
+        geometry="$(slurp "${selection_args[@]}" <<< "$rectangles")" || exit 0
+      else
+        geometry="$(slurp)" || exit 0
+      fi
+      [[ -n "$geometry" ]] || exit 0
+      grim -g "$geometry" "$raw_file"
+      ;;
+    output)
+      output="$(mmsg get all-monitors | jq -er '.monitors[] | select(.active) | .name')" \
+        || report_error "Could not query the focused Mango monitor."
+      grim -o "$output" "$raw_file"
+      ;;
+    screen)
+      grim "$raw_file"
+      ;;
+  esac
+elif [[ -n "${NIRI_SOCKET:-}" ]]; then
   case "$target" in
     window)
       picked_window="$(niri msg --json pick-window)" \
