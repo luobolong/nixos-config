@@ -21,7 +21,7 @@
 | Nixpkgs | <code>nixos-unstable</code> |
 | NixOS / Home Manager state version | <code>25.11</code> |
 | 时区 | <code>Asia/Taipei</code> |
-| 桌面会话 | Hyprland 与 niri |
+| 桌面会话 | Hyprland、niri 与 Mango |
 | 登录管理器 | greetd + Noctalia Greeter |
 | 系统盘 | Btrfs，启用 zstd 压缩与 Snapper |
 | 启动链 | rEFInd → systemd-boot / Lanzaboote → UKI |
@@ -29,13 +29,13 @@
 主要能力：
 
 - 使用 Flake 统一组合 NixOS、Home Manager、Lanzaboote、sops-nix 与 Noctalia。
-- 同时提供 Hyprland 动态平铺和 niri 滚动平铺会话。
+- 同时提供 Hyprland 动态平铺、niri 滚动平铺和 Mango 多布局标签式会话。
 - 由 Noctalia 提供状态栏、启动器、剪贴板、通知、壁纸和会话界面。
 - 使用 Fcitx5 + Rime Ice，提供中英文输入。
 - 使用 PipeWire、NetworkManager、BlueZ/Blueman、UDisks2 与桌面门户。
 - 使用 Btrfs 子卷和周期 TRIM；保留 Snapper，由用户手动管理快照和清理。
 - 打包 ChatGPT Linux 客户端、DeepSeek Harness 和 AudioMonitor，并集成 [linuxqq-wayland-fix](https://github.com/SHORiN-KiWATA/linuxqq-wayland-fix) 修复 QQ 的 Wayland 剪贴板、屏幕共享与截图。
-- 为 Wayland、Electron、Qt/KDE 和 GTK 应用统一 Catppuccin Mocha 风格。
+- 由 Noctalia 模板统一桌面、GTK3/GTK4、Kitty 与 Qt/KDE 配色，保留 Papirus Dark 图标与 Bibata 光标。
 
 ### 分支模型
 
@@ -85,6 +85,11 @@ git diff master...laptop -- flake.nix home/default.nix hosts/nixos modules/core.
 │   ├── default.nix                   # Home Manager、应用、主题和用户服务
 │   ├── hyprland.lua                  # Hyprland Lua 配置
 │   ├── niri.kdl                      # niri 配置
+│   ├── mango.nix                     # Mango 配置与可写 include 管理
+│   ├── mango.conf                    # Mango 外观、标签、布局与快捷键
+│   ├── noctalia-templates.nix         # 桌面和应用模板的默认设置
+│   ├── noctalia-app-themes.nix        # GTK、Kitty、Qt/KDE 主题消费端与首次初始化
+│   ├── templates/                    # 首次登录的回退配色
 │   ├── scripts/                      # 截图、niri 与 Zsh/Lua 脚本
 │   └── zsh.nix                       # Zsh、Starship、fzf 和终端工具
 └── packages/
@@ -350,8 +355,8 @@ sudo nixos-rebuild boot --flake .#nixos
 
 首次进入图形会话后建议逐项确认：
 
-- 在 Noctalia Greeter 中分别启动一次 Hyprland 和 niri，确认登录、锁屏、退出及重登正常。
-- 在对应会话运行 <code>hyprctl monitors</code> 或 <code>niri msg outputs</code>；<code>laptop</code> 还应确认内屏存在 2880×1800@120 Hz 模式。
+- 在 Noctalia Greeter 中分别启动一次 Hyprland、niri 和 Mango，确认登录、锁屏、退出及重登正常。
+- 在对应会话运行 <code>hyprctl monitors</code>、<code>niri msg outputs</code> 或 <code>mmsg get all-monitors</code>；<code>laptop</code> 还应确认内屏存在 2880×1800@120 Hz 模式。
 - 使用 <code>journalctl -b -k | grep -Ei 'edid|displayid|amdgpu'</code> 检查 EDID 与 AMDGPU 日志。
 - 用 <code>Ctrl + Space</code> 切换 Fcitx5/Rime，并用 <code>F4</code> 选择雾凇拼音方案；候选窗异常时可运行 <code>fcitx5 -r</code> 和 <code>fcitx5-configtool</code>。
 - 检查 <code>systemctl --user --failed</code> 和 <code>systemctl --user status noctalia</code>，确认 Noctalia 等用户服务没有失败。
@@ -415,18 +420,18 @@ Snapper 快照便于本机回滚，但不能替代异机备份。至少应单独
 
 | 类别 | 配置 |
 |---|---|
-| 会话 | Noctalia Greeter 可选择 Hyprland 或 niri |
+| 会话 | Noctalia Greeter 可选择 Hyprland、niri 或 Mango；Mango 原生管理 graphical-session 生命周期 |
 | Shell | Zsh vi mode、共享历史、fzf、zoxide、eza、bat、lf |
 | 提示符 | Starship，显示系统、目录、Git 状态和语言版本 |
-| 终端 | Kitty，JetBrains Mono Nerd Font，Catppuccin Mocha，90% 透明度 |
-| 文件管理器 | Dolphin + Kvantum，紧凑工具栏和右侧信息面板 |
+| 终端 | Kitty，JetBrains Mono Nerd Font，Noctalia 动态配色，90% 透明度 |
+| 文件管理器 | Dolphin + Fusion，紧凑工具栏和右侧信息面板 |
 | 启动器/栏/通知 | Noctalia，栏字体为 JetBrains Mono Nerd Font；禁用 Mako 及旧式网络/蓝牙托盘自启动 |
 | 输入法 | Fcitx5 + Rime Ice，横向候选框，每页 7 个候选词 |
-| 主题 | Catppuccin Mocha Mauve、Papirus Dark、Bibata Modern Ice 光标 |
+| 主题 | Noctalia 动态配色、Papirus Dark、Bibata Modern Ice 光标 |
 | 编辑器 | AstroNvim 模板、绝对行号；VS Code 与 JetBrains IDE |
 | 默认程序 | Kitty 终端、Dolphin 目录、Firefox 网页、VS Code 文本、Okular PDF、Gwenview 图片、mpv 音视频、Ark 压缩包 |
 | 音频 | PipeWire 的 ALSA、32 位 ALSA 与 PulseAudio 兼容层 |
-| Wayland | GTK portal、wl-clipboard、Satty、grim/slurp、nwg-displays |
+| Wayland | GTK portal、Mango 的 wlr 共享屏幕门户、wl-clipboard、Satty、grim/slurp、nwg-displays、wlr-randr |
 | 网络代理 | Clash Verge 使用 service mode 与 TUN mode，默认不自动启动 |
 
 常用桌面应用包括 Firefox、Spotify、QQ、LocalSend、OBS Studio、Mission Center、Pavucontrol、AudioMonitor、ChatGPT、Okular、Gwenview、Ark、VS Code、IntelliJ IDEA、DataGrip 和 GoLand。
@@ -435,9 +440,20 @@ Snapper 快照便于本机回滚，但不能替代异机备份。至少应单独
 
 系统字体覆盖 Inter、Source Serif、Noto CJK/Emoji、Sarasa Gothic、Ioskeley Mono（Term Nerd Font）、Cousine Nerd Font 和 JetBrains Mono Nerd Font。
 
+### Noctalia 应用动态配色
+
+GTK3/GTK4、Kitty、Qt 与 KDE 配色由 <code>home/noctalia-app-themes.nix</code> 接入，相关模板默认开启，可在 Noctalia 中自行关闭。字体、字号、Papirus 图标、Kitty 90% 透明度及 Dolphin 的紧凑布局保持原有设置。
+
+- GTK3 安装并选择 <code>adw-gtk3-dark</code>。GTK3/GTK4 的 CSS 导入交由 Noctalia 钩子维护，两项可独立开关；关闭模板时移除导入并保留其他用户样式。GTK4 不额外注入 GTK3 基础主题。
+- Kitty 主配置声明 <code>include themes/noctalia.conf</code>。为 Noctalia 提供仅读取配置并发送重载信号的应用钩子，避免原生钩子对只读 <code>kitty.conf</code> 执行 <code>touch</code>；关闭模板时清空可写配色并重载。桌面模板的撤销钩子同样保留受管理的 include，仅清理动态配色；保持使用上游缓存二进制。
+- Qt5/Qt6 使用自带的 <code>Fusion</code> 样式，qt5ct/qt6ct 选择各自的 <code>colors/noctalia.conf</code>。额外开启 <code>kcolorscheme</code>，由 Noctalia 合并配色到可写的 <code>kdeglobals</code> 并通知 KDE 应用，保留图标、终端和禁用钱包设置。
+- Dolphin 使用 Fusion 控件与标准背景，窗口整体透明度由桌面规则控制。Qt/KDE 均使用 Noctalia 内置模板，无需 Kvantum 底稿、颜色转换脚本或自定义 SVG 模板。
+
+激活时仅为缺失的 Kitty、Qt 与 KDE 动态文件写入 Catppuccin Mocha 回退配色，避免首次登录找不到主题。已有动态配色不会被重建覆盖。GTK 配色由 Noctalia 在应用模板时生成。之后 Noctalia 随当前主题更新这些可写文件；部分 Qt 应用可能需要重新打开才能刷新全部控件。接入机制参考 [Noctalia GTK/Qt 文档](https://docs.noctalia.dev/noctalia/templates/official/gtk-qt/)。
+
 ### Hyprland 快捷键
 
-Hyprland 和 niri 统一使用 Noctalia 的 [Keybind Cheatsheet](https://noctalia.dev/plugins/community/keybind-cheatsheet) 插件，按 <code>Super + /</code> 打开或关闭。快捷键说明和分类直接写在各自配置中，以中英双语显示，支持中文或英文搜索（例如“截图”或“screenshot”）。速查表用于查看绑定；应用启动使用 <code>Super + A</code>。
+Hyprland、niri 和 Mango 统一使用 Noctalia 的 [Keybind Cheatsheet](https://noctalia.dev/plugins/community/keybind-cheatsheet) 插件，按 <code>Super + /</code> 打开或关闭。快捷键说明和分类直接写在各自配置中，以中英双语显示，支持中文或英文搜索（例如“截图”或“screenshot”）。速查表用于查看绑定；应用启动使用 <code>Super + A</code>。
 
 修改并重载桌面配置后，可运行以下命令刷新速查表缓存：
 
@@ -505,7 +521,7 @@ noctalia msg plugin kenn/keybind-cheatsheet:data all refresh
 | <code>Super + Alt + P</code> | 当前输出截图 |
 | <code>Print</code> | 全部输出截图 |
 
-Hyprland 和 niri 共用 <code>screenshot</code> 脚本，按当前会话自动选择截图后端。截图流程参考 [HyDE](https://github.com/HyDE-Project/HyDE/blob/master/Configs/.local/lib/hyde/screenshot.sh)：先复制原图到剪贴板，再打开 Satty 标注。Hyprland 选区时也可以单击窗口完成截图；点击时任一方向移动不超过 5 个逻辑像素仍保留窗口选择，超过后才开始框选。
+Hyprland、niri 和 Mango 共用 <code>screenshot</code> 脚本，按当前会话自动选择截图后端。截图流程参考 [HyDE](https://github.com/HyDE-Project/HyDE/blob/master/Configs/.local/lib/hyde/screenshot.sh)：先复制原图到剪贴板，再打开 Satty 标注。Hyprland 选区时也可以单击窗口完成截图；点击时任一方向移动不超过 5 个逻辑像素仍保留窗口选择，超过后才开始框选。
 
 在 Satty 中，<code>Enter</code> / <code>Ctrl + C</code> 复制编辑结果并退出，<code>Ctrl + S</code> 保存到 XDG 图片目录的 <code>Screenshots</code> 子目录并退出，保存后显示通知。仅复制不会自动写入文件；直接关闭编辑器时，剪贴板仍保留原图。
 
@@ -566,11 +582,54 @@ Hyprland 和 niri 共用 <code>screenshot</code> 脚本，按当前会话自动�
 
 应用启动和截图快捷键与 Hyprland 基本一致：<code>Super + T/E/C/B</code>、<code>Super + A/V</code>、<code>Ctrl + Shift + Escape</code> 以及同一组 <code>P</code>/<code>Print</code> 截图键。niri 另外配置了麦克风静音、Playerctl 播放控制和锁屏状态下可用的媒体/亮度键。
 
+### Mango 快捷键与布局
+
+使用锁定的 nixpkgs 中的 Mango 0.18.2，无需额外 Flake 输入。在 Noctalia Greeter 选择 **Mango** 登录。Mango 导入 Wayland/IPC 环境并启动自带的 <code>mango-session.target</code>，带起 Noctalia、Fcitx5、认证代理和桌面门户；退出时清理图形会话。配置语法可参考 [Mango 官方文档](https://mangowm.github.io/docs/)。
+
+Noctalia 的内置模板总开关、<code>hyprland</code>、<code>niri</code>、<code>mango</code> 桌面模板，以及 <code>gtk3</code>、<code>gtk4</code>、<code>kitty</code>、<code>qt</code>、<code>kcolorscheme</code>、<code>btop</code> 应用模板默认开启，仅选择当前安装的应用和桌面。<code>noctalia-templates.nix</code> 仅提供默认值，Noctalia 界面保存的设置优先，不会在启动、重建或设置变化时自动恢复开关。Mango 显式设置 <code>auto_reload_config=1</code>，读取可写的 <code>~/.config/mango/noctalia.conf</code>，主题更新会自动重载，无需 Noctalia 修改受管理的主配置。模板机制见 [Noctalia 官方 Mango 文档](https://docs.noctalia.dev/noctalia/templates/official/mango/)。
+
+默认所有标签使用半屏宽滚动布局，延续 niri 的 1/3、1/2、2/3 预设列宽，并加入整屏列宽。每个标签分别保留布局，<code>Super + Space</code> 在滚动、主从、居中主从、单窗标签页、网格与螺旋布局间轮换。外观沿用 10px 圆角、2px 边框、5/10px 间距、Kitty/Dolphin 透明效果及 Noctalia 动态配色。
+
+| 快捷键 | 动作 |
+| --- | --- |
+| <code>Super + T/E/C/B</code>、<code>Super + A/V</code> | Kitty/Dolphin/VS Code/Firefox、启动器/剪贴板 |
+| <code>Super + Q/W/M</code> | 关闭 / 浮动 / 最大化 |
+| <code>Super + Shift + F</code> / <code>Super + F11</code> | 全屏 |
+| <code>Super + Alt + L</code>、<code>Super + Shift + E</code> | Noctalia 锁屏 / 退出 Mango |
+| <code>Alt + Tab</code> / <code>Alt + Shift + Tab</code> | 原生跨显示器窗口切换器 |
+| <code>Super + 方向键</code> 或 <code>H/J/K/L</code> | 方向焦点 |
+| <code>Super + Ctrl + 方向键</code> | 移动平铺窗口 |
+| <code>Super + Shift + 方向键</code> | 调整窗口大小 |
+| <code>Super + Shift + H/J/K/L</code> | 切换显示器 |
+| <code>Super + Ctrl + Shift + 方向键</code> | 移动窗口到显示器 |
+| <code>Super + 1…0</code> / 加 <code>Shift</code> | 查看标签 1–10 / 移动窗口并跟随 |
+| <code>Super + Ctrl + 1…0</code> | 将标签加入当前视图或移除，可同时查看多个标签 |
+| <code>Super + Ctrl + Shift + 1…0</code> | 将窗口加入或移出指定标签，可让一个窗口属于多个标签 |
+| <code>Super + Tab</code> | 返回上次标签组合 |
+| <code>Super + PageUp/PageDown</code> 或 <code>I/U</code> | 前后切换标签；加 <code>Ctrl</code> 的 Page 键移动窗口 |
+| <code>Super + Alt + S/T/C/M/G/D</code> | 直接选择滚动 / 主从 / 居中主从 / 单窗 / 网格 / 螺旋布局 |
+| <code>Super + R</code> / <code>Super + Shift + R</code> | 下一档 / 上一档滚动列宽 |
+| <code>Super + F</code>、<code>Super + ,/.</code> | 整屏列宽 / 向左或右堆叠滚动窗口 |
+| <code>Super + Return</code> | 将当前窗口提升为主窗口 |
+| <code>Super + -/=</code> / 加 <code>Shift</code> | 调整主区域比例 / 主窗口数量 |
+| <code>Super + O</code>、<code>Super + Shift + O</code> | 总览 / 字母标签跳转窗口 |
+| <code>Super + S</code> / 加 <code>Shift</code> / 加 <code>Ctrl</code> | 切换特殊工作区 / 移入并跟随 / 静默移入 |
+| <code>Super + `</code> | 启动或显隐独立的 Kitty 暂存终端 |
+| <code>Super + Ctrl + Shift + R</code> | 重载配置 |
+| <code>Super + /</code> | 中英双语快捷键速查表 |
+
+截图继续使用 <code>Super + P</code>、<code>Super + Ctrl + P</code>、<code>Super + Alt + P</code> 与 <code>Print</code>。Mango 后端通过原生 IPC 获取窗口和焦点显示器；选区时可单击窗口，<code>screenshot window</code> 仅选窗口。滚动窗口越出显示器的部分会裁掉，隐藏标签页和最小化窗口不会进入选窗列表，取消选择不会截图。
+
+<code>Super + 鼠标左/右键</code> 移动/缩放窗口，<code>Super + 滚轮</code> 跳过空标签；触控板自然滚动、轻触点击和打字禁用保持一致。三指左右滑动切换非空标签，四指上/下滑动打开/关闭总览。媒体键、麦克风静音与亮度键可在锁屏时使用。
+
+显示器默认首选模式、2 倍缩放。使用 <code>wlr-randr</code> 查询或临时调整输出；持久设置写入可写的 <code>~/.config/mango/monitors.conf</code>，例如 <code>monitor_rule=name:^DP-2$,scale:1.5</code>，随后重载。该文件先于默认规则读取，优先匹配；nwg-displays 继续用于 Hyprland/niri。
+
 ### 运行时生成的配置
 
-- Noctalia 写入 <code>~/.config/niri/noctalia.kdl</code>。
+- Noctalia 写入 <code>~/.config/niri/noctalia.kdl</code> 和 <code>~/.config/mango/noctalia.conf</code>。
 - nwg-displays 写入 <code>~/.config/niri/monitor.kdl</code>，以及 Hyprland 的 monitor/workspace Lua 模块。
 - Home Manager 首次激活时会创建 niri 的两个可写 include 文件，但主 <code>config.kdl</code> 仍由声明式配置管理。
+- Mango 首次激活时创建可写的 <code>noctalia.conf</code> 和 <code>monitors.conf</code>，主 <code>config.conf</code> 由 Home Manager 管理。
 - Rime Ice 以可写副本同步到用户数据目录，以便 Fcitx5 生成编译产物。
 - sops-nix 运行时使用主机 SSH Ed25519 密钥作为 Age 密钥来源；<code>.sops.yaml</code> 为 <code>secrets/*.yaml</code> 声明 GPG 与 Age 接收者，但仓库当前没有具体 secret 文件。
 - <code>/var/lib/sbctl</code> 保存本机 Secure Boot 私钥，必须纳入安全离线备份，但不能提交到仓库。

@@ -21,7 +21,7 @@ This repository is a complete personal machine configuration, not a hardware-neu
 | Nixpkgs | <code>nixos-unstable</code> |
 | NixOS / Home Manager state version | <code>25.11</code> |
 | Time zone | <code>Asia/Taipei</code> |
-| Desktop sessions | Hyprland and niri |
+| Desktop sessions | Hyprland, niri, and Mango |
 | Login manager | greetd + Noctalia Greeter |
 | System filesystem | Btrfs with zstd compression and Snapper |
 | Boot chain | rEFInd → systemd-boot / Lanzaboote → UKI |
@@ -29,13 +29,13 @@ This repository is a complete personal machine configuration, not a hardware-neu
 Highlights:
 
 - A single Flake composes NixOS, Home Manager, Lanzaboote, sops-nix, and Noctalia.
-- Both a dynamic-tiling Hyprland session and a scrollable-tiling niri session are available.
+- Hyprland dynamic tiling, niri scrollable tiling, and Mango layouts with tags are available.
 - Noctalia provides the bar, launcher, clipboard, notifications, wallpaper, and session UI.
 - Fcitx5 with Rime Ice provides Chinese and English input.
 - PipeWire, NetworkManager, BlueZ/Blueman, UDisks2, and desktop portals are configured.
 - Btrfs subvolumes and periodic TRIM are enabled; Snapper is available for users to manage snapshots and cleanup manually.
 - Local packages cover the ChatGPT Linux app, DeepSeek Harness, and AudioMonitor; [linuxqq-wayland-fix](https://github.com/SHORiN-KiWATA/linuxqq-wayland-fix) provides QQ clipboard, screen-sharing, and screenshot fixes on Wayland.
-- Wayland, Electron, Qt/KDE, and GTK applications share a Catppuccin Mocha-oriented desktop.
+- Noctalia templates coordinate desktop, GTK3/GTK4, Kitty, and Qt/KDE palettes while retaining Papirus Dark icons and Bibata cursors.
 
 ### Branch model
 
@@ -85,6 +85,11 @@ git diff master...laptop -- flake.nix home/default.nix hosts/nixos modules/core.
 │   ├── default.nix                   # Home Manager, applications, theming, services
 │   ├── hyprland.lua                  # Hyprland Lua configuration
 │   ├── niri.kdl                      # niri configuration
+│   ├── mango.nix                     # Mango config and writable includes
+│   ├── mango.conf                    # Mango appearance, tags, layouts, and bindings
+│   ├── noctalia-templates.nix         # Desktop and application template defaults
+│   ├── noctalia-app-themes.nix        # GTK, Kitty, Qt/KDE consumers and first-login setup
+│   ├── templates/                    # First-login fallback palette
 │   ├── scripts/                      # Capture, niri and Zsh/Lua scripts
 │   └── zsh.nix                       # Zsh, Starship, fzf, terminal tools
 └── packages/
@@ -350,8 +355,8 @@ Retaining Microsoft certificates helps Windows Boot Manager and some hardware op
 
 After entering the graphical session for the first time:
 
-- Start both Hyprland and niri once from Noctalia Greeter and verify login, locking, logout, and login again.
-- Run <code>hyprctl monitors</code> or <code>niri msg outputs</code> in the corresponding session. On <code>laptop</code>, confirm that the internal display offers 2880×1800 at 120 Hz.
+- Start Hyprland, niri, and Mango once from Noctalia Greeter and verify login, locking, logout, and login again.
+- Run <code>hyprctl monitors</code>, <code>niri msg outputs</code>, or <code>mmsg get all-monitors</code> in the corresponding session. On <code>laptop</code>, confirm that the internal display offers 2880×1800 at 120 Hz.
 - Inspect EDID and AMDGPU messages with <code>journalctl -b -k | grep -Ei 'edid|displayid|amdgpu'</code>.
 - Toggle Fcitx5/Rime with <code>Ctrl + Space</code> and select the Rime Ice schema with <code>F4</code>. If the candidate window fails, run <code>fcitx5 -r</code> and <code>fcitx5-configtool</code>.
 - Check <code>systemctl --user --failed</code> and <code>systemctl --user status noctalia</code>, and make sure Noctalia and other user services did not fail.
@@ -415,18 +420,18 @@ Snapper snapshots are useful for local rollback, but they are not an off-machine
 
 | Area | Configuration |
 |---|---|
-| Sessions | Noctalia Greeter offers Hyprland and niri |
+| Sessions | Noctalia Greeter offers Hyprland, niri, and Mango; Mango manages the graphical-session lifecycle natively |
 | Shell | Zsh vi mode, shared history, fzf, zoxide, eza, bat, lf |
 | Prompt | Starship with OS, directory, Git state, and language versions |
-| Terminal | Kitty, JetBrains Mono Nerd Font, Catppuccin Mocha, 90% opacity |
-| File manager | Dolphin with Kvantum, compact toolbar, and right-side information panel |
+| Terminal | Kitty, JetBrains Mono Nerd Font, Noctalia palette, 90% opacity |
+| File manager | Dolphin with Fusion, compact toolbar, and right-side information panel |
 | Launcher/bar/notifications | Noctalia with JetBrains Mono Nerd Font for the bar; Mako and legacy network/Bluetooth tray autostart are disabled |
 | Input method | Fcitx5 + Rime Ice with a horizontal list of seven candidates per page |
-| Theme | Catppuccin Mocha Mauve, Papirus Dark, Bibata Modern Ice cursor |
+| Theme | Noctalia palettes, Papirus Dark, Bibata Modern Ice cursor |
 | Editors | AstroNvim with absolute line numbers, VS Code, JetBrains IDEs |
 | Defaults | Kitty for terminals, Dolphin for directories, Firefox for the web, VS Code for text, Okular for PDF, Gwenview for images, mpv for media, Ark for archives |
 | Audio | PipeWire with ALSA, 32-bit ALSA, and PulseAudio compatibility |
-| Wayland tools | GTK portal, wl-clipboard, Satty, grim/slurp, nwg-displays |
+| Wayland tools | GTK portal, wlr screencasting portal for Mango, wl-clipboard, Satty, grim/slurp, nwg-displays, wlr-randr |
 | Network proxy | Clash Verge uses service mode and TUN mode but does not autostart |
 
 Desktop applications include Firefox, Spotify, QQ, LocalSend, OBS Studio, Mission Center, Pavucontrol, AudioMonitor, ChatGPT, Okular, Gwenview, Ark, VS Code, IntelliJ IDEA, DataGrip, and GoLand.
@@ -435,9 +440,20 @@ Development and maintenance tools include GCC, CMake, Make, pkg-config, Node.js,
 
 Installed font families cover Inter, Source Serif, Noto CJK/Emoji, Sarasa Gothic, Ioskeley Mono (Term Nerd Font), Cousine Nerd Font, and JetBrains Mono Nerd Font.
 
+### Noctalia application palettes
+
+<code>home/noctalia-app-themes.nix</code> connects GTK3/GTK4, Kitty, Qt, and KDE to Noctalia. Their templates are enabled by default and can be disabled in Noctalia. Existing fonts, sizes, Papirus icons, Kitty's 90% opacity, and Dolphin's compact layout are retained.
+
+- GTK3 installs and selects <code>adw-gtk3-dark</code>. Noctalia's hooks manage the CSS imports for both GTK versions, support independent toggles, and remove imports when disabled while preserving other user styles. GTK4 does not inject a GTK3 base theme.
+- Kitty declares <code>include themes/noctalia.conf</code>. A replacement Noctalia apply hook only verifies the include and signals Kitty to reload, avoiding the upstream hook's unconditional <code>touch</code> of the read-only main config. Disabling the template clears the writable palette and reloads Kitty. Compositor undo hooks likewise preserve managed includes and clear only generated colors. The upstream cached binary is retained.
+- Qt5/Qt6 use the built-in <code>Fusion</code> style, with qt5ct/qt6ct selecting their respective <code>colors/noctalia.conf</code>. The <code>kcolorscheme</code> template is enabled by default, merges colors into writable <code>kdeglobals</code>, and notifies KDE applications while preserving icons, terminal, and wallet settings.
+- Dolphin uses Fusion widgets and a standard background; compositor rules control whole-window opacity. Qt/KDE use Noctalia's built-in templates, without a Kvantum base theme, color conversion script, or custom SVG templates.
+
+Activation seeds only missing Kitty, Qt, and KDE files with a Catppuccin Mocha fallback, so first login has usable themes. Rebuilds preserve existing generated palettes. Noctalia generates GTK colors when applying its templates and subsequently updates the writable files with the selected theme; some Qt applications may need reopening to refresh every widget. See the [Noctalia GTK/Qt documentation](https://docs.noctalia.dev/noctalia/templates/official/gtk-qt/).
+
 ### Hyprland key bindings
 
-Hyprland and niri both use the Noctalia [Keybind Cheatsheet](https://noctalia.dev/plugins/community/keybind-cheatsheet) plugin, toggled with <code>Super + /</code>. Bilingual Chinese/English descriptions and categories live in each compositor configuration; search in either language (for example, “截图” or “screenshot”). The cheatsheet displays bindings; use <code>Super + A</code> to launch applications.
+Hyprland, niri, and Mango use the Noctalia [Keybind Cheatsheet](https://noctalia.dev/plugins/community/keybind-cheatsheet) plugin, toggled with <code>Super + /</code>. Bilingual Chinese/English descriptions and categories live in each compositor configuration; search in either language (for example, “截图” or “screenshot”). The cheatsheet displays bindings; use <code>Super + A</code> to launch applications.
 
 After editing and reloading the compositor configuration, refresh the cheatsheet cache with:
 
@@ -505,7 +521,7 @@ Window group tabs use Noctalia theme background colors, a title font size of 10,
 | <code>Super + Alt + P</code> | Capture the focused output |
 | <code>Print</code> | Capture all outputs |
 
-Hyprland and niri share the <code>screenshot</code> script, which selects the capture backend for the current session. The capture workflow follows [HyDE](https://github.com/HyDE-Project/HyDE/blob/master/Configs/.local/lib/hyde/screenshot.sh): copy the original image to the clipboard, then open Satty for annotation. In Hyprland, clicking a window during area selection also captures that window; pointer movement of up to 5 logical pixels along either axis preserves the window selection, and exceeding that threshold starts a region selection.
+Hyprland, niri, and Mango share the <code>screenshot</code> script, which selects the capture backend for the current session. The capture workflow follows [HyDE](https://github.com/HyDE-Project/HyDE/blob/master/Configs/.local/lib/hyde/screenshot.sh): copy the original image to the clipboard, then open Satty for annotation. In Hyprland, clicking a window during area selection also captures that window; pointer movement of up to 5 logical pixels along either axis preserves the window selection, and exceeding that threshold starts a region selection.
 
 In Satty, <code>Enter</code> / <code>Ctrl + C</code> copies the edited image and exits; <code>Ctrl + S</code> saves it to <code>Screenshots</code> under the XDG pictures directory and exits, followed by a save notification. Copying alone does not write a file. Closing the editor without copying leaves the original image in the clipboard.
 
@@ -566,11 +582,54 @@ The smart directional helper first inspects the focused window. Floating move an
 
 Application and capture bindings largely match Hyprland: <code>Super + T/E/C/B</code>, <code>Super + A/V</code>, <code>Ctrl + Shift + Escape</code>, and the same <code>P</code>/<code>Print</code> capture family. niri additionally binds microphone mute, Playerctl playback controls, and media/brightness keys that remain available while locked.
 
+### Mango bindings and layouts
+
+Uses Mango 0.18.2 from the locked nixpkgs, without another Flake input. Select **Mango** in Noctalia Greeter. Mango imports its Wayland/IPC environment and starts the shipped <code>mango-session.target</code>, bringing up Noctalia, Fcitx5, the authentication agent, and portals; logout stops the graphical session. See the [official Mango documentation](https://mangowm.github.io/docs/) for configuration syntax.
+
+The built-in template switch, <code>hyprland</code>, <code>niri</code>, and <code>mango</code> compositor templates, and <code>gtk3</code>, <code>gtk4</code>, <code>kitty</code>, <code>qt</code>, <code>kcolorscheme</code>, and <code>btop</code> application templates are enabled by default, selecting only installed applications and compositors. <code>noctalia-templates.nix</code> only supplies defaults; settings saved through the Noctalia UI take precedence and are not reset during startup, rebuilds, or settings changes. Mango explicitly sets <code>auto_reload_config=1</code> and reads the writable <code>~/.config/mango/noctalia.conf</code>, so palette updates reload automatically without Noctalia editing the managed main config. See the [official Noctalia Mango template documentation](https://docs.noctalia.dev/noctalia/templates/official/mango/).
+
+Every tag starts with a half-width scroller layout. Width presets follow niri's thirds, halves, and two-thirds, plus full width. Each tag keeps its own layout; <code>Super + Space</code> cycles scroller, master-stack, centered master, monocle tabs, grid, and dwindle. Appearance follows the existing 10px rounding, 2px borders, 5/10px gaps, Kitty/Dolphin transparency, and Noctalia palette.
+
+| Binding | Action |
+| --- | --- |
+| <code>Super + T/E/C/B</code>, <code>Super + A/V</code> | Kitty/Dolphin/VS Code/Firefox, launcher/clipboard |
+| <code>Super + Q/W/M</code> | Close / float / maximize |
+| <code>Super + Shift + F</code> / <code>Super + F11</code> | Fullscreen |
+| <code>Super + Alt + L</code>, <code>Super + Shift + E</code> | Noctalia lock / quit Mango |
+| <code>Alt + Tab</code> / <code>Alt + Shift + Tab</code> | Native window switcher across monitors |
+| <code>Super + arrows</code> or <code>H/J/K/L</code> | Directional focus |
+| <code>Super + Ctrl + arrows</code> | Move tiled windows |
+| <code>Super + Shift + arrows</code> | Resize windows |
+| <code>Super + Shift + H/J/K/L</code> | Focus monitors |
+| <code>Super + Ctrl + Shift + arrows</code> | Move windows to monitors |
+| <code>Super + 1…0</code> / with <code>Shift</code> | View tags 1–10 / move window and follow |
+| <code>Super + Ctrl + 1…0</code> | Add/remove a tag in the current view; view several tags together |
+| <code>Super + Ctrl + Shift + 1…0</code> | Add/remove window membership in a tag |
+| <code>Super + Tab</code> | Return to the previous tagset |
+| <code>Super + PageUp/PageDown</code> or <code>I/U</code> | Previous/next tag; add <code>Ctrl</code> to Page keys to move windows |
+| <code>Super + Alt + S/T/C/M/G/D</code> | Scroller / tile / centered master / monocle / grid / dwindle |
+| <code>Super + R</code> / <code>Super + Shift + R</code> | Next/previous scroller width preset |
+| <code>Super + F</code>, <code>Super + ,/.</code> | Full-width column / stack scroller windows left or right |
+| <code>Super + Return</code> | Promote the focused window to master |
+| <code>Super + -/=</code> / with <code>Shift</code> | Adjust master ratio / master count |
+| <code>Super + O</code>, <code>Super + Shift + O</code> | Overview / jump to a window by letter label |
+| <code>Super + S</code> / with <code>Shift</code> / with <code>Ctrl</code> | Toggle special workspace / move and follow / send silently |
+| <code>Super + `</code> | Launch or toggle a dedicated Kitty scratch terminal |
+| <code>Super + Ctrl + Shift + R</code> | Reload configuration |
+| <code>Super + /</code> | Chinese/English keybind cheatsheet |
+
+Capture uses the same <code>Super + P</code>, <code>Super + Ctrl + P</code>, <code>Super + Alt + P</code>, and <code>Print</code> bindings. The Mango backend queries windows and the focused monitor through native IPC. Click a window during area selection, or use <code>screenshot window</code> for window-only selection. Scroller rectangles are clipped to their monitors; hidden tabs and minimized windows are excluded. Cancelling never captures a fallback window.
+
+<code>Super + left/right mouse</code> moves/resizes windows; <code>Super + wheel</code> skips empty tags. Natural scrolling, tap-to-click, and disable-while-typing match the existing trackpad settings. Three-finger horizontal swipes navigate occupied tags; four-finger up/down opens/closes overview. Media, microphone mute, and brightness bindings work while locked.
+
+Outputs default to their preferred mode at 2x scale. Use <code>wlr-randr</code> to inspect or temporarily adjust them. Persist rules in the writable <code>~/.config/mango/monitors.conf</code>, for example <code>monitor_rule=name:^DP-2$,scale:1.5</code>, then reload. This include is read before the fallback rule and takes precedence. nwg-displays remains available for Hyprland/niri.
+
 ### Runtime-generated configuration
 
-- Noctalia writes <code>~/.config/niri/noctalia.kdl</code>.
+- Noctalia writes <code>~/.config/niri/noctalia.kdl</code> and <code>~/.config/mango/noctalia.conf</code>.
 - nwg-displays writes <code>~/.config/niri/monitor.kdl</code> and Hyprland monitor/workspace Lua modules.
 - Home Manager creates the two writable niri include files on first activation while keeping the main <code>config.kdl</code> declarative.
+- Mango activation creates writable <code>noctalia.conf</code> and <code>monitors.conf</code> includes; Home Manager manages the main <code>config.conf</code>.
 - Rime Ice is synchronized as a writable copy so Fcitx5 can generate compiled artifacts.
 - At runtime, sops-nix derives an Age key from the host SSH Ed25519 key. <code>.sops.yaml</code> declares GPG and Age recipients for <code>secrets/*.yaml</code>, but no concrete secret file exists yet.
 - <code>/var/lib/sbctl</code> stores this machine's Secure Boot private keys. Keep a safe offline backup, but never commit them to the repository.

@@ -36,15 +36,6 @@ let
       system = pkgs.stdenv.hostPlatform.system;
       config.allowUnfree = true;
     }).claude-code;
-  catppuccinKde = pkgs.catppuccin-kde.override {
-    flavour = [ "mocha" ];
-    accents = [ "mauve" ];
-    winDecStyles = [ "modern" ];
-  };
-  catppuccinKvantum = pkgs.catppuccin-kvantum.override {
-    variant = "mocha";
-    accent = "mauve";
-  };
   dolphinUiStyle = pkgs.writeText "dolphin-ui.qss" ''
     QWidget {
       font-size: 9pt;
@@ -59,20 +50,12 @@ let
       menu/page_size: 7
   '';
   dolphin = pkgs.symlinkJoin {
-    name = "dolphin-kvantum";
+    name = "dolphin-compact";
     paths = [ pkgs.kdePackages.dolphin ];
     nativeBuildInputs = [ pkgs.makeWrapper ];
     postBuild = ''
       wrapProgram "$out/bin/dolphin" \
-        --set QT_QPA_PLATFORMTHEME qt6ct \
-        --set QT_STYLE_OVERRIDE kvantum \
-        --add-flags "-stylesheet ${dolphinUiStyle}" \
-        --prefix QT_PLUGIN_PATH : "${
-          lib.makeSearchPath "lib/qt-6/plugins" [
-            pkgs.kdePackages.qt6ct
-            pkgs.kdePackages.qtstyleplugin-kvantum
-          ]
-        }"
+        --add-flags "-stylesheet ${dolphinUiStyle}"
     '';
   };
   spotify = pkgs.symlinkJoin {
@@ -100,6 +83,7 @@ let
       screenshotGrimblast
       jq
       libnotify
+      mango
       niri
       satty
       screenshotSlurp
@@ -119,7 +103,12 @@ let
   };
 in
 {
-  imports = [ ./zsh.nix ];
+  imports = [
+    ./zsh.nix
+    ./mango.nix
+    ./noctalia-templates.nix
+    ./noctalia-app-themes.nix
+  ];
 
   home = {
     inherit username;
@@ -150,7 +139,6 @@ in
       kdePackages.baloo-widgets
       kdePackages.ffmpegthumbs
       kdePackages.kio-extras
-      catppuccinKde
       firefox
       localsend
       mission-center
@@ -162,7 +150,7 @@ in
       gamescope
       mangohud
 
-      # Hyprland and Wayland desktop tools
+      # Wayland desktop tools
       wl-clipboard
       hyprpicker
       screenshotGrimblast
@@ -176,6 +164,7 @@ in
       mpvpaper
       networkmanagerapplet
       nwg-displays
+      wlr-randr
       xwayland-satellite
       xlsclients
 
@@ -287,30 +276,24 @@ in
   qt = {
     enable = true;
     platformTheme.name = "qtct";
-    style.name = "kvantum";
-    kvantum = {
-      enable = true;
-      themes = [ catppuccinKvantum ];
-      settings.General.theme = "catppuccin-mocha-mauve";
-    };
+    style.name = "Fusion";
     qt5ctSettings.Appearance = {
-      color_scheme_path = "${catppuccinKde}/share/color-schemes/CatppuccinMochaMauve.colors";
+      color_scheme_path = "${config.xdg.configHome}/qt5ct/colors/noctalia.conf";
       custom_palette = true;
       icon_theme = "Papirus-Dark";
       standard_dialogs = "default";
-      style = "kvantum";
+      style = "Fusion";
     };
     qt6ctSettings.Appearance = {
-      color_scheme_path = "${catppuccinKde}/share/color-schemes/CatppuccinMochaMauve.colors";
+      color_scheme_path = "${config.xdg.configHome}/qt6ct/colors/noctalia.conf";
       custom_palette = true;
       icon_theme = "Papirus-Dark";
       standard_dialogs = "default";
-      style = "kvantum";
+      style = "Fusion";
     };
   };
   programs.kitty = {
     enable = true;
-    themeFile = "Catppuccin-Mocha";
     settings = {
       font_family = "JetBrainsMono Nerd Font";
       bold_font = "auto";
@@ -413,25 +396,7 @@ in
     builtins.readFile ./scripts/markdown-preview.lua
   );
 
-  xdg.configFile."kdeglobals".text = ''
-    [Colors:View]
-    BackgroundNormal=#00000000
-
-    [General]
-    ColorScheme=CatppuccinMochaMauve
-    TerminalApplication=kitty
-
-    [Icons]
-    Theme=Papirus-Dark
-
-    [UiSettings]
-    ColorScheme=CatppuccinMochaMauve
-
-    [Wallet]
-    Enabled=false
-  '';
-
-  # Mirror HyDE's compact, transparent Dolphin layout.
+  # Mirror HyDE's compact Dolphin layout.
   xdg.configFile."dolphinrc".text = ''
     MenuBar=Disabled
 
@@ -629,29 +594,6 @@ in
     ];
     settings.widget.mpvpaper.type = "noctalia/mpvpaper:mpvpaper";
     settings.widget.lyrics.type = "h465855hgg/lyrics:lyrics";
-    # Keep Kitty, Starship, and KDE/Qt out of dynamic templates so their fixed
-    # configurations are not overwritten on palette changes.
-    settings.theme.templates = {
-      enable_builtin_templates = true;
-      builtin_ids = [
-        "alacritty"
-        "btop"
-        "cava"
-        "emacs"
-        "foot"
-        "ghostty"
-        "gtk3"
-        "gtk4"
-        "helix"
-        "labwc"
-        "niri"
-        "hyprland"
-        "mango"
-        "scroll"
-        "sway"
-        "wezterm"
-      ];
-    };
   };
 
   # Dolphin delegates removable and secondary-drive mounts to UDisks2, which

@@ -18,6 +18,11 @@
     enable = true;
   };
 
+  programs.mango.enable = true;
+  # Mango 0.18 imports its Wayland/IPC environment and starts this target
+  # itself. Install the shipped unit so graphical-session services follow it.
+  systemd.packages = [ config.programs.mango.package ];
+
   programs.linuxqq-wayland-fix = {
     enable = true;
     qq = pkgs.qq.override {
@@ -39,6 +44,8 @@
   xdg.portal = {
     enable = true;
     extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+    # Correct the interface spelling in nixpkgs' Mango portal defaults.
+    config.mango."org.freedesktop.impl.portal.Screenshot" = [ "wlr" ];
   };
 
   hardware.bluetooth = {
@@ -72,7 +79,7 @@
     };
   };
 
-  # Niri/Hyprland sessions do not consistently launch XDG autostart entries.
+  # Wayland sessions do not consistently launch XDG autostart entries.
   # Start Fcitx explicitly as a user service after the graphical session exists.
   systemd.user.services.fcitx5 = {
     description = "Fcitx 5 input method";
