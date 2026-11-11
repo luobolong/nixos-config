@@ -540,21 +540,6 @@ in
           "notifications"
           "session"
         ];
-        monitor."DP-2" = {
-          start = [
-            "launcher"
-            "settings"
-            "workspaces"
-          ];
-          end = [
-            "tray"
-            "wallpaper"
-            "mpvpaper"
-            "volume"
-            "notifications"
-            "session"
-          ];
-        };
         thickness = 26;
       };
     };

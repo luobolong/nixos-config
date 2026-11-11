@@ -49,7 +49,7 @@
 | Btrfs 子卷 | Disko 创建 <code>@root</code>、<code>@nix</code>、<code>@home</code> 及快照子卷 | 挂载已有 <code>@root</code>、<code>@nix</code>、<code>@home</code> |
 | Windows 双启动 | Windows ESP 使用 PARTUUID <code>991a77db-c316-4f75-b9df-bc05e179a798</code>，并应位于不会被 Disko 清除的另一块磁盘上 | 同一 SSD 上的 Windows ESP 使用 <code>084dbc6c-e077-48f9-b6d5-ccd76d8f1d42</code> |
 | 内置屏幕 | 无 EDID 覆盖 | 在 initrd 中加载校正 EDID，修复 2880×1800 面板的 120 Hz 模式 |
-| Noctalia 默认栏 | 包含媒体与 mpvpaper，并为 <code>DP-2</code> 提供单独布局 | 默认栏显示网络、蓝牙和电池，不设置 <code>DP-2</code> 覆盖 |
+| Noctalia 默认栏 | 包含媒体与 mpvpaper，所有显示器使用默认布局 | 默认栏显示网络、蓝牙和电池，所有显示器使用默认布局 |
 | Flake 锁文件 | 包含 Disko 输入闭包 | 移除 Disko 输入闭包 |
 
 可用以下命令核对两个已提交分支的实际差异：
