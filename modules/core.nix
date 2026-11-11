@@ -84,12 +84,7 @@ in
     };
   };
 
-  nixpkgs.config = {
-    allowUnfree = true;
-    # Lutris still needs GTK2 in its 32/64-bit game runtime. Nixpkgs marks it
-    # broken for planned removal in 27.05; retain the deprecation warning.
-    problems.handlers."gtk+".broken = "warn";
-  };
+  nixpkgs.config.allowUnfree = true;
 
   boot = {
     # Follow the latest Linux kernel series provided by nixos-unstable.
