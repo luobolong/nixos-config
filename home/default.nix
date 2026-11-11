@@ -7,35 +7,7 @@
   ...
 }:
 let
-  chatgpt = pkgs.callPackage ../packages/chatgpt.nix { };
-  deepseekHarness = pkgs.callPackage ../packages/deepseek-harness.nix { };
-  githubReleases = import ../packages/github-releases.nix { inherit pkgs; };
-  obsBilibiliStream = githubReleases.obs-bilibili-stream;
-  codexUpdater = pkgs.writeShellApplication {
-    name = "codex-update";
-    runtimeInputs = with pkgs; [
-      coreutils
-      curl
-      findutils
-      gawk
-      gnugrep
-      gnused
-      gnutar
-      util-linux
-    ];
-    text = ''
-      export CODEX_INSTALL_DIR="$HOME/.local/bin"
-      export CODEX_NON_INTERACTIVE=1
-      export PATH="$CODEX_INSTALL_DIR:$PATH"
-
-      curl -fsSL https://chatgpt.com/codex/install.sh | ${pkgs.runtimeShell}
-    '';
-  };
-  claudeCode =
-    (import inputs.nixpkgs-claude {
-      system = pkgs.stdenv.hostPlatform.system;
-      config.allowUnfree = true;
-    }).claude-code;
+  extraPackages = import ../packages { inherit inputs pkgs; };
   dolphinUiStyle = pkgs.writeText "dolphin-ui.qss" ''
     QWidget {
       font-size: 9pt;
@@ -44,10 +16,6 @@ let
     QDockWidget#placesDock {
       min-height: 350px;
     }
-  '';
-  rimeDefaultCustom = pkgs.writeText "rime-default-custom.yaml" ''
-    patch:
-      menu/page_size: 7
   '';
   dolphin = pkgs.symlinkJoin {
     name = "dolphin-compact";
@@ -64,9 +32,6 @@ let
     nativeBuildInputs = [ pkgs.makeWrapper ];
     postBuild = ''
       wrapProgram "$out/bin/spotify" \
-        --set NIXOS_OZONE_WL 1 \
-        --add-flags "--enable-features=UseOzonePlatform" \
-        --add-flags "--ozone-platform=wayland" \
         --add-flags "--enable-wayland-ime" \
         --add-flags "--wayland-text-input-version=3"
     '';
@@ -143,7 +108,7 @@ in
       localsend
       mission-center
       pavucontrol
-      githubReleases.audiomonitor
+      extraPackages.audiomonitor
 
       # Gaming tools
       wineWow64Packages.full
@@ -171,7 +136,7 @@ in
       # Terminal and file search tools
       fastfetch
       btop
-      githubReleases.bili-danmaku-tui
+      extraPackages.bili-danmaku-tui
       ripgrep
       fd
       file
@@ -213,13 +178,10 @@ in
       nil
       nixfmt
       nix-update
-      # Keep nixpkgs' Codex as an offline fallback until the standalone updater
-      # has installed the latest release into ~/.local/bin.
       codex
-      codexUpdater
       chatgpt
-      claudeCode
-      deepseekHarness
+      claude-code
+      deepseek-harness
       sops
     ];
     preferXdgDirectories = true;
@@ -241,7 +203,7 @@ in
   };
   programs.obs-studio = {
     enable = true;
-    plugins = [ obsBilibiliStream ];
+    plugins = [ pkgs.obs-studio-plugins.obs-bilibili-stream ];
   };
   programs.java = {
     enable = true;
@@ -471,12 +433,11 @@ in
     ]
   '';
 
-  # rime-ice writes compiled artifacts into the user directory, so deploy it
-  # as a writable copy.
-  home.activation.installRimeIce = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    $DRY_RUN_CMD mkdir -p ${config.home.homeDirectory}/.local/share/fcitx5/rime
-    $DRY_RUN_CMD ${pkgs.rsync}/bin/rsync -rL --chmod=u+w ${inputs.rime-ice}/ ${config.home.homeDirectory}/.local/share/fcitx5/rime/
-    $DRY_RUN_CMD install -m 0644 ${rimeDefaultCustom} ${config.home.homeDirectory}/.local/share/fcitx5/rime/default.custom.yaml
+  # Schemas and dictionaries are supplied by fcitx5-rime's rimeDataPkgs.
+  xdg.dataFile."fcitx5/rime/default.custom.yaml".text = ''
+    patch:
+      __include: rime_ice_suggestion:/
+      menu/page_size: 7
   '';
 
   # Keep niri's runtime-generated includes writable and available on first login.
@@ -607,13 +568,13 @@ in
   };
   services.ssh-agent.enable = true;
 
-  home.sessionPath = [ "$HOME/.local/bin" ];
+  # Prefer declarative packages over older standalone installs in ~/.local/bin.
+  home.sessionPath = [
+    "${config.home.profileDirectory}/bin"
+    "$HOME/.local/bin"
+  ];
   home.sessionVariables = {
     NIXOS_OZONE_WL = "1";
-    ELECTRON_OZONE_PLATFORM_HINT = "auto";
     TERMINAL = "kitty";
-    XMODIFIERS = "@im=fcitx";
-    XCURSOR_THEME = config.home.pointerCursor.name;
-    XCURSOR_SIZE = toString config.home.pointerCursor.size;
   };
 }

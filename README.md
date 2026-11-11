@@ -34,7 +34,7 @@
 - 使用 Fcitx5 + Rime Ice，提供中英文输入。
 - 使用 PipeWire、NetworkManager、BlueZ/Blueman、UDisks2 与桌面门户。
 - 使用 Btrfs 子卷和周期 TRIM；保留 Snapper，由用户手动管理快照和清理。
-- 打包 ChatGPT Linux 客户端、DeepSeek Harness 和 AudioMonitor，并集成 [linuxqq-wayland-fix](https://github.com/SHORiN-KiWATA/linuxqq-wayland-fix) 修复 QQ 的 Wayland 剪贴板、屏幕共享与截图。
+- ChatGPT、DeepSeek Harness 和 OBS Bilibili 插件使用 nixpkgs；AudioMonitor 与弹幕 TUI 使用上游 flake，并集成 [linuxqq-wayland-fix](https://github.com/SHORiN-KiWATA/linuxqq-wayland-fix) 修复 QQ 的 Wayland 剪贴板、屏幕共享与截图。
 - 由 Noctalia 模板统一桌面、GTK3/GTK4、Kitty 与 Qt/KDE 配色，保留 Papirus Dark 图标与 Bibata 光标。
 
 ### 分支模型
@@ -79,7 +79,6 @@ git diff master...laptop -- flake.nix home/default.nix hosts/nixos modules/core.
 │   ├── clash-verge.nix               # Clash Verge service/TUN 配置
 │   ├── secrets.nix                   # sops-nix Age 密钥来源
 │   ├── fonts.conf                    # Fontconfig 字体优先级
-│   ├── patches/                      # 本地软件修补
 │   └── scripts/                      # rEFInd 与 Lanzaboote 安装脚本
 ├── home/
 │   ├── default.nix                   # Home Manager、应用、主题和用户服务
@@ -93,10 +92,8 @@ git diff master...laptop -- flake.nix home/default.nix hosts/nixos modules/core.
 │   ├── scripts/                      # 截图、niri 与 Zsh/Lua 脚本
 │   └── zsh.nix                       # Zsh、Starship、fzf 和终端工具
 └── packages/
-    ├── chatgpt.nix                   # ChatGPT 官方 Linux 二进制封装
-    ├── deepseek-harness.nix          # DeepSeek Harness NPM 构建
-    ├── deepseek-harness/package-lock.json
-    └── scripts/                      # 软件包构建与安装检查脚本
+    ├── default.nix                   # nixpkgs 尚未收录的上游 flake 软件
+    └── patches/                      # 仍需保留的截图交互补丁
 ~~~
 
 少于 10 行的脚本内嵌在对应配置或调用脚本中；其余脚本保存在各目录的 <code>scripts/</code> 下。
@@ -377,26 +374,18 @@ nix flake check
 # 只验证 Home Manager 生成
 nix build .#nixosConfigurations.nixos.config.home-manager.users.ben.home.activationPackage --no-link
 
-# 更新锁文件；提交前应审阅 flake.lock
+# 统一更新 nixpkgs 和上游 flake；提交前应审阅 flake.lock
 nix flake update
-
-# 使用 nix-update 更新并构建 nixpkgs 尚未收录的 GitHub 正式版软件，然后应用配置
-nix run .#update-github-releases
 sudo nixos-rebuild switch --flake .#nixos
-
-# 从 OpenAI 官方 Linux 软件源更新 ChatGPT，自动刷新版本与哈希并构建验证
-nix run .#update-chatgpt
-sudo nixos-rebuild switch --flake .#nixos
-
-# 手动将 Codex CLI 更新至 OpenAI 最新稳定版；系统重建时不再自动更新
-codex-update
 
 # 查看新旧系统闭包差异
 nix build .#nixosConfigurations.nixos.config.system.build.toplevel
 nvd diff /run/current-system result
 ~~~
 
-软件优先使用 nixpkgs 的包，包括 CC Switch、Clash Verge Rev 和通用工具。`update-github-releases` 只管理当前 nixpkgs 尚未收录的 OBS Bilibili 插件、AudioMonitor 和 bili-danmaku-tui；版本与源码、Go 依赖校验值保存在 `packages/`。`update-chatgpt` 从 OpenAI 官方软件源读取最新版，使用 `nix-update` 更新固定版本与 SHA-256，并在写入后构建验证，因此不会用可变 URL 破坏 Nix 的可复现性。此命令需手动运行；普通系统重建不会联网检查新版本。
+软件来源顺序为 **nixpkgs → 项目上游 flake → 必要的本地修补**。ChatGPT、Codex、Claude Code、DeepSeek Harness、Noctalia、雾凇拼音及 OBS Bilibili 插件均使用同一份锁定的 nixpkgs。AudioMonitor、bili-danmaku-tui、Turing Screen 和 QQ Wayland 修复使用项目 flake，并让其 nixpkgs 输入跟随系统。更新统一通过 `nix flake update`，不再保留独立安装器、重复包定义和应用专用更新脚本。会话 PATH 优先选择 Nix 用户配置中的命令，之后才查找 `~/.local/bin`，避免旧的独立安装版本抢占。
+
+Codex 0.167.0 仍缺少当前 Rust 构建规则要求的四个系统库，因此保留一个集中在 `modules/core.nix` 的依赖修复，CLI 与 ChatGPT 共用它；ChatGPT 的 Tectonic 辅助程序同样补齐缺失的 AWS-LC。Clash Verge Rev 2.5.2 的 GUI 构建补齐 AWS-LC 和 zstd，继续使用 nixpkgs 的源码、补丁和服务打包。AudioMonitor 上游 flake 仍调用已删除的图标生成脚本，因此保留一处安装修正。截图拖动阈值、只读配置下的 Noctalia 模板钩子、Mango 会话及门户处理仍有实际用途；它们属于当前功能所需的配置，不能仅因使用了覆盖或脚本就删除。
 
 系统每周清理超过 7 天的旧 Nix store 代次并执行 store 优化。Snapper 的 <code>root</code>（<code>/</code>）和 <code>home</code>（<code>/home</code>）配置在 <code>modules/snapper.nix</code> 中定义，关闭自动创建和所有自动清理算法，不设置快照保留数量策略。时间线和清理定时器不随系统启动，开机快照和自动备份任务也不启用；快照创建和删除由用户通过 Btrfs Assistant 或 Snapper 手动操作。若修改了用户名或主机名，请同步替换上述属性路径。
 
@@ -445,7 +434,7 @@ Snapper 快照便于本机回滚，但不能替代异机备份。至少应单独
 GTK3/GTK4、Kitty、Qt 与 KDE 配色由 <code>home/noctalia-app-themes.nix</code> 接入，相关模板默认开启，可在 Noctalia 中自行关闭。字体、字号、Papirus 图标、Kitty 90% 透明度及 Dolphin 的紧凑布局保持原有设置。
 
 - GTK3 安装并选择 <code>adw-gtk3-dark</code>。GTK3/GTK4 的 CSS 导入交由 Noctalia 钩子维护，两项可独立开关；关闭模板时移除导入并保留其他用户样式。GTK4 不额外注入 GTK3 基础主题。
-- Kitty 主配置声明 <code>include themes/noctalia.conf</code>。为 Noctalia 提供仅读取配置并发送重载信号的应用钩子，避免原生钩子对只读 <code>kitty.conf</code> 执行 <code>touch</code>；关闭模板时清空可写配色并重载。桌面模板的撤销钩子同样保留受管理的 include，仅清理动态配色；保持使用上游缓存二进制。
+- Kitty 主配置声明 <code>include themes/noctalia.conf</code>。为 Noctalia 提供仅读取配置并发送重载信号的应用钩子，避免原生钩子对只读 <code>kitty.conf</code> 执行 <code>touch</code>；关闭模板时清空可写配色并重载。桌面模板的撤销钩子同样保留受管理的 include，仅清理动态配色；使用 nixpkgs 的 Noctalia 包。
 - Qt5/Qt6 使用自带的 <code>Fusion</code> 样式，qt5ct/qt6ct 选择各自的 <code>colors/noctalia.conf</code>。额外开启 <code>kcolorscheme</code>，由 Noctalia 合并配色到可写的 <code>kdeglobals</code> 并通知 KDE 应用，保留图标、终端和禁用钱包设置。
 - Dolphin 使用 Fusion 控件与标准背景，窗口整体透明度由桌面规则控制。Qt/KDE 均使用 Noctalia 内置模板，无需 Kvantum 底稿、颜色转换脚本或自定义 SVG 模板。
 
@@ -630,7 +619,7 @@ Noctalia 的内置模板总开关、<code>hyprland</code>、<code>niri</code>、
 - nwg-displays 写入 <code>~/.config/niri/monitor.kdl</code>，以及 Hyprland 的 monitor/workspace Lua 模块。
 - Home Manager 首次激活时会创建 niri 的两个可写 include 文件，但主 <code>config.kdl</code> 仍由声明式配置管理。
 - Mango 首次激活时创建可写的 <code>noctalia.conf</code> 和 <code>monitors.conf</code>，主 <code>config.conf</code> 由 Home Manager 管理。
-- Rime Ice 以可写副本同步到用户数据目录，以便 Fcitx5 生成编译产物。
+- 雾凇拼音通过 nixpkgs 的 `rime-ice` 数据包接入 `fcitx5-rime`；用户词库与编译产物保存在用户目录。
 - sops-nix 运行时使用主机 SSH Ed25519 密钥作为 Age 密钥来源；<code>.sops.yaml</code> 为 <code>secrets/*.yaml</code> 声明 GPG 与 Age 接收者，但仓库当前没有具体 secret 文件。
 - <code>/var/lib/sbctl</code> 保存本机 Secure Boot 私钥，必须纳入安全离线备份，但不能提交到仓库。
 
