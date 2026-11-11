@@ -1,5 +1,4 @@
 {
-  config,
   lib,
   pkgs,
   hostname,
@@ -66,11 +65,6 @@ in
         "nix-command"
         "flakes"
       ];
-      extra-substituters = [ "https://noctalia.cachix.org" ];
-      extra-trusted-public-keys = [
-        "noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4="
-      ];
-      auto-optimise-store = true;
       warn-dirty = false;
     };
     gc = {
@@ -84,7 +78,52 @@ in
     };
   };
 
-  nixpkgs.config.allowUnfree = true;
+  nixpkgs = {
+    config.allowUnfree = true;
+    overlays = [
+      (final: prev: {
+        # The Rust hook uses system SQLite, which cc-switch omits from buildInputs.
+        cc-switch = prev.cc-switch.overrideAttrs (oldAttrs: {
+          buildInputs = (oldAttrs.buildInputs or [ ]) ++ [ final.sqlite ];
+        });
+        # nixpkgs' Rust hook requires these libraries; Codex 0.167.0 omits them.
+        # Keep CLI and ChatGPT on the same repaired package until nixpkgs fixes it.
+        codex = prev.codex.overrideAttrs (oldAttrs: {
+          buildInputs =
+            (oldAttrs.buildInputs or [ ])
+            ++ (with final; [
+              aws-lc
+              oniguruma
+              sqlite
+              zstd
+            ]);
+        });
+        # ChatGPT's LaTeX helper has the same missing AWS-LC dependency.
+        tectonic-unwrapped = prev.tectonic-unwrapped.overrideAttrs (oldAttrs: {
+          buildInputs = (oldAttrs.buildInputs or [ ]) ++ [ final.aws-lc ];
+        });
+        # Supply the system libraries required by nixpkgs' nested GUI build.
+        clash-verge-rev = prev.clash-verge-rev.override {
+          callPackage =
+            path: args:
+            let
+              package = final.callPackage path args;
+            in
+            if package.pname == "clash-verge-rev-unwrapped" then
+              package.overrideAttrs (oldAttrs: {
+                buildInputs =
+                  (oldAttrs.buildInputs or [ ])
+                  ++ (with final; [
+                    aws-lc
+                    zstd
+                  ]);
+              })
+            else
+              package;
+        };
+      })
+    ];
+  };
 
   boot = {
     # Follow the latest Linux kernel series provided by nixos-unstable.
@@ -133,7 +172,6 @@ in
     sbctl
     vim
   ];
-  environment.pathsToLink = [ "/share/zsh" ];
 
   system.stateVersion = "25.11";
 }

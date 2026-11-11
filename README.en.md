@@ -34,7 +34,7 @@ Highlights:
 - Fcitx5 with Rime Ice provides Chinese and English input.
 - PipeWire, NetworkManager, BlueZ/Blueman, UDisks2, and desktop portals are configured.
 - Btrfs subvolumes and periodic TRIM are enabled; Snapper is available for users to manage snapshots and cleanup manually.
-- Local packages cover the ChatGPT Linux app, DeepSeek Harness, and AudioMonitor; [linuxqq-wayland-fix](https://github.com/SHORiN-KiWATA/linuxqq-wayland-fix) provides QQ clipboard, screen-sharing, and screenshot fixes on Wayland.
+- ChatGPT, DeepSeek Harness, and the OBS Bilibili plugin come from nixpkgs; AudioMonitor and bili-danmaku-tui use upstream flakes. [linuxqq-wayland-fix](https://github.com/SHORiN-KiWATA/linuxqq-wayland-fix) provides QQ clipboard, screen-sharing, and screenshot fixes on Wayland.
 - Noctalia templates coordinate desktop, GTK3/GTK4, Kitty, and Qt/KDE palettes while retaining Papirus Dark icons and Bibata cursors.
 
 ### Branch model
@@ -79,7 +79,6 @@ git diff master...laptop -- flake.nix home/default.nix hosts/nixos modules/core.
 │   ├── clash-verge.nix               # Clash Verge service and TUN settings
 │   ├── secrets.nix                   # sops-nix Age key source
 │   ├── fonts.conf                    # Fontconfig font priorities
-│   ├── patches/                      # Local package fixes
 │   └── scripts/                      # rEFInd and Lanzaboote installers
 ├── home/
 │   ├── default.nix                   # Home Manager, applications, theming, services
@@ -93,10 +92,8 @@ git diff master...laptop -- flake.nix home/default.nix hosts/nixos modules/core.
 │   ├── scripts/                      # Capture, niri and Zsh/Lua scripts
 │   └── zsh.nix                       # Zsh, Starship, fzf, terminal tools
 └── packages/
-    ├── chatgpt.nix                   # Official ChatGPT Linux binary wrapper
-    ├── deepseek-harness.nix          # DeepSeek Harness NPM build
-    ├── deepseek-harness/package-lock.json
-    └── scripts/                      # Package build and install checks
+    ├── default.nix                   # Upstream flakes for packages absent from nixpkgs
+    └── patches/                      # Required screenshot interaction patch
 ~~~
 
 Scripts shorter than 10 lines stay inline in their configuration or calling script; longer scripts live in each directory’s <code>scripts/</code> folder.
@@ -372,26 +369,18 @@ nix flake check
 # Build only the Home Manager generation
 nix build .#nixosConfigurations.nixos.config.home-manager.users.ben.home.activationPackage --no-link
 
-# Update inputs; review flake.lock before committing
+# Update nixpkgs and upstream flakes together; review flake.lock before committing
 nix flake update
-
-# Use nix-update for GitHub Release packages not yet in nixpkgs, then apply
-nix run .#update-github-releases
 sudo nixos-rebuild switch --flake .#nixos
-
-# Update ChatGPT from OpenAI's official Linux repository and verify the build
-nix run .#update-chatgpt
-sudo nixos-rebuild switch --flake .#nixos
-
-# Manually update Codex CLI to OpenAI's latest stable release; system rebuilds no longer update it
-codex-update
 
 # Compare system closures
 nix build .#nixosConfigurations.nixos.config.system.build.toplevel
 nvd diff /run/current-system result
 ~~~
 
-Prefer nixpkgs packages, including CC Switch, Clash Verge Rev, and general-purpose tools. `update-github-releases` manages only the OBS Bilibili plugin, AudioMonitor, and bili-danmaku-tui, which are not currently in nixpkgs. Versions and source and Go dependency hashes are kept in `packages/`. `update-chatgpt` reads the latest version from OpenAI's official package repository, uses `nix-update` to refresh the pinned version and SHA-256, and verifies the result with a build, preserving reproducible Nix evaluation instead of using a mutable URL. Run this command explicitly; ordinary system rebuilds do not check for new releases.
+Package sources follow **nixpkgs → upstream project flake → necessary local fixes**. ChatGPT, Codex, Claude Code, DeepSeek Harness, Noctalia, Rime Ice, and the OBS Bilibili plugin share the system nixpkgs lock. AudioMonitor, bili-danmaku-tui, Turing Screen, and the QQ Wayland fix use upstream flakes whose nixpkgs inputs follow the system. Updates use `nix flake update`; separate installers, duplicate package definitions, and application-specific update scripts have been removed. The session PATH checks the Nix user profile before `~/.local/bin`, so older standalone installs do not take precedence.
+
+Codex 0.167.0 still omits four system libraries required by the current Rust build hook. A single dependency fix in `modules/core.nix` serves both the CLI and ChatGPT; its Tectonic helper also needs the missing AWS-LC dependency. Clash Verge Rev 2.5.2's GUI build adds AWS-LC and zstd while retaining nixpkgs' source, patches, and service packaging. AudioMonitor needs a small installation fix because its upstream flake calls a removed icon generator. The screenshot drag threshold, Noctalia hooks for read-only configurations, and Mango session and portal integration still support existing behavior and remain necessary.
 
 The system removes Nix store generations older than seven days and optimizes the store weekly. Snapper's <code>root</code> (<code>/</code>) and <code>home</code> (<code>/home</code>) configurations are defined in <code>modules/snapper.nix</code>, with automatic snapshot creation and all automatic cleanup algorithms disabled and no snapshot retention limits configured. Timeline and cleanup timers do not start at boot; boot snapshots and automatic backup tasks are also not enabled. Users create and delete snapshots manually through Btrfs Assistant or Snapper. Replace the host and user attribute names above after changing either value.
 
@@ -440,7 +429,7 @@ Installed font families cover Inter, Source Serif, Noto CJK/Emoji, Sarasa Gothic
 <code>home/noctalia-app-themes.nix</code> connects GTK3/GTK4, Kitty, Qt, and KDE to Noctalia. Their templates are enabled by default and can be disabled in Noctalia. Existing fonts, sizes, Papirus icons, Kitty's 90% opacity, and Dolphin's compact layout are retained.
 
 - GTK3 installs and selects <code>adw-gtk3-dark</code>. Noctalia's hooks manage the CSS imports for both GTK versions, support independent toggles, and remove imports when disabled while preserving other user styles. GTK4 does not inject a GTK3 base theme.
-- Kitty declares <code>include themes/noctalia.conf</code>. A replacement Noctalia apply hook only verifies the include and signals Kitty to reload, avoiding the upstream hook's unconditional <code>touch</code> of the read-only main config. Disabling the template clears the writable palette and reloads Kitty. Compositor undo hooks likewise preserve managed includes and clear only generated colors. The upstream cached binary is retained.
+- Kitty declares <code>include themes/noctalia.conf</code>. A replacement Noctalia apply hook only verifies the include and signals Kitty to reload, avoiding the upstream hook's unconditional <code>touch</code> of the read-only main config. Disabling the template clears the writable palette and reloads Kitty. Compositor undo hooks likewise preserve managed includes and clear only generated colors. The Noctalia binary comes from nixpkgs.
 - Qt5/Qt6 use the built-in <code>Fusion</code> style, with qt5ct/qt6ct selecting their respective <code>colors/noctalia.conf</code>. The <code>kcolorscheme</code> template is enabled by default, merges colors into writable <code>kdeglobals</code>, and notifies KDE applications while preserving icons, terminal, and wallet settings.
 - Dolphin uses Fusion widgets and a standard background; compositor rules control whole-window opacity. Qt/KDE use Noctalia's built-in templates, without a Kvantum base theme, color conversion script, or custom SVG templates.
 
@@ -625,7 +614,7 @@ Outputs default to their preferred mode at 2x scale. Use <code>wlr-randr</code> 
 - nwg-displays writes <code>~/.config/niri/monitor.kdl</code> and Hyprland monitor/workspace Lua modules.
 - Home Manager creates the two writable niri include files on first activation while keeping the main <code>config.kdl</code> declarative.
 - Mango activation creates writable <code>noctalia.conf</code> and <code>monitors.conf</code> includes; Home Manager manages the main <code>config.conf</code>.
-- Rime Ice is synchronized as a writable copy so Fcitx5 can generate compiled artifacts.
+- Rime Ice is supplied by nixpkgs through the `rimeDataPkgs` option of fcitx5-rime; user dictionaries and compiled data remain in the user directory.
 - At runtime, sops-nix derives an Age key from the host SSH Ed25519 key. <code>.sops.yaml</code> declares GPG and Age recipients for <code>secrets/*.yaml</code>, but no concrete secret file exists yet.
 - <code>/var/lib/sbctl</code> stores this machine's Secure Boot private keys. Keep a safe offline backup, but never commit them to the repository.
 

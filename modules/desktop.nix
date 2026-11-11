@@ -44,7 +44,6 @@
 
   xdg.portal = {
     enable = true;
-    extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
     # Correct the interface spelling in nixpkgs' Mango portal defaults.
     config.mango."org.freedesktop.impl.portal.Screenshot" = [ "wlr" ];
   };
@@ -72,7 +71,7 @@
     fcitx5 = {
       waylandFrontend = true;
       addons = with pkgs; [
-        fcitx5-rime
+        (fcitx5-rime.override { rimeDataPkgs = [ rime-ice ]; })
         fcitx5-gtk
         qt6Packages.fcitx5-configtool
         catppuccin-fcitx5
