@@ -49,7 +49,7 @@ Highlights:
 | Btrfs subvolumes | Disko creates <code>@root</code>, <code>@nix</code>, <code>@home</code>, and snapshot subvolumes | Mounts existing <code>@root</code>, <code>@nix</code>, and <code>@home</code>; the initialization service creates a separate <code>@root/swap</code> subvolume if missing |
 | Windows dual boot | Uses Windows ESP PARTUUID <code>991a77db-c316-4f75-b9df-bc05e179a798</code>; the ESP should be on another disk that Disko will not erase | Uses <code>084dbc6c-e077-48f9-b6d5-ccd76d8f1d42</code> for the Windows ESP on the same SSD |
 | Internal panel | No EDID override | Loads a corrected EDID in the initrd for the 2880×1800 panel 120 Hz mode |
-| Default Noctalia bar | Includes media and mpvpaper plus a dedicated <code>DP-2</code> layout | Shows network, Bluetooth, and battery widgets without a <code>DP-2</code> override |
+| Default Noctalia bar | Includes media and mpvpaper; all monitors use the default layout | Shows network, Bluetooth, and battery widgets; all monitors use the default layout |
 | Flake lock file | Contains the Disko input closure | Omits the Disko input closure |
 
 Inspect the exact committed branch delta with:
