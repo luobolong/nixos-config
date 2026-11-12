@@ -26,14 +26,30 @@ let
         --add-flags "-stylesheet ${dolphinUiStyle}"
     '';
   };
+  # Electron falls back to XWayland unless the ozone platform is forced. The
+  # NIXOS_OZONE_WL switch only reaches terminals here, not applications started
+  # by the compositor, so the launchers carry the Wayland flags themselves.
   spotify = pkgs.symlinkJoin {
     name = "spotify-wayland";
     paths = [ pkgs.spotify ];
     nativeBuildInputs = [ pkgs.makeWrapper ];
     postBuild = ''
       wrapProgram "$out/bin/spotify" \
+        --add-flags "--ozone-platform=wayland" \
+        --add-flags "--enable-features=WaylandWindowDecorations" \
         --add-flags "--enable-wayland-ime" \
         --add-flags "--wayland-text-input-version=3"
+    '';
+  };
+  chatgpt = pkgs.symlinkJoin {
+    name = "chatgpt-wayland";
+    paths = [ pkgs.chatgpt ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    postBuild = ''
+      wrapProgram "$out/bin/chatgpt" \
+        --add-flags "--ozone-platform=wayland" \
+        --add-flags "--enable-features=WaylandWindowDecorations" \
+        --add-flags "--enable-wayland-ime=true"
     '';
   };
   screenshotSlurp = pkgs.slurp.overrideAttrs (oldAttrs: {

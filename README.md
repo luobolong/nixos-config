@@ -380,7 +380,7 @@ nvd diff /run/current-system result
 
 软件来源顺序为 **nixpkgs → 项目上游 flake → 必要的本地修补**。ChatGPT、Codex、Claude Code、DeepSeek Harness、Noctalia、雾凇拼音及 OBS Bilibili 插件均使用同一份锁定的 nixpkgs。AudioMonitor、bili-danmaku-tui、Turing Screen 和 QQ Wayland 修复使用项目 flake，并让其 nixpkgs 输入跟随系统。更新统一通过 `nix flake update`，不再保留独立安装器、重复包定义和应用专用更新脚本。会话 PATH 优先选择 Nix 用户配置中的命令，之后才查找 `~/.local/bin`，避免旧的独立安装版本抢占。
 
-Codex 0.167.0 仍缺少当前 Rust 构建规则要求的四个系统库，因此保留一个集中在 `modules/core.nix` 的依赖修复，CLI 与 ChatGPT 共用它；ChatGPT 的 Tectonic 辅助程序同样补齐缺失的 AWS-LC。Clash Verge Rev 2.5.2 的 GUI 构建补齐 AWS-LC 和 zstd，继续使用 nixpkgs 的源码、补丁和服务打包。AudioMonitor 上游 flake 仍调用已删除的图标生成脚本，因此保留一处安装修正。截图拖动阈值、只读配置下的 Noctalia 模板钩子、Mango 会话及门户处理仍有实际用途；它们属于当前功能所需的配置，不能仅因使用了覆盖或脚本就删除。
+Codex 0.167.0 仍缺少当前 Rust 构建规则要求的四个系统库，因此保留一个集中在 `modules/core.nix` 的依赖修复，CLI 与 ChatGPT 共用它；ChatGPT 的 Tectonic 辅助程序同样补齐缺失的 AWS-LC。Clash Verge Rev 2.5.2 的 GUI 构建补齐 AWS-LC 和 zstd，继续使用 nixpkgs 的源码、补丁和服务打包。AudioMonitor 上游 flake 仍调用已删除的图标生成脚本，因此保留一处安装修正。截图拖动阈值、只读配置下的 Noctalia 模板钩子、Mango 会话及门户处理仍有实际用途；它们属于当前功能所需的配置，不能仅因使用了覆盖或脚本就删除。Spotify 与 ChatGPT 桌面版基于 Electron，而 <code>NIXOS_OZONE_WL</code> 在此环境只覆盖登录 shell，因此二者的启动包装显式传入 Wayland ozone 参数，避免回退到 XWayland。
 
 系统每周清理超过 7 天的旧 Nix store 代次并执行 store 优化。Snapper 的 <code>root</code>（<code>/</code>）和 <code>home</code>（<code>/home</code>）配置在 <code>modules/snapper.nix</code> 中定义，关闭自动创建和所有自动清理算法，不设置快照保留数量策略。时间线和清理定时器不随系统启动，开机快照和自动备份任务也不启用；快照创建和删除由用户通过 Btrfs Assistant 或 Snapper 手动操作。若修改了用户名或主机名，请同步替换上述属性路径。
 
