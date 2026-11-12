@@ -89,6 +89,21 @@ in
           buildInputs = (oldAttrs.buildInputs or [ ]) ++ [ final.sqlite ];
         });
       })
+      # localsend 1.18.0 links libz.so.1, but nixpkgs leaves zlib out of the
+      # launcher's LD_LIBRARY_PATH, so startup fails with "libz.so.1: cannot
+      # open shared object file". Wrap zlib in instead of rebuilding the Flutter
+      # app. Drop this once nixpkgs adds the dependency.
+      (final: prev: {
+        localsend = prev.symlinkJoin {
+          name = "localsend-zlib";
+          paths = [ prev.localsend ];
+          nativeBuildInputs = [ prev.makeWrapper ];
+          postBuild = ''
+            wrapProgram "$out/bin/localsend_app" \
+              --prefix LD_LIBRARY_PATH : ${prev.lib.makeLibraryPath [ prev.zlib ]}
+          '';
+        };
+      })
     ];
   };
 
