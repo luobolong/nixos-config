@@ -75,6 +75,7 @@
         })
         // {
           inherit (packagePkgs)
+            antigravity-cli
             chatgpt
             claude-code
             codex

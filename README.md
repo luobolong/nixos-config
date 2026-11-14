@@ -358,7 +358,8 @@ sudo nixos-rebuild boot --flake .#nixos
 - 用 <code>Ctrl + Space</code> 切换 Fcitx5/Rime，并用 <code>F4</code> 选择雾凇拼音方案；候选窗异常时可运行 <code>fcitx5 -r</code> 和 <code>fcitx5-configtool</code>。
 - 检查 <code>systemctl --user --failed</code> 和 <code>systemctl --user status noctalia</code>，确认 Noctalia 等用户服务没有失败。
 - 完全退出 QQ（包括托盘）后，从「QQ（Wayland修复版）」启动，检查剪贴板、屏幕共享和截图；可运行 <code>linuxqq-wayland-fix --doctor</code> 自检。
-- 首次使用 Claude Code、Codex 或 Gemini CLI 前，在 CC Switch 中添加并启用对应的 API 供应商；配置本身不保存这些服务的令牌。
+- 首次使用 Claude Code 或 Codex 前，在 CC Switch 中添加并启用对应的 API 供应商；配置本身不保存这些服务的令牌。
+- Gemini CLI 已迁移为 Antigravity CLI。运行 <code>agy</code>，按首次启动提示登录 Google 账号并导入需要的旧 Gemini 配置。
 - 首次运行 <code>nvim</code>，让 AstroNvim 完成插件初始化。
 - 再次确认 <code>sudo sbctl status</code>、Windows 启动项、音频、蓝牙、挂起与恢复。
 
