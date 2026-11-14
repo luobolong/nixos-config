@@ -353,7 +353,8 @@ After entering the graphical session for the first time:
 - Toggle Fcitx5/Rime with <code>Ctrl + Space</code> and select the Rime Ice schema with <code>F4</code>. If the candidate window fails, run <code>fcitx5 -r</code> and <code>fcitx5-configtool</code>.
 - Check <code>systemctl --user --failed</code> and <code>systemctl --user status noctalia</code>, and make sure Noctalia and other user services did not fail.
 - Fully quit QQ, including its tray icon, then launch “QQ (Wayland Fix)” and check clipboard access, screen sharing, and screenshots. Run <code>linuxqq-wayland-fix --doctor</code> for diagnostics.
-- Before first use of Claude Code, Codex, or Gemini CLI, add and enable the corresponding API provider in CC Switch. This configuration does not store those service tokens.
+- Before first use of Claude Code or Codex, add and enable the corresponding API provider in CC Switch. This configuration does not store those service tokens.
+- Gemini CLI has been replaced with Antigravity CLI. Run <code>agy</code> and follow the first-launch prompts to sign in with your Google account and import the legacy Gemini configuration you need.
 - Run <code>nvim</code> once so AstroNvim can complete plugin initialization.
 - Recheck <code>sudo sbctl status</code>, the Windows boot entry, audio, Bluetooth, suspend, and resume.
 

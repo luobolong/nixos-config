@@ -89,11 +89,11 @@
         })
         // {
           inherit (packagePkgs)
+            antigravity-cli
             chatgpt
             claude-code
             codex
             deepseek-harness
-            gemini-cli
             noctalia
             rime-ice
             ;

@@ -198,7 +198,7 @@ in
       chatgpt
       claude-code
       deepseek-harness
-      gemini-cli
+      antigravity-cli
       sops
     ];
     preferXdgDirectories = true;
