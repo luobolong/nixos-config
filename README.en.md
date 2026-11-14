@@ -355,6 +355,7 @@ After entering the graphical session for the first time:
 - Fully quit QQ, including its tray icon, then launch “QQ (Wayland Fix)” and check clipboard access, screen sharing, and screenshots. Run <code>linuxqq-wayland-fix --doctor</code> for diagnostics.
 - Before first use of Claude Code or Codex, add and enable the corresponding API provider in CC Switch. This configuration does not store those service tokens.
 - Gemini CLI has been replaced with Antigravity CLI. Run <code>agy</code> and follow the first-launch prompts to sign in with your Google account and import the legacy Gemini configuration you need.
+- Antigravity-Manager uses the official release package. Launch “Antigravity Tools” from the application menu or run <code>antigravity-tools</code>.
 - Run <code>nvim</code> once so AstroNvim can complete plugin initialization.
 - Recheck <code>sudo sbctl status</code>, the Windows boot entry, audio, Bluetooth, suspend, and resume.
 

@@ -113,6 +113,7 @@ in
       discord
       telegram-desktop
       cc-switch
+      extraPackages.antigravity-manager
       dolphin
       kdePackages.okular
       kdePackages.gwenview

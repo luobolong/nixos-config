@@ -355,6 +355,7 @@ sudo nixos-rebuild boot --flake .#nixos
 - 完全退出 QQ（包括托盘）后，从「QQ（Wayland修复版）」启动，检查剪贴板、屏幕共享和截图；可运行 <code>linuxqq-wayland-fix --doctor</code> 自检。
 - 首次使用 Claude Code 或 Codex 前，在 CC Switch 中添加并启用对应的 API 供应商；配置本身不保存这些服务的令牌。
 - Gemini CLI 已迁移为 Antigravity CLI。运行 <code>agy</code>，按首次启动提示登录 Google 账号并导入需要的旧 Gemini 配置。
+- Antigravity-Manager 使用官方发布包，在应用菜单中显示为「Antigravity Tools」，也可运行 <code>antigravity-tools</code> 启动。
 - 首次运行 <code>nvim</code>，让 AstroNvim 完成插件初始化。
 - 再次确认 <code>sudo sbctl status</code>、Windows 启动项、音频、蓝牙、挂起与恢复。
 
