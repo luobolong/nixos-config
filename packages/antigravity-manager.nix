@@ -8,6 +8,7 @@
   glib-networking,
   gtk3,
   libayatana-appindicator,
+  libsecret,
   libsoup_3,
   webkitgtk_4_1,
 }:
@@ -63,6 +64,11 @@ stdenv.mkDerivation (finalAttrs: {
     substituteInPlace "$out/share/applications/Antigravity Tools.desktop" \
       --replace-fail "Categories=" "Categories=Development;Utility;"
     runHook postInstall
+  '';
+
+  # Linux credential storage invokes secret-tool as a subprocess.
+  preFixup = ''
+    gappsWrapperArgs+=(--prefix PATH : ${lib.makeBinPath [ libsecret ]})
   '';
 
   meta = {
