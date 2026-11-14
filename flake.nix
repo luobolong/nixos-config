@@ -93,6 +93,7 @@
             claude-code
             codex
             deepseek-harness
+            gemini-cli
             noctalia
             rime-ice
             ;
