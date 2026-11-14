@@ -274,11 +274,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794261845,
-        "narHash": "sha256-Ivif/kuD68yEOKcZZG3zSwNMFUuIgzUgeJuzcHrQy+8=",
+        "lastModified": 1794624949,
+        "narHash": "sha256-3q/hxp/flW1PnV3Dx+H3p8kHGEHJ7251BqVMNsAAB9E=",
         "owner": "Mic92",
         "repo": "sops-nix",
-        "rev": "fe7b4228405aeac2ce7192c2049a6e2bc8637082",
+        "rev": "11e5885d241743ff0193465d533b20e754bc3ce0",
         "type": "github"
       },
       "original": {
@@ -294,11 +294,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794508134,
-        "narHash": "sha256-32Il3X4NWD+Ib3oFE+b3ddrmwczkaXBEmgQ3d5lejCQ=",
+        "lastModified": 1794656450,
+        "narHash": "sha256-UkSzvtWf1Df+oMYglEUZZh1JyPUEv/cgHb0R+JRtBco=",
         "owner": "luobolong",
         "repo": "turing-smart-screen-qt",
-        "rev": "18bb97a8018de5ad3d23c83e4a1cbe633fb7b2db",
+        "rev": "eddf598237e1c54664746858f4ac373d666361d4",
         "type": "github"
       },
       "original": {
