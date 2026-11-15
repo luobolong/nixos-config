@@ -217,7 +217,6 @@
         "astronvim": "astronvim",
         "audiomonitor": "audiomonitor",
         "bili-danmaku-tui": "bili-danmaku-tui",
-        "disko": "disko",
         "home-manager": "home-manager",
         "lanzaboote": "lanzaboote",
         "linuxqq-wayland-fix": "linuxqq-wayland-fix",
@@ -263,26 +262,6 @@
       "original": {
         "owner": "Mic92",
         "repo": "sops-nix",
-        "type": "github"
-      }
-    },
-    "turing-screen": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1794742932,
-        "narHash": "sha256-btZVDNp2JWXXIe2uoalBpf6KHFWTcVYEzD1d8F2s1n0=",
-        "owner": "luobolong",
-        "repo": "turing-smart-screen-qt",
-        "rev": "70fd36e5547669bd91657d0d88969d45fd08cde1",
-        "type": "github"
-      },
-      "original": {
-        "owner": "luobolong",
-        "repo": "turing-smart-screen-qt",
         "type": "github"
       }
     }

@@ -84,7 +84,6 @@
             rime-ice
             ;
           inherit (packagePkgs.obs-studio-plugins) obs-bilibili-stream;
-          turing-screen = inputs.turing-screen.packages.${system}.default;
         };
 
       formatter.${system} = nixpkgs.legacyPackages.${system}.nixfmt;
