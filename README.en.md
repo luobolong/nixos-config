@@ -360,6 +360,7 @@ After entering the graphical session for the first time:
 - Fully quit QQ, including its tray icon, then launch “QQ (Wayland Fix)” and check clipboard access, screen sharing, and screenshots. Run <code>linuxqq-wayland-fix --doctor</code> for diagnostics.
 - Before first use of Claude Code or Codex, add and enable the corresponding API provider in CC Switch. This configuration does not store those service tokens.
 - Gemini CLI has been replaced with Antigravity CLI. Run <code>agy</code> and follow the first-launch prompts to sign in with your Google account and import the legacy Gemini configuration you need.
+- Antigravity-Manager uses the official release package. Launch “Antigravity Tools” from the application menu or run <code>antigravity-tools</code>.
 - Run <code>nvim</code> once so AstroNvim can complete plugin initialization.
 - Recheck <code>sudo sbctl status</code>, the Windows boot entry, audio, Bluetooth, suspend, and resume.
 
@@ -444,6 +445,8 @@ Activation seeds only missing Kitty, Qt, and KDE files with a Catppuccin Mocha f
 ### Hyprland key bindings
 
 Hyprland, niri, and Mango use the Noctalia [Keybind Cheatsheet](https://noctalia.dev/plugins/community/keybind-cheatsheet) plugin, toggled with <code>Super + /</code>. Bilingual Chinese/English descriptions and categories live in each compositor configuration; search in either language (for example, “截图” or “screenshot”). The cheatsheet displays bindings; use <code>Super + A</code> to launch applications.
+
+<code>Super + A</code> and the bar's launcher button use <code>noctalia-launcher</code> to keep Fcitx5 in Latin mode while Launcher is open, restoring the previous input-method activation state on dismissal. This works around the text-input focus mismatch between Launcher and Rime on Hyprland.
 
 After editing and reloading the compositor configuration, refresh the cheatsheet cache with:
 

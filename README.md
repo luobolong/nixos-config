@@ -360,6 +360,7 @@ sudo nixos-rebuild boot --flake .#nixos
 - 完全退出 QQ（包括托盘）后，从「QQ（Wayland修复版）」启动，检查剪贴板、屏幕共享和截图；可运行 <code>linuxqq-wayland-fix --doctor</code> 自检。
 - 首次使用 Claude Code 或 Codex 前，在 CC Switch 中添加并启用对应的 API 供应商；配置本身不保存这些服务的令牌。
 - Gemini CLI 已迁移为 Antigravity CLI。运行 <code>agy</code>，按首次启动提示登录 Google 账号并导入需要的旧 Gemini 配置。
+- Antigravity-Manager 使用官方发布包，在应用菜单中显示为「Antigravity Tools」，也可运行 <code>antigravity-tools</code> 启动。
 - 首次运行 <code>nvim</code>，让 AstroNvim 完成插件初始化。
 - 再次确认 <code>sudo sbctl status</code>、Windows 启动项、音频、蓝牙、挂起与恢复。
 
@@ -444,6 +445,8 @@ GTK3/GTK4、Kitty、Qt 与 KDE 配色由 <code>home/noctalia-app-themes.nix</cod
 ### Hyprland 快捷键
 
 Hyprland、niri 和 Mango 统一使用 Noctalia 的 [Keybind Cheatsheet](https://noctalia.dev/plugins/community/keybind-cheatsheet) 插件，按 <code>Super + /</code> 打开或关闭。快捷键说明和分类直接写在各自配置中，以中英双语显示，支持中文或英文搜索（例如“截图”或“screenshot”）。速查表用于查看绑定；应用启动使用 <code>Super + A</code>。
+
+<code>Super + A</code> 和栏上的启动器按钮通过 <code>noctalia-launcher</code> 打开 Launcher，使用 Fcitx5 Latin 模式搜索，关闭后恢复打开前的输入法启用状态。这用于绕过 Hyprland 下 Launcher 与 Rime 的文本输入焦点不同步问题。
 
 修改并重载桌面配置后，可运行以下命令刷新速查表缓存：
 

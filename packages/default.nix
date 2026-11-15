@@ -1,6 +1,7 @@
 { inputs, pkgs }:
 {
-  # Packages absent from nixpkgs: use the project's flake before local packaging.
+  # Packages absent from nixpkgs: prefer upstream flakes, then package releases.
+  antigravity-manager = pkgs.callPackage ./antigravity-manager.nix { };
   audiomonitor =
     pkgs.audiomonitor
       or (inputs.audiomonitor.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs
