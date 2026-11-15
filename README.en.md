@@ -441,6 +441,8 @@ Activation seeds only missing Kitty, Qt, and KDE files with a Catppuccin Mocha f
 
 Hyprland, niri, and Mango use the Noctalia [Keybind Cheatsheet](https://noctalia.dev/plugins/community/keybind-cheatsheet) plugin, toggled with <code>Super + /</code>. Bilingual Chinese/English descriptions and categories live in each compositor configuration; search in either language (for example, “截图” or “screenshot”). The cheatsheet displays bindings; use <code>Super + A</code> to launch applications.
 
+<code>Super + A</code> and the bar's launcher button use <code>noctalia-launcher</code> to keep Fcitx5 in Latin mode while Launcher is open, restoring the previous input-method activation state on dismissal. This works around the text-input focus mismatch between Launcher and Rime on Hyprland.
+
 After editing and reloading the compositor configuration, refresh the cheatsheet cache with:
 
 ~~~bash

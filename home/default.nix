@@ -82,6 +82,17 @@ let
     ];
     text = builtins.readFile ./scripts/niri-smart-direction.sh;
   };
+  noctaliaLauncher = pkgs.writeShellApplication {
+    name = "noctalia-launcher";
+    runtimeInputs = with pkgs; [
+      coreutils
+      fcitx5
+      jq
+      util-linux
+      config.programs.noctalia.package
+    ];
+    text = builtins.readFile ./scripts/noctalia-launcher.sh;
+  };
 in
 {
   imports = [
@@ -140,6 +151,7 @@ in
       screenshotSlurp
       screenshot
       niriSmartDirection
+      noctaliaLauncher
       brightnessctl
       playerctl
       mpv
@@ -568,6 +580,7 @@ in
     ];
     settings.widget.mpvpaper.type = "noctalia/mpvpaper:mpvpaper";
     settings.widget.lyrics.type = "h465855hgg/lyrics:lyrics";
+    settings.widget.launcher.actions.left = "exec noctalia-launcher";
   };
 
   # Dolphin delegates removable and secondary-drive mounts to UDisks2, which

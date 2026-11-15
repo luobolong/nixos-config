@@ -407,7 +407,7 @@ hl.bind(
 )
 hl.bind(
   mainMod .. " + A",
-  hl.dsp.exec_cmd("noctalia msg panel-toggle launcher"),
+  hl.dsp.exec_cmd("noctalia-launcher"),
   { description = "打开应用启动器 / Application launcher" }
 )
 hl.bind(

@@ -441,6 +441,8 @@ GTK3/GTK4、Kitty、Qt 与 KDE 配色由 <code>home/noctalia-app-themes.nix</cod
 
 Hyprland、niri 和 Mango 统一使用 Noctalia 的 [Keybind Cheatsheet](https://noctalia.dev/plugins/community/keybind-cheatsheet) 插件，按 <code>Super + /</code> 打开或关闭。快捷键说明和分类直接写在各自配置中，以中英双语显示，支持中文或英文搜索（例如“截图”或“screenshot”）。速查表用于查看绑定；应用启动使用 <code>Super + A</code>。
 
+<code>Super + A</code> 和栏上的启动器按钮通过 <code>noctalia-launcher</code> 打开 Launcher，使用 Fcitx5 Latin 模式搜索，关闭后恢复打开前的输入法启用状态。这用于绕过 Hyprland 下 Launcher 与 Rime 的文本输入焦点不同步问题。
+
 修改并重载桌面配置后，可运行以下命令刷新速查表缓存：
 
 ~~~bash

@@ -204,7 +204,7 @@ binds {
         spawn "missioncenter";
     }
     Mod+A repeat=false hotkey-overlay-title="打开应用启动器 / Application launcher" {
-        spawn "noctalia" "msg" "panel-toggle" "launcher";
+        spawn "noctalia-launcher";
     }
     Mod+V repeat=false hotkey-overlay-title="打开剪贴板历史 / Clipboard history" {
         spawn "noctalia" "msg" "panel-toggle" "clipboard";
