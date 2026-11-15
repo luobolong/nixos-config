@@ -294,11 +294,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794740228,
-        "narHash": "sha256-b0KQhPsVPR7qV9RjnBcfEfNkTDPmdgOwwedpyG0S1KA=",
+        "lastModified": 1794742932,
+        "narHash": "sha256-btZVDNp2JWXXIe2uoalBpf6KHFWTcVYEzD1d8F2s1n0=",
         "owner": "luobolong",
         "repo": "turing-smart-screen-qt",
-        "rev": "b01fa02b61cfd71ccb147763dc5a5a6cb22668c2",
+        "rev": "70fd36e5547669bd91657d0d88969d45fd08cde1",
         "type": "github"
       },
       "original": {
